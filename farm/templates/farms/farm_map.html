@@ -1,0 +1,776 @@
+{% extends "app_base.html" %}
+{% block title %}Farm Map - Miginon Farm{% endblock %}
+
+{% block extra_head %}
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+{% endblock %}
+
+{% block app_content %}
+<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <div>
+        <h1 class="text-2xl font-extrabold tracking-tight text-stone-900">Farm Map</h1>
+        <p class="mt-1 text-sm text-stone-500">
+            Your paddocks, herd, feed troughs, storage, crop fields, workers and this month's finances, laid out across the farm.
+            Drag to rotate, scroll to zoom, click anything to open it.
+        </p>
+    </div>
+    <a href="{% url 'farms:block_list' %}" class="rounded-full border border-stone-200 bg-white px-4 py-2.5 text-sm font-bold text-stone-700 hover:bg-stone-50">List view</a>
+</div>
+
+{% if blocks or cows_data or inventory_data or finance_data.income or finance_data.expense or crops_data or workers_data or tasks_data %}
+<div id="farm-map" class="relative h-[75vh] w-full overflow-hidden rounded-2xl border border-stone-200 bg-stone-100">
+    <div id="map-tooltip" class="pointer-events-none absolute z-10 hidden rounded-lg bg-stone-900/90 px-3 py-1.5 text-xs font-semibold text-white shadow-lg"></div>
+    <div class="absolute left-3 top-3 z-10 flex flex-col gap-1.5 rounded-2xl border border-stone-200 bg-white/95 p-3 text-xs font-bold text-stone-700 shadow-soft backdrop-blur">
+        <p class="mb-0.5 text-[10px] font-bold uppercase tracking-wide text-stone-400">Layers</p>
+        <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" data-layer="cows" checked class="accent-emerald-600"> Cows</label>
+        <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" data-layer="feeding" checked class="accent-emerald-600"> Feeding</label>
+        <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" data-layer="inventory" checked class="accent-emerald-600"> Inventory</label>
+        <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" data-layer="finance" checked class="accent-emerald-600"> Finance</label>
+        <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" data-layer="crops" checked class="accent-emerald-600"> Crops</label>
+        <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" data-layer="workers" checked class="accent-emerald-600"> Workers</label>
+        <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" data-layer="tasks" checked class="accent-emerald-600"> Tasks</label>
+    </div>
+
+    <details class="absolute right-3 top-3 z-10 rounded-2xl border border-stone-200 bg-white/95 shadow-soft backdrop-blur">
+        <summary class="flex cursor-pointer list-none items-center gap-1.5 px-3 py-2 text-xs font-bold text-stone-700">
+            <ion-icon name="information-circle-outline"></ion-icon> Legend
+            <ion-icon name="chevron-down-outline" class="text-[10px] text-stone-400"></ion-icon>
+        </summary>
+        <div class="max-h-[60vh] w-64 overflow-y-auto border-t border-stone-100 p-3 text-xs text-stone-600">
+            <p class="mb-1 text-[10px] font-bold uppercase tracking-wide text-stone-400">Paddocks</p>
+            <p class="mb-3">Ground shade deepens to green with more active cows in that block.</p>
+
+            <p class="mb-1 text-[10px] font-bold uppercase tracking-wide text-stone-400">Cows</p>
+            <div class="mb-3 space-y-1">
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#d8b48a"></span> Calf</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#b98a5a"></span> Heifer</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#2b2b2b"></span> Cow (black &amp; white)</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#3d2b1f"></span> Bull</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#9c9c9c"></span> Dry (any category, greyed)</div>
+            </div>
+
+            <p class="mb-1 text-[10px] font-bold uppercase tracking-wide text-stone-400">Tasks</p>
+            <div class="mb-3 space-y-1">
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#f2990f"></span> Pending</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#25a56f"></span> In progress</div>
+                <p class="text-[11px] text-stone-400">Planted at the linked block/crop, or by the worker if unlinked.</p>
+            </div>
+
+            <p class="mb-1 text-[10px] font-bold uppercase tracking-wide text-stone-400">Workers</p>
+            <div class="mb-3 space-y-1">
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#146a4a"></span> Farmer (owner)</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#25a56f"></span> Farm manager</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#d6760a"></span> Supervisor</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#78716c"></span> Worker</div>
+            </div>
+
+            <p class="mb-1 text-[10px] font-bold uppercase tracking-wide text-stone-400">Inventory</p>
+            <div class="mb-3 space-y-1">
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#d9b35c"></span> Feed (silo)</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-stone-300" style="background:#ffffff"></span> Veterinary (crate)</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#8a6d3a"></span> Equipment (crate)</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#d9c08a"></span> Other (sack)</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#dc2626"></span> Low stock (any shape)</div>
+            </div>
+
+            <p class="mb-1 text-[10px] font-bold uppercase tracking-wide text-stone-400">Crops</p>
+            <div class="mb-3 space-y-1">
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#8a6d3a"></span> Planned (bare soil)</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#4d7c33"></span> Growing</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#b59a5b"></span> Harvested (stubble)</div>
+            </div>
+
+            <p class="mb-1 text-[10px] font-bold uppercase tracking-wide text-stone-400">Finance</p>
+            <div class="space-y-1">
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#17835a"></span> Income, this month</div>
+                <div class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full" style="background:#b45309"></span> Expense, this month</div>
+            </div>
+        </div>
+    </details>
+</div>
+{{ blocks_data|json_script:"blocks-data" }}
+{{ cows_data|json_script:"cows-data" }}
+{{ inventory_data|json_script:"inventory-data" }}
+{{ finance_data|json_script:"finance-data" }}
+{{ crops_data|json_script:"crops-data" }}
+{{ workers_data|json_script:"workers-data" }}
+{{ tasks_data|json_script:"tasks-data" }}
+<p class="mt-2 text-xs text-stone-400" id="feeding-url" data-url="{{ feeding_url }}">
+    Trough fill shows how much has been fed to that paddock today. Low-stock inventory is tinted red.
+</p>
+{% else %}
+<p class="text-sm text-stone-400">Nothing to show on the map yet. Add a block, cow, inventory item, crop, worker or transaction to see it here.</p>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+{% if blocks or cows_data or inventory_data or finance_data.income or finance_data.expense or crops_data or workers_data or tasks_data %}
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const blocksData = JSON.parse(document.getElementById('blocks-data').textContent);
+const cowsData = JSON.parse(document.getElementById('cows-data').textContent);
+const inventoryData = JSON.parse(document.getElementById('inventory-data').textContent);
+const financeData = JSON.parse(document.getElementById('finance-data').textContent);
+const cropsData = JSON.parse(document.getElementById('crops-data').textContent);
+const workersData = JSON.parse(document.getElementById('workers-data').textContent);
+const tasksData = JSON.parse(document.getElementById('tasks-data').textContent);
+const feedingUrl = document.getElementById('feeding-url').dataset.url;
+
+const container = document.getElementById('farm-map');
+const tooltip = document.getElementById('map-tooltip');
+const COW_CAP = 12;
+
+// --------------------------------------------------------------- helpers
+
+function cap(s) {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+
+function seededRandom(seed) {
+    let s = seed % 2147483647;
+    if (s <= 0) s += 2147483646;
+    return function () {
+        s = (s * 16807) % 2147483647;
+        return (s - 1) / 2147483646;
+    };
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+
+function makeLabelSprite(text, bg) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const fontSize = 42;
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    const paddingX = 24;
+    canvas.width = Math.ceil(ctx.measureText(text).width) + paddingX * 2;
+    canvas.height = fontSize + 28;
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    ctx.fillStyle = bg || '#1c1917';
+    roundRect(ctx, 0, 0, canvas.width, canvas.height, 16);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 2);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+    const sprite = new THREE.Sprite(material);
+    const scale = 0.0085;
+    sprite.scale.set(canvas.width * scale, canvas.height * scale, 1);
+    sprite.renderOrder = 999;
+    return sprite;
+}
+
+// ----------------------------------------------------------- scene setup
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xbfe3f7);
+
+const camera = new THREE.PerspectiveCamera(48, container.clientWidth / container.clientHeight, 0.1, 500);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+container.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+const sun = new THREE.DirectionalLight(0xfff4d6, 0.9);
+sun.position.set(14, 24, 12);
+scene.add(sun);
+
+// ------------------------------------------------------------- layout
+
+const cols = Math.max(1, Math.ceil(Math.sqrt(blocksData.length)));
+const rows = Math.max(1, Math.ceil(blocksData.length / cols));
+const spacing = 6;
+const paddockSize = 4.6;
+const gridW = cols * spacing;
+const gridD = rows * spacing;
+
+const yardX = gridW / 2 + spacing * 1.4;
+const financeX = -(gridW / 2 + spacing * 1.4);
+const itemSpacing = 3.1;
+const yardSpan = Math.max(inventoryData.length, 1) * itemSpacing;
+
+const cropsZ = gridD / 2 + spacing * 1.4;
+const workersZ = -(gridD / 2 + spacing * 1.4);
+const plotSpacing = 3.2;
+const cropsSpan = Math.max(cropsData.length, 1) * plotSpacing;
+const workerSpacing = 1.4;
+const workersSpan = Math.max(workersData.length, 1) * workerSpacing;
+
+const groundW = Math.max((Math.abs(yardX) + 6) * 2, workersSpan + 8, cropsSpan + 8);
+const groundD = Math.max(gridD, yardSpan) + Math.abs(cropsZ) * 2 + 10;
+const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(groundW, groundD),
+    new THREE.MeshStandardMaterial({ color: 0x6fae5a })
+);
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
+
+const totalSpan = Math.max(groundW, groundD);
+scene.fog = new THREE.Fog(0xbfe3f7, totalSpan * 0.9, totalSpan * 2.4);
+
+function buildPath(x1, z1, x2, z2, width) {
+    const dx = x2 - x1, dz = z2 - z1;
+    const len = Math.sqrt(dx * dx + dz * dz);
+    const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(len, width),
+        new THREE.MeshStandardMaterial({ color: 0xc2a878 })
+    );
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.rotation.z = -Math.atan2(dz, dx);
+    mesh.position.set((x1 + x2) / 2, 0.015, (z1 + z2) / 2);
+    return mesh;
+}
+scene.add(buildPath(gridW / 2 + 0.5, 0, yardX - 1.2, 0, 1));
+scene.add(buildPath(-gridW / 2 - 0.5, 0, financeX + 1.2, 0, 1));
+scene.add(buildPath(0, gridD / 2 + 0.5, 0, cropsZ - 1.2, 1));
+scene.add(buildPath(0, -gridD / 2 - 0.5, 0, workersZ + 1.2, 1));
+
+function buildPerimeterFence(width, depth) {
+    const group = new THREE.Group();
+    const halfW = width / 2, halfD = depth / 2;
+    const postGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.9, 6);
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x6b4a2a });
+    const step = 3;
+    for (let x = -halfW; x <= halfW + 0.01; x += step) {
+        [-halfD, halfD].forEach((z) => {
+            const p = new THREE.Mesh(postGeo, postMat);
+            p.position.set(x, 0.45, z);
+            group.add(p);
+        });
+    }
+    for (let z = -halfD + step; z < halfD; z += step) {
+        [-halfW, halfW].forEach((x) => {
+            const p = new THREE.Mesh(postGeo, postMat);
+            p.position.set(x, 0.45, z);
+            group.add(p);
+        });
+    }
+    const railTop = 0.65;
+    const r1 = new THREE.Mesh(new THREE.BoxGeometry(width + 0.2, 0.06, 0.06), postMat); r1.position.set(0, railTop, -halfD); group.add(r1);
+    const r2 = new THREE.Mesh(new THREE.BoxGeometry(width + 0.2, 0.06, 0.06), postMat); r2.position.set(0, railTop, halfD); group.add(r2);
+    const r3 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, depth + 0.2), postMat); r3.position.set(-halfW, railTop, 0); group.add(r3);
+    const r4 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, depth + 0.2), postMat); r4.position.set(halfW, railTop, 0); group.add(r4);
+    return group;
+}
+scene.add(buildPerimeterFence(groundW - 1, groundD - 1));
+
+// ------------------------------------------------------------- paddocks
+
+function buildFenceSquare(half) {
+    const group = new THREE.Group();
+    const postGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.7, 6);
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x8a5a34 });
+    const step = 1.15;
+    const positions = [];
+    for (let x = -half; x <= half + 0.01; x += step) { positions.push([x, -half]); positions.push([x, half]); }
+    for (let z = -half + step; z < half; z += step) { positions.push([-half, z]); positions.push([half, z]); }
+    positions.forEach(([x, z]) => {
+        const post = new THREE.Mesh(postGeo, postMat);
+        post.position.set(x, 0.35, z);
+        group.add(post);
+    });
+    const railTop = 0.5;
+    const r1 = new THREE.Mesh(new THREE.BoxGeometry(half * 2 + 0.15, 0.06, 0.06), postMat); r1.position.set(0, railTop, -half); group.add(r1);
+    const r2 = new THREE.Mesh(new THREE.BoxGeometry(half * 2 + 0.15, 0.06, 0.06), postMat); r2.position.set(0, railTop, half); group.add(r2);
+    const r3 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, half * 2 + 0.15), postMat); r3.position.set(-half, railTop, 0); group.add(r3);
+    const r4 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, half * 2 + 0.15), postMat); r4.position.set(half, railTop, 0); group.add(r4);
+    return group;
+}
+
+function buildPaddock(block, size) {
+    const group = new THREE.Group();
+    const half = size / 2;
+    const t = Math.min(block.cow_count / 15, 1);
+    const patchColor = new THREE.Color(0x8a9a5b).lerp(new THREE.Color(0x1f6b4a), t);
+    const patch = new THREE.Mesh(
+        new THREE.CircleGeometry(half * 0.92, 28),
+        new THREE.MeshStandardMaterial({ color: patchColor })
+    );
+    patch.rotation.x = -Math.PI / 2;
+    patch.position.y = 0.015;
+    group.add(patch);
+    group.add(buildFenceSquare(half));
+
+    const sign = makeLabelSprite(block.name, '#166534');
+    sign.position.set(0, 1.5, -half - 0.35);
+    group.add(sign);
+
+    const userData = { url: block.url, text: `${block.name} — ${block.cow_count} cow${block.cow_count === 1 ? '' : 's'}` };
+    group.traverse((o) => { if (o.isMesh) o.userData = userData; });
+    return group;
+}
+
+function buildTrough(feedKg, url) {
+    const group = new THREE.Group();
+    const outer = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.28, 0.5), new THREE.MeshStandardMaterial({ color: 0x6b4a2a }));
+    outer.position.y = 0.14;
+    group.add(outer);
+    const ratio = Math.max(0, Math.min(feedKg / 40, 1));
+    if (ratio > 0.02) {
+        const h = 0.2 * ratio;
+        const fill = new THREE.Mesh(new THREE.BoxGeometry(0.95, h, 0.36), new THREE.MeshStandardMaterial({ color: 0xd9b35c }));
+        fill.position.y = 0.05 + h / 2;
+        group.add(fill);
+    }
+    const userData = { url, text: `Feed today — ${feedKg.toFixed(1)} kg` };
+    group.traverse((o) => { if (o.isMesh) o.userData = userData; });
+    return group;
+}
+
+// ----------------------------------------------------------------- cows
+
+function buildCow(cow) {
+    const group = new THREE.Group();
+    let bodyColor = 0x2b2b2b, scale = 1;
+    if (cow.category === 'calf') { bodyColor = 0xd8b48a; scale = 0.55; }
+    else if (cow.category === 'heifer') { bodyColor = 0xb98a5a; scale = 0.8; }
+    else if (cow.category === 'bull') { bodyColor = 0x3d2b1f; scale = 1.15; }
+    if (cow.status === 'dry') bodyColor = new THREE.Color(bodyColor).lerp(new THREE.Color(0x9c9c9c), 0.4).getHex();
+
+    const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 0.45), bodyMat);
+    body.position.y = 0.55;
+    group.add(body);
+
+    if (cow.category === 'cow' || !cow.category) {
+        const patch = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.47), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+        patch.position.set(-0.08, 0.83, 0);
+        group.add(patch);
+    }
+
+    const legGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.45, 6);
+    [[-0.32, -0.16], [-0.32, 0.16], [0.32, -0.16], [0.32, 0.16]].forEach(([lx, lz]) => {
+        const leg = new THREE.Mesh(legGeo, bodyMat);
+        leg.position.set(lx, 0.22, lz);
+        group.add(leg);
+    });
+
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.28, 0.28), bodyMat);
+    head.position.set(0.58, 0.62, 0);
+    group.add(head);
+
+    const earGeo = new THREE.ConeGeometry(0.08, 0.16, 6);
+    [-0.11, 0.11].forEach((offset) => {
+        const ear = new THREE.Mesh(earGeo, bodyMat);
+        ear.rotation.z = Math.PI / 2;
+        ear.position.set(0.6, 0.78, offset);
+        group.add(ear);
+    });
+
+    const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.35, 6), bodyMat);
+    tail.rotation.z = Math.PI / 2.3;
+    tail.position.set(-0.5, 0.55, 0);
+    group.add(tail);
+
+    group.scale.setScalar(scale);
+    const userData = {
+        url: cow.url,
+        text: `${cow.name || cow.tag_id} · ${cap(cow.category)}${cow.status === 'dry' ? ' (dry)' : ''}`,
+    };
+    group.traverse((o) => { if (o.isMesh) o.userData = userData; });
+    return group;
+}
+
+// ------------------------------------------------------------ inventory
+
+function buildShed(x, z) {
+    const group = new THREE.Group();
+    group.position.set(x, 0, z);
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.6, 2.6), new THREE.MeshStandardMaterial({ color: 0xb45309 }));
+    body.position.y = 0.8;
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(1.9, 1.1, 4), new THREE.MeshStandardMaterial({ color: 0x57534e }));
+    roof.position.y = 1.6 + 0.55;
+    roof.rotation.y = Math.PI / 4;
+    group.add(body, roof);
+    return group;
+}
+
+function buildInventoryObject(item) {
+    const group = new THREE.Group();
+    const low = item.is_low_stock;
+    const stockRatio = Math.max(0.15, Math.min(item.current_stock / Math.max(item.reorder_level * 3, 20), 1));
+
+    if (item.category === 'feed') {
+        const color = low ? 0xdc2626 : 0xd9b35c;
+        const h = 1.1 * stockRatio + 0.4;
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, h, 12), new THREE.MeshStandardMaterial({ color }));
+        body.position.y = h / 2;
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.4, 12), new THREE.MeshStandardMaterial({ color: 0x57534e }));
+        roof.position.y = h + 0.2;
+        group.add(body, roof);
+    } else if (item.category === 'veterinary') {
+        const crate = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.6, 0.7), new THREE.MeshStandardMaterial({ color: low ? 0xfca5a5 : 0xffffff }));
+        crate.position.y = 0.3;
+        const crossMat = new THREE.MeshStandardMaterial({ color: 0xdc2626 });
+        const cross1 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.08, 0.02), crossMat);
+        cross1.position.set(0, 0.3, 0.36);
+        const cross2 = cross1.clone();
+        cross2.rotation.z = Math.PI / 2;
+        group.add(crate, cross1, cross2);
+    } else if (item.category === 'equipment') {
+        const color = low ? 0xdc2626 : 0x8a6d3a;
+        const crate = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.6), new THREE.MeshStandardMaterial({ color }));
+        crate.position.y = 0.25;
+        group.add(crate);
+    } else {
+        const color = low ? 0xdc2626 : 0xd9c08a;
+        const sack = new THREE.Mesh(new THREE.SphereGeometry(0.4, 10, 8), new THREE.MeshStandardMaterial({ color }));
+        sack.scale.set(1, 0.8, 1);
+        sack.position.y = 0.35;
+        group.add(sack);
+    }
+
+    const label = makeLabelSprite(item.name, low ? '#b91c1c' : '#292524');
+    label.position.set(0, 1.6, 0);
+    group.add(label);
+
+    const userData = { url: item.url, text: `${item.name} — ${item.current_stock} ${item.unit}${low ? ' (low stock)' : ''}` };
+    group.traverse((o) => { if (o.isMesh) o.userData = userData; });
+    return group;
+}
+
+// -------------------------------------------------------------- finance
+
+function buildFinancePost(finance) {
+    const group = new THREE.Group();
+    const maxVal = Math.max(finance.income, finance.expense, 1);
+    const incomeH = 0.3 + (finance.income / maxVal) * 2.2;
+    const expenseH = 0.3 + (finance.expense / maxVal) * 2.2;
+
+    const incomeBar = new THREE.Mesh(new THREE.BoxGeometry(0.6, incomeH, 0.6), new THREE.MeshStandardMaterial({ color: 0x17835a }));
+    incomeBar.position.set(-0.45, incomeH / 2, 0);
+    const expenseBar = new THREE.Mesh(new THREE.BoxGeometry(0.6, expenseH, 0.6), new THREE.MeshStandardMaterial({ color: 0xb45309 }));
+    expenseBar.position.set(0.45, expenseH / 2, 0);
+    group.add(incomeBar, expenseBar);
+
+    const net = finance.income - finance.expense;
+    const label = makeLabelSprite(`This month · Net ${net.toFixed(0)}`, net >= 0 ? '#146a4a' : '#b91c1c');
+    label.position.set(0, Math.max(incomeH, expenseH) + 0.6, 0);
+    group.add(label);
+
+    const userData = { url: finance.url, text: `Income ${finance.income.toFixed(0)} · Expense ${finance.expense.toFixed(0)}` };
+    group.traverse((o) => { if (o.isMesh) o.userData = userData; });
+    return group;
+}
+
+// ---------------------------------------------------------------- crops
+
+function buildCropPlot(crop) {
+    const group = new THREE.Group();
+    const w = 2.4, d = 1.8;
+    const soil = new THREE.Mesh(new THREE.BoxGeometry(w, 0.08, d), new THREE.MeshStandardMaterial({ color: 0x6b4a2a }));
+    soil.position.y = 0.04;
+    group.add(soil);
+
+    let plantColor = 0x4d7c33, plantHeight = 0.34, signBg = '#166534';
+    if (crop.status === 'planned') { plantColor = 0x8a6d3a; plantHeight = 0.04; signBg = '#78716c'; }
+    else if (crop.status === 'harvested') { plantColor = 0xb59a5b; plantHeight = 0.09; signBg = '#b45309'; }
+
+    const plantMat = new THREE.MeshStandardMaterial({ color: plantColor });
+    const rows = 3, perRow = 5;
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < perRow; c++) {
+            const plant = new THREE.Mesh(new THREE.ConeGeometry(0.08, plantHeight, 6), plantMat);
+            plant.position.set(
+                (c - (perRow - 1) / 2) * (w / perRow),
+                plantHeight / 2 + 0.08,
+                (r - (rows - 1) / 2) * (d / rows)
+            );
+            group.add(plant);
+        }
+    }
+
+    const label = makeLabelSprite(crop.name, signBg);
+    label.position.set(0, 1.1, -d / 2 - 0.3);
+    group.add(label);
+
+    const userData = {
+        url: crop.url,
+        text: `${crop.name}${crop.field_name ? ' · ' + crop.field_name : ''} — ${cap(crop.status)}`,
+    };
+    group.traverse((o) => { if (o.isMesh) o.userData = userData; });
+    return group;
+}
+
+// -------------------------------------------------------------- workers
+
+function buildFarmhouse(x, z) {
+    const group = new THREE.Group();
+    group.position.set(x, 0, z);
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.5, 2), new THREE.MeshStandardMaterial({ color: 0xe7e0d0 }));
+    body.position.y = 0.75;
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(2.1, 1, 4), new THREE.MeshStandardMaterial({ color: 0x8a5a34 }));
+    roof.position.y = 1.5 + 0.5;
+    roof.rotation.y = Math.PI / 4;
+    group.add(body, roof);
+    return group;
+}
+
+const ROLE_COLORS = {
+    farmer: 0x146a4a,
+    farm_manager: 0x25a56f,
+    farm_supervisor: 0xd6760a,
+    farm_worker: 0x78716c,
+};
+
+function buildWorker(worker) {
+    const group = new THREE.Group();
+    const color = ROLE_COLORS[worker.role] || 0x78716c;
+    const mat = new THREE.MeshStandardMaterial({ color });
+
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.16, 0.42, 4, 8), mat);
+    body.position.y = 0.5;
+    group.add(body);
+
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), new THREE.MeshStandardMaterial({ color: 0xd8b48a }));
+    head.position.y = 0.9;
+    group.add(head);
+
+    if (worker.role === 'farmer' || worker.role === 'farm_manager') {
+        const hat = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.13, 8), mat);
+        hat.position.y = 1.03;
+        group.add(hat);
+    }
+
+    const label = makeLabelSprite(`${worker.name} · ${worker.role_display}`, `#${color.toString(16).padStart(6, '0')}`);
+    label.position.set(0, 1.35, 0);
+    group.add(label);
+
+    const userData = { url: worker.url, text: `${worker.name} — ${worker.role_display}` };
+    group.traverse((o) => { if (o.isMesh) o.userData = userData; });
+    return group;
+}
+
+// ----------------------------------------------------------------- tasks
+
+const TASK_STATUS_COLORS = { pending: 0xf2990f, in_progress: 0x25a56f };
+
+function buildTaskFlag(task) {
+    const group = new THREE.Group();
+    const color = TASK_STATUS_COLORS[task.status] || 0x78716c;
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0x57534e });
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.1, 6), poleMat);
+    pole.position.y = 0.55;
+    group.add(pole);
+
+    const pennant = new THREE.Mesh(
+        new THREE.ConeGeometry(0.22, 0.34, 3),
+        new THREE.MeshStandardMaterial({ color })
+    );
+    pennant.rotation.z = -Math.PI / 2;
+    pennant.rotation.y = Math.PI / 2;
+    pennant.position.set(0.16, 0.95, 0);
+    group.add(pennant);
+
+    const label = makeLabelSprite(task.title, `#${color.toString(16).padStart(6, '0')}`);
+    label.position.set(0, 1.4, 0);
+    group.add(label);
+
+    const userData = {
+        url: task.url,
+        text: `${task.title} · ${task.assigned_name} — ${cap(task.status).replace('_', ' ')}`,
+    };
+    group.traverse((o) => { if (o.isMesh) o.userData = userData; });
+    return group;
+}
+
+// --------------------------------------------------------------- layers
+
+const layers = {
+    cows: new THREE.Group(),
+    feeding: new THREE.Group(),
+    inventory: new THREE.Group(),
+    finance: new THREE.Group(),
+    crops: new THREE.Group(),
+    workers: new THREE.Group(),
+    tasks: new THREE.Group(),
+};
+Object.values(layers).forEach((g) => scene.add(g));
+
+const cowsByBlock = {};
+cowsData.forEach((c) => {
+    (cowsByBlock[c.block_id] = cowsByBlock[c.block_id] || []).push(c);
+});
+
+const blockPositionById = {};
+const cropPositionById = {};
+const workerPositionById = {};
+
+blocksData.forEach((block, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x = (col - (cols - 1) / 2) * spacing;
+    const z = (row - (rows - 1) / 2) * spacing;
+    blockPositionById[block.id] = { x, z };
+
+    const paddock = buildPaddock(block, paddockSize);
+    paddock.position.set(x, 0, z);
+    scene.add(paddock);
+
+    const trough = buildTrough(block.feed_today_kg, feedingUrl);
+    trough.position.set(x + paddockSize * 0.32, 0, z - paddockSize * 0.32);
+    layers.feeding.add(trough);
+
+    const cowsHere = cowsByBlock[block.id] || [];
+    const shown = cowsHere.slice(0, COW_CAP);
+    shown.forEach((cow, ci) => {
+        const cowGroup = buildCow(cow);
+        const angle = (ci / Math.max(shown.length, 1)) * Math.PI * 2;
+        const radius = paddockSize * 0.28;
+        const rand = seededRandom(cow.id * 97 + 13);
+        const jitterX = (rand() - 0.5) * 0.3;
+        const jitterZ = (rand() - 0.5) * 0.3;
+        cowGroup.position.set(x + Math.cos(angle) * radius + jitterX, 0, z + Math.sin(angle) * radius + jitterZ);
+        cowGroup.rotation.y = rand() * Math.PI * 2;
+        layers.cows.add(cowGroup);
+    });
+    if (cowsHere.length > COW_CAP) {
+        const moreLabel = makeLabelSprite(`+${cowsHere.length - COW_CAP} more`, '#44403c');
+        moreLabel.position.set(x, 1.2, z + paddockSize * 0.42);
+        layers.cows.add(moreLabel);
+    }
+});
+
+if (inventoryData.length) {
+    scene.add(buildShed(yardX + 2.6, 0));
+    inventoryData.forEach((item, i) => {
+        const obj = buildInventoryObject(item);
+        obj.position.set(yardX, 0, (i - (inventoryData.length - 1) / 2) * itemSpacing);
+        layers.inventory.add(obj);
+    });
+}
+
+if (financeData.income || financeData.expense) {
+    const post = buildFinancePost(financeData);
+    post.position.set(financeX, 0, 0);
+    layers.finance.add(post);
+}
+
+cropsData.forEach((crop, i) => {
+    const plot = buildCropPlot(crop);
+    const cx = (i - (cropsData.length - 1) / 2) * plotSpacing;
+    plot.position.set(cx, 0, cropsZ);
+    cropPositionById[crop.id] = { x: cx, z: cropsZ };
+    layers.crops.add(plot);
+});
+
+if (workersData.length) {
+    scene.add(buildFarmhouse(0, workersZ - 1.6));
+    workersData.forEach((worker, i) => {
+        const w = buildWorker(worker);
+        const wx = (i - (workersData.length - 1) / 2) * workerSpacing;
+        const wz = workersZ + 1.3;
+        w.position.set(wx, 0, wz);
+        workerPositionById[worker.id] = { x: wx, z: wz };
+        layers.workers.add(w);
+    });
+}
+
+tasksData.forEach((task, i) => {
+    let pos = null;
+    if (task.block_id && blockPositionById[task.block_id]) {
+        const bp = blockPositionById[task.block_id];
+        pos = { x: bp.x - paddockSize * 0.32, z: bp.z + paddockSize * 0.32 };
+    } else if (task.crop_id && cropPositionById[task.crop_id]) {
+        const cp = cropPositionById[task.crop_id];
+        pos = { x: cp.x, z: cp.z - 1.3 };
+    } else if (task.assigned_to_id && workerPositionById[task.assigned_to_id]) {
+        const wp = workerPositionById[task.assigned_to_id];
+        pos = { x: wp.x, z: wp.z + 0.8 };
+    } else {
+        pos = { x: (i - (tasksData.length - 1) / 2) * 1.4, z: 0 };
+    }
+    const flag = buildTaskFlag(task);
+    flag.position.set(pos.x, 0, pos.z);
+    layers.tasks.add(flag);
+});
+
+document.querySelectorAll('[data-layer]').forEach((el) => {
+    el.addEventListener('change', () => {
+        layers[el.dataset.layer].visible = el.checked;
+    });
+});
+
+// --------------------------------------------------------------- camera
+
+camera.position.set(0, totalSpan * 0.5, totalSpan * 0.7);
+camera.lookAt(0, 0, 0);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0, 0);
+controls.enableDamping = true;
+controls.maxPolarAngle = Math.PI / 2.05;
+
+// ------------------------------------------------------------ raycasting
+
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+
+function pointerFromEvent(event, rect) {
+    pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+}
+
+function pickAt(event) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointerFromEvent(event, rect);
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObjects(scene.children, true);
+    return hits.find((h) => h.object.userData && h.object.userData.url);
+}
+
+renderer.domElement.addEventListener('pointermove', (event) => {
+    const hit = pickAt(event);
+    const rect = renderer.domElement.getBoundingClientRect();
+    if (hit) {
+        tooltip.textContent = hit.object.userData.text;
+        tooltip.style.left = `${event.clientX - rect.left + 14}px`;
+        tooltip.style.top = `${event.clientY - rect.top + 14}px`;
+        tooltip.classList.remove('hidden');
+        renderer.domElement.style.cursor = 'pointer';
+    } else {
+        tooltip.classList.add('hidden');
+        renderer.domElement.style.cursor = 'default';
+    }
+});
+
+renderer.domElement.addEventListener('click', (event) => {
+    const hit = pickAt(event);
+    if (hit) window.location = hit.object.userData.url;
+});
+
+window.addEventListener('resize', () => {
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+(function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+})();
+</script>
+{% endif %}
+{% endblock %}
