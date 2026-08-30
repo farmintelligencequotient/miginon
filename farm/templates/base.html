@@ -59,10 +59,30 @@
         vertical-align: -0.2em;
       }
       button[disabled] { opacity: 0.65; cursor: not-allowed; }
+
+      #page-loading-overlay {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(250, 250, 249, 0.8);
+        backdrop-filter: blur(2px);
+        opacity: 0; pointer-events: none;
+        transition: opacity 0.15s ease-out;
+      }
+      #page-loading-overlay.is-visible { opacity: 1; pointer-events: all; }
+      .dark #page-loading-overlay { background: rgba(12, 10, 9, 0.8); }
+      .page-loading-spinner {
+        width: 2.5rem; height: 2.5rem;
+        border: 3px solid #17835a; border-right-color: transparent;
+        border-radius: 9999px; animation: btn-spin 0.6s linear infinite;
+      }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="h-full text-stone-900 antialiased dark:text-stone-100">
+    <div id="page-loading-overlay" aria-hidden="true">
+        <span class="page-loading-spinner"></span>
+    </div>
+
     {% if messages %}
     <div class="fixed top-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2 px-4 sm:px-0">
         {% for message in messages %}
@@ -96,6 +116,42 @@
       })();
     </script>
     {% endif %}
+
+    <script>
+      // Site-wide: show a full-page loading overlay while a link navigates
+      // to a new page. The 150ms delay means a fast/cached page never
+      // flickers the overlay - it only appears once a navigation is
+      // genuinely taking a moment, which is what real page loads (a fresh
+      // GET rendering a form, a list with a few queries) look like here.
+      (function () {
+        var overlay = document.getElementById('page-loading-overlay');
+        var showTimer = null;
+
+        function showOverlay() {
+          overlay.classList.add('is-visible');
+          setTimeout(function () { overlay.classList.remove('is-visible'); }, 20000);
+        }
+
+        document.addEventListener('click', function (e) {
+          if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          var link = e.target.closest('a[href]');
+          if (!link) return;
+          var href = link.getAttribute('href');
+          if (!href || href.charAt(0) === '#') return;
+          if (href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0 || href.indexOf('javascript:') === 0) return;
+          if (link.target && link.target !== '_self') return;
+          if (link.hasAttribute('download')) return;
+          if (link.origin !== window.location.origin) return;
+          if (link.pathname === window.location.pathname && link.search === window.location.search) return;
+          showTimer = setTimeout(showOverlay, 150);
+        });
+
+        window.addEventListener('pageshow', function () {
+          if (showTimer) clearTimeout(showTimer);
+          overlay.classList.remove('is-visible');
+        });
+      })();
+    </script>
 
     <script>
       // Site-wide: on every form submission, disable and spin the submit
