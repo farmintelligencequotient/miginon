@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext, gettext_lazy as _
 
 from core.formhelpers import TailwindFormMixin
 from farms.models import Block
@@ -11,9 +12,9 @@ class CowForm(TailwindFormMixin, forms.ModelForm):
         model = Cow
         fields = ['block', 'tag_id', 'name', 'category', 'gender', 'breed', 'date_of_birth', 'last_calving_date', 'status']
         widgets = {
-            'tag_id': forms.TextInput(attrs={'placeholder': 'e.g. C-014'}),
-            'name': forms.TextInput(attrs={'placeholder': 'Optional'}),
-            'breed': forms.TextInput(attrs={'placeholder': 'e.g. Friesian'}),
+            'tag_id': forms.TextInput(attrs={'placeholder': _('e.g. C-014')}),
+            'name': forms.TextInput(attrs={'placeholder': _('Optional')}),
+            'breed': forms.TextInput(attrs={'placeholder': _('e.g. Friesian')}),
             'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
             'last_calving_date': forms.DateInput(attrs={'type': 'date'}),
         }
@@ -37,7 +38,7 @@ class CowForm(TailwindFormMixin, forms.ModelForm):
             if self.instance.pk:
                 existing = existing.exclude(pk=self.instance.pk)
             if existing.exists():
-                raise forms.ValidationError('A cow with this tag ID already exists on this farm.')
+                raise forms.ValidationError(gettext('A cow with this tag ID already exists on this farm.'))
         return tag_id
 
     def clean(self):
@@ -45,9 +46,9 @@ class CowForm(TailwindFormMixin, forms.ModelForm):
         category = cleaned.get('category')
         gender = cleaned.get('gender')
         if category == Cow.Category.BULL and gender != Cow.Gender.MALE:
-            self.add_error('gender', 'A bull must be male.')
+            self.add_error('gender', gettext('A bull must be male.'))
         elif category in (Cow.Category.HEIFER, Cow.Category.COW) and gender != Cow.Gender.FEMALE:
-            self.add_error('gender', f'A {category} must be female.')
+            self.add_error('gender', gettext('A %(category)s must be female.') % {'category': category})
         return cleaned
 
 
@@ -62,7 +63,7 @@ class FeedingRecordForm(TailwindFormMixin, forms.ModelForm):
     cows = forms.ModelMultipleChoiceField(
         queryset=Cow.objects.none(),
         widget=forms.CheckboxSelectMultiple,
-        error_messages={'required': 'Select at least one cow that was fed.'},
+        error_messages={'required': _('Select at least one cow that was fed.')},
     )
 
     class Meta:
@@ -96,7 +97,8 @@ class FeedingRecordForm(TailwindFormMixin, forms.ModelForm):
             if mismatched:
                 names = ', '.join(c.tag_id for c in mismatched)
                 raise forms.ValidationError(
-                    f'{names} does not belong to {block.name}. Pick cows from the selected block only.'
+                    gettext('%(names)s does not belong to %(block)s. Pick cows from the selected block only.')
+                    % {'names': names, 'block': block.name}
                 )
         return cleaned
 
@@ -120,10 +122,10 @@ class MilkRecordForm(TailwindFormMixin, forms.ModelForm):
 
 
 class CowTransferForm(TailwindFormMixin, forms.Form):
-    to_block = forms.ModelChoiceField(queryset=Block.objects.none(), label='Move to block')
+    to_block = forms.ModelChoiceField(queryset=Block.objects.none(), label=_('Move to block'))
     note = forms.CharField(
         max_length=255, required=False,
-        widget=forms.TextInput(attrs={'placeholder': 'Optional reason, e.g. calving, herd rebalancing'})
+        widget=forms.TextInput(attrs={'placeholder': _('Optional reason, e.g. calving, herd rebalancing')})
     )
 
     def __init__(self, *args, cow=None, **kwargs):

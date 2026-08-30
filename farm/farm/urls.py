@@ -16,6 +16,7 @@ urlpatterns = [
     path('analysis/', include('analysis.urls')),
     path('notifications/', include('notifications.urls')),
     path('tasks/', include('tasks.urls')),
+    path('weather/', include('weather.urls')),
 ]
 
 if settings.DEBUG:
