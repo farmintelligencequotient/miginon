@@ -1,7 +1,7 @@
 {% extends "emails/base_email.html" %}
 {% load i18n %}
-{% block title %}{{ heading }} - Farm IQ{% endblock %}
-{% block preheader %}{% blocktrans with code=code minutes=validity_minutes %}Your Farm IQ code is {{ code }} - it expires in {{ minutes }} minutes.{% endblocktrans %}{% endblock %}
+{% block title %}{{ heading }} - FarmIQ{% endblock %}
+{% block preheader %}{% blocktrans with code=code minutes=validity_minutes %}Your FarmIQ code is {{ code }} - it expires in {{ minutes }} minutes.{% endblocktrans %}{% endblock %}
 {% block content %}
 <h1 class="email-heading" style="margin:0 0 12px; font-size:20px; font-weight:800; color:#1c1917;">{{ heading }}</h1>
 <p class="email-text" style="margin:0 0 24px; font-size:14px; line-height:1.6; color:#57534e;">{{ intro }}</p>

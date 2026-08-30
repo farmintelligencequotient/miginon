@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="color-scheme" content="light dark">
 <meta name="supported-color-schemes" content="light dark">
-<title>{% block title %}Farm IQ{% endblock %}</title>
+<title>{% block title %}FarmIQ{% endblock %}</title>
 <style>
     /* Email clients that honor prefers-color-scheme (Apple Mail, iOS/mac Mail,
        most mobile clients) get a dark card on a near-black page background;
@@ -43,7 +43,7 @@
                         <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                             <tr>
                                 <td style="width:34px; height:34px; background-color:rgba(255,255,255,0.12); border-radius:10px; text-align:center; font-size:18px; line-height:34px;">🌿</td>
-                                <td style="padding-left:10px; font-family:'Segoe UI', Helvetica, Arial, sans-serif; font-size:18px; font-weight:800; color:#ffffff;">Farm IQ</td>
+                                <td style="padding-left:10px; font-family:'Segoe UI', Helvetica, Arial, sans-serif; font-size:18px; font-weight:800; color:#ffffff;">FarmIQ</td>
                             </tr>
                         </table>
                     </td>
@@ -59,10 +59,10 @@
                     <td style="padding:24px 32px 32px;">
                         <div class="email-divider" style="border-top:1px solid #e7e5e4; padding-top:20px; font-family:'Segoe UI', Helvetica, Arial, sans-serif;">
                             <p class="email-text-muted" style="margin:0; font-size:12px; line-height:1.6; color:#a8a29e;">
-                                {% if farm %}{% blocktrans with farm_name=farm.name %}You're receiving this because you have an account on Farm IQ for {{ farm_name }}.{% endblocktrans %}{% else %}{% trans "You're receiving this because you have an account on Farm IQ." %}{% endif %}
+                                {% if farm %}{% blocktrans with farm_name=farm.name %}You're receiving this because you have an account on FarmIQ for {{ farm_name }}.{% endblocktrans %}{% else %}{% trans "You're receiving this because you have an account on FarmIQ." %}{% endif %}
                             </p>
                             <p class="email-text-muted" style="margin:6px 0 0; font-size:12px; color:#a8a29e;">
-                                &copy; {{ current_year }} Farm IQ &middot; {% trans "Smart dairy management, built for Kenyan farms." %}
+                                &copy; {{ current_year }} FarmIQ &middot; {% trans "Smart dairy management, built for Kenyan farms." %}
                             </p>
                         </div>
                     </td>

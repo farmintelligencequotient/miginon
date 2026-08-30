@@ -45,7 +45,7 @@ def send_worker_added_email(membership, request):
     farm = membership.farm
     send_styled_email_safely(
         to=membership.user.email,
-        subject=_('You were added to %(farm)s on Farm IQ') % {'farm': farm.name},
+        subject=_('You were added to %(farm)s on FarmIQ') % {'farm': farm.name},
         template_name='emails/worker_added.html',
         context={
             'membership': membership, 'farm': farm,

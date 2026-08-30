@@ -1,6 +1,6 @@
 {% extends "emails/base_email.html" %}
 {% load i18n %}
-{% block title %}{{ heading }} - Farm IQ{% endblock %}
+{% block title %}{{ heading }} - FarmIQ{% endblock %}
 {% block preheader %}{{ paragraphs.0|default:heading }}{% endblock %}
 {% block content %}
 <h1 class="email-heading" style="margin:0 0 20px; font-size:20px; font-weight:800; color:#1c1917;">{{ heading }}</h1>
@@ -14,6 +14,6 @@
 {% endif %}
 
 <p class="email-text-muted" style="margin:16px 0 0; font-size:13px; line-height:1.6; color:#a8a29e;">
-    {% blocktrans with first_name=user.first_name %}Hi {{ first_name }} - you're getting this as a Farm IQ user. Reply to this email if you have questions.{% endblocktrans %}
+    {% blocktrans with first_name=user.first_name %}Hi {{ first_name }} - you're getting this as a FarmIQ user. Reply to this email if you have questions.{% endblocktrans %}
 </p>
 {% endblock %}

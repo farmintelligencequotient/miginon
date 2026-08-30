@@ -1,12 +1,12 @@
 {% extends "emails/base_email.html" %}
 {% load i18n %}
-{% block title %}{% blocktrans with farm_name=farm.name %}You've been added to {{ farm_name }} - Farm IQ{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with farm_name=farm.name %}You've been added to {{ farm_name }} - FarmIQ{% endblocktrans %}{% endblock %}
 {% block preheader %}{% blocktrans with role=membership.get_role_display farm_name=farm.name code=farm.code %}You're now a {{ role }} on {{ farm_name }}. Sign in with Farm ID {{ code }}.{% endblocktrans %}{% endblock %}
 {% block content %}
 <h1 class="email-heading" style="margin:0 0 12px; font-size:20px; font-weight:800; color:#1c1917;">{% trans "You're in! 🐄" %}</h1>
 <p class="email-text" style="margin:0 0 24px; font-size:14px; line-height:1.6; color:#57534e;">
     {% trans "The farm owner" as farm_owner_fallback %}
-    {% blocktrans with inviter=membership.invited_by.get_full_name|default:farm_owner_fallback farm_name=farm.name role=membership.get_role_display %}<strong>{{ inviter }}</strong> added you to <strong>{{ farm_name }}</strong> on Farm IQ as a
+    {% blocktrans with inviter=membership.invited_by.get_full_name|default:farm_owner_fallback farm_name=farm.name role=membership.get_role_display %}<strong>{{ inviter }}</strong> added you to <strong>{{ farm_name }}</strong> on FarmIQ as a
     <strong>{{ role }}</strong>.{% endblocktrans %}
 </p>
 
@@ -35,6 +35,6 @@
     {% trans "There's no password to set up. Sign in with the Farm ID and email above, and we'll text - well, email - you a one-time code each time." %}
 </p>
 
-{% trans "Sign in to Farm IQ →" as signin_label %}
+{% trans "Sign in to FarmIQ →" as signin_label %}
 {% include "emails/_button.html" with url=login_url label=signin_label %}
 {% endblock %}

@@ -1,11 +1,11 @@
 {% load static %}
 {% load i18n %}
 {% load pwa %}<!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE }}" class="h-full scroll-smooth bg-stone-50 dark:bg-stone-950{% if theme == 'dark' %} dark{% endif %}">
+<html lang="{{ LANGUAGE_CODE }}" class="h-full scroll-smooth{% if theme == 'dark' %} dark{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Farm IQ{% endblock %}</title>
+    <title>{% block title %}FarmIQ{% endblock %}</title>
     <link rel="icon" type="image/png" href="{% static 'images/icons/favicon-32.png' %}">
     {% progressive_web_app_meta %}
     {% if not user.is_authenticated %}
@@ -78,7 +78,7 @@
     </style>
     {% block extra_head %}{% endblock %}
 </head>
-<body class="h-full text-stone-900 antialiased dark:text-stone-100">
+<body class="h-full bg-stone-50 text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100">
     <div id="page-loading-overlay" aria-hidden="true">
         <span class="page-loading-spinner"></span>
     </div>

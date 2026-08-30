@@ -305,7 +305,7 @@ def _finish_farm_setup(request, farm):
                 'farm': farm,
                 'title': _('Farm setup complete!'),
                 'description': (
-                    _("%(farm)s now has its blocks and cows recorded on Farm IQ. You're ready to start logging milk and feeding records daily.")
+                    _("%(farm)s now has its blocks and cows recorded on FarmIQ. You're ready to start logging milk and feeding records daily.")
                     % {'farm': farm.name}
                 ),
                 'dashboard_url': request.build_absolute_uri(reverse('farms:dashboard')),

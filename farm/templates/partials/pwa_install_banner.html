@@ -1,12 +1,10 @@
-{% load i18n %}
+{% load i18n static %}
 <div id="pwa-install-banner" class="fixed inset-x-0 top-0 z-40 hidden w-full">
     <div class="w-full border-b border-emerald-100 bg-white px-4 py-5 shadow-soft dark:border-emerald-900 dark:bg-stone-900 sm:px-6">
         <div class="mx-auto flex max-w-3xl items-start gap-3">
-            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-lg text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
-                <ion-icon name="leaf-outline"></ion-icon>
-            </span>
+            <img src="{% static 'images/logo-mark.svg' %}" alt="FarmIQ" class="h-10 w-10 shrink-0 rounded-xl">
             <div class="min-w-0 flex-1">
-                <p class="text-sm font-bold text-stone-900 dark:text-stone-100">{% trans "Install Miginon Farm" %}</p>
+                <p class="text-sm font-bold text-stone-900 dark:text-stone-100">{% trans "Install FarmIQ" %}</p>
 
                 <p id="pwa-banner-text-android" class="mt-1 hidden text-xs leading-relaxed text-stone-500 dark:text-stone-400">
                     {% trans "Add it to your home screen for quick, full-screen access - no browser bar, works like a real app." %}
@@ -44,7 +42,7 @@
         var banner = document.getElementById('pwa-install-banner');
         if (!banner) return;
 
-        var DISMISS_KEY = 'miginon_pwa_banner_dismissed';
+        var DISMISS_KEY = 'farmiq_pwa_banner_dismissed';
         if (localStorage.getItem(DISMISS_KEY)) return;
 
         var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;

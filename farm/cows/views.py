@@ -299,7 +299,7 @@ def milk_create(request):
                     'farm': request.farm,
                     'title': _('First milk record logged!'),
                     'description': (
-                        _("%(cow)s just produced its first recorded %(liters)sL on Farm IQ. Every record from here builds your farm's production history.")
+                        _("%(cow)s just produced its first recorded %(liters)sL on FarmIQ. Every record from here builds your farm's production history.")
                         % {'cow': record.cow, 'liters': record.liters}
                     ),
                     'dashboard_url': request.build_absolute_uri(reverse('farms:dashboard')),

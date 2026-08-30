@@ -3,6 +3,7 @@ from datetime import date
 from django.test import TestCase
 
 from accounts.models import User
+from advisory.models import DiseaseCatalog, Guide
 from cows.models import Cow, FeedingRecord, MilkRecord
 from crops.models import Crop, CropActivity
 from finance.models import Transaction
@@ -68,6 +69,9 @@ class FullSiteCrawlTests(TestCase):
         return client
 
     def _urls_for(self, role_is_owner):
+        dairy_disease = DiseaseCatalog.objects.filter(category='dairy').first()
+        crop_disease = DiseaseCatalog.objects.filter(category='crop').first()
+        guide = Guide.objects.first()
         urls = [
             '/farm/', '/weather/', '/farm/map/', '/farm/blocks/', f'/farm/blocks/{self.block.id}/',
             '/cows/', f'/cows/{self.cow.id}/', '/cows/feeding/', '/cows/milk/',
@@ -77,7 +81,14 @@ class FullSiteCrawlTests(TestCase):
             '/tasks/', f'/tasks/{self.task.id}/',
             '/notifications/',
             '/accounts/settings/',
+            '/advisory/', '/advisory/diseases/', '/advisory/guides/', '/advisory/agri-centers/',
         ]
+        if dairy_disease:
+            urls.append(f'/advisory/diseases/{dairy_disease.id}/')
+        if crop_disease:
+            urls.append(f'/advisory/diseases/{crop_disease.id}/')
+        if guide:
+            urls.append(f'/advisory/guides/{guide.id}/')
         if role_is_owner:
             urls += ['/analysis/', '/analysis/predictions/', '/farm/workers/', '/farm/settings/']
         return urls

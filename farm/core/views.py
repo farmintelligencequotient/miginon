@@ -55,20 +55,24 @@ def landing(request):
     features = [
         ('layers-outline', _('3D farm visualization'), _('Explore your whole farm in an interactive 3D view - paddocks, herd, crops, tasks, inventory and finance, all in one place.')),
         ('trending-up-outline', _('AI production predictions'), _('Get milk yield forecasts per cow, block or herd, with an honest, exact breakdown of what’s driving each prediction - not a black box.')),
-        ('water-outline', _('Milk production'), _('Log AM, noon and PM yields per cow and block - production automatically becomes trackable stock, and a sale updates your finances and inventory together.')),
+        ('partly-sunny-outline', _('Weather & field advisory'), _('Live 5-day forecasts for your exact farm location, plus plain-language advisories - know when to hold off spraying or add extra water before a hot, dry spell.')),
+        ('school-outline', _('Farming & dairy advisory'), _('A sourced disease catalog for dairy cattle and crops with symptoms, prevention and treatment, step-by-step guides for silage, milk value addition and planting, and the nearest KALRO center to your farm.')),
+        ('water-outline', _('Milk production'), _('Log AM, noon and PM yields per cow and block, with the session set automatically from the time you record - production becomes trackable stock, and a sale updates your finances and inventory together.')),
         ('nutrition-outline', _('Feeding records'), _('Record dairy meal and silage/hay per block or per individual cow, with automatic stock draw-down and a suggested feed composition to get you started.')),
         ('paw-outline', _('Herd management'), _('Organize cows, heifers, calves and bulls into blocks with tags, breed, gender, calving dates and status - transfer between blocks in a click.')),
         ('leaf-outline', _('Crop tracking'), _('Track every crop from planting to harvest - a logged harvest automatically restocks your produce inventory.')),
         ('checkbox-outline', _('Task management'), _('Assign tasks to your team tied to a block, crop or piece of equipment, and track them through to done.')),
         ('cube-outline', _('Inventory & stock'), _('Track feed, veterinary supplies, equipment and produce, with automatic low-stock warnings and per-worker equipment usage.')),
         ('cash-outline', _('Finance'), _('Record income and expenses by category and see your real-time net position for the farm.')),
-        ('bar-chart-outline', _('Reports & analytics'), _('A full dashboard plus one-click exports to CSV, Excel or PDF - or have a report emailed to you instantly.')),
+        ('bar-chart-outline', _('Reports & analytics'), _('A full dashboard plus one-click exports to CSV, Excel or PDF - or have a report emailed to you instantly, weather included.')),
         ('notifications-circle-outline', _('Device notifications'), _('Get notified on your phone or browser the moment something needs attention - a task, a completed job, low stock - even when the app is closed.')),
         ('notifications-outline', _('Activity feed'), _('Every teammate sees who added, changed or removed what, in real time, right on their dashboard.')),
+        ('moon-outline', _('Light & dark mode'), _('Switch between a bright or dark theme any time - it’s saved to your account and remembered on every device.')),
+        ('language-outline', _('English & Kiswahili'), _('Use FarmIQ in English or Kiswahili - switch any time from the header, and it’s remembered for next time.')),
         ('lock-closed-outline', _('Passwordless login'), _('No passwords to remember or leak. Sign in with your Farm ID, email and a 6-digit one-time code.')),
         ('people-outline', _('Role-based access'), _('Farmer, Manager, Supervisor and Worker - everyone sees exactly the tools their role needs, nothing more.')),
         ('business-outline', _('Multi-farm support'), _('Run more than one farm from a single account, each with its own team, herd and records.')),
-        ('phone-portrait-outline', _('Install as an app'), _('Add Miginon Farm to your home screen and use it full-screen, offline-friendly, like a native app.')),
+        ('phone-portrait-outline', _('Install as an app'), _('Add FarmIQ to your home screen and use it full-screen, offline-friendly, like a native app.')),
     ]
 
     steps = [

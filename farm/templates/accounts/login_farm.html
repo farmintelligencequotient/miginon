@@ -1,6 +1,6 @@
 {% extends "accounts/_auth_base.html" %}
 {% load i18n %}
-{% block title %}{% trans "Sign in" %} - Miginon Farm{% endblock %}
+{% block title %}{% trans "Sign in" %} - FarmIQ{% endblock %}
 {% block progress %}
 {% include "partials/step_progress.html" with step=1 labels="123"|make_list %}
 {% endblock %}
@@ -18,7 +18,7 @@
 {% block below_card %}
 {% url 'accounts:signup_account' as signup_url %}
 <div class="mt-6 space-y-2 text-center text-sm text-emerald-50/90">
-    <p>{% blocktrans %}New to Miginon Farm? <a href="{{ signup_url }}" class="font-bold text-white underline underline-offset-2">Create your farm</a>{% endblocktrans %}</p>
+    <p>{% blocktrans %}New to FarmIQ? <a href="{{ signup_url }}" class="font-bold text-white underline underline-offset-2">Create your farm</a>{% endblocktrans %}</p>
     <p><a href="{% url 'accounts:admin_login' %}" class="text-emerald-100/70 hover:text-white">{% trans "Platform admin sign in" %}</a></p>
 </div>
 {% endblock %}

@@ -1,6 +1,6 @@
 {% extends "emails/base_email.html" %}
 {% load i18n %}
-{% block title %}{{ title }} - Farm IQ{% endblock %}
+{% block title %}{{ title }} - FarmIQ{% endblock %}
 {% block preheader %}{{ description }}{% endblock %}
 {% block content %}
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
@@ -15,6 +15,6 @@
 {% include "emails/_button.html" with url=dashboard_url label=dashboard_label %}
 
 <p class="email-text-muted" style="margin:0; font-size:13px; line-height:1.6; color:#a8a29e;">
-    {% blocktrans with farm_name=farm.name %}Milestones like this one show up because {{ farm_name }} is building real history in Farm IQ - keep logging and the picture only gets sharper.{% endblocktrans %}
+    {% blocktrans with farm_name=farm.name %}Milestones like this one show up because {{ farm_name }} is building real history in FarmIQ - keep logging and the picture only gets sharper.{% endblocktrans %}
 </p>
 {% endblock %}

@@ -1,6 +1,6 @@
 {% extends "app_base.html" %}
 {% load i18n %}
-{% block title %}{% trans "Milk records" %} - Miginon Farm{% endblock %}
+{% block title %}{% trans "Milk records" %} - FarmIQ{% endblock %}
 {% block app_content %}
 <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
     <div>
@@ -35,6 +35,7 @@
                     <td class="px-6 py-3 text-stone-600 dark:text-stone-300">{{ r.block.name }}</td>
                     <td class="px-6 py-3">
                         <span class="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-bold text-stone-600 dark:bg-stone-800 dark:text-stone-300">{{ r.get_session_display }}</span>
+                        {% if r.recorded_time %}<span class="ml-1.5 text-xs text-stone-400 dark:text-stone-500">{{ r.recorded_time|time:"H:i" }}</span>{% endif %}
                     </td>
                     <td class="px-6 py-3 font-bold text-emerald-700 dark:text-emerald-400">{{ r.liters }} L</td>
                     {% if active_membership.can_edit_or_delete %}

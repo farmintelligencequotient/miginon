@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block title %}{% trans "Miginon Farm - Smart Dairy Management" %}{% endblock %}
+{% block title %}{% trans "FarmIQ - Smart Dairy Management" %}{% endblock %}
 {% block body %}
 <div class="bg-farm-gradient text-white">
     {% include "partials/public_nav.html" %}
@@ -18,9 +18,17 @@
                 </h1>
                 <p class="mt-4 max-w-xl text-base text-emerald-50/90 sm:mt-6 sm:text-lg">
                     {% blocktrans %}Milk, feeding, herd, crops, inventory and finance - tracked block by block, cow by cow,
-                    with an interactive 3D view of your farm, AI-powered yield predictions, and device
-                    notifications that keep the whole team in sync. No passwords to remember, just your
-                    Farm ID and a one-time code.{% endblocktrans %}
+                    with an interactive 3D view of your farm, AI-powered yield predictions, live weather
+                    forecasts with field advisories, a dairy and crop disease library, and device notifications
+                    that keep the whole team in sync. No passwords to remember, just your Farm ID and a
+                    one-time code.{% endblocktrans %}
+                </p>
+                <p class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-emerald-100/70 sm:text-sm">
+                    <ion-icon name="moon-outline" class="text-sm"></ion-icon>
+                    {% trans "Light and dark mode" %}
+                    <span class="text-emerald-100/40">&middot;</span>
+                    <ion-icon name="language-outline" class="text-sm"></ion-icon>
+                    {% trans "English and Kiswahili" %}
                 </p>
                 <div class="mt-7 flex flex-wrap items-center gap-3 sm:mt-9 sm:gap-4">
                     <a href="{% url 'accounts:signup_account' %}" class="rounded-full bg-amber-500 px-6 py-3 text-sm font-bold text-emerald-950 shadow-soft transition hover:bg-amber-400 sm:px-7 sm:py-3.5">
@@ -50,7 +58,16 @@
                         </div>
                         <span class="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 sm:text-xs">{% trans "On track" %}</span>
                     </div>
-                    <div class="mt-4 grid grid-cols-3 gap-2.5 text-center sm:gap-3">
+                    <div class="mt-4 flex items-center gap-3 rounded-2xl bg-sky-50 p-3 dark:bg-sky-950/40">
+                        <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-sky-500 text-white">
+                            <ion-icon name="partly-sunny-outline" class="text-lg"></ion-icon>
+                        </span>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-bold text-stone-900 dark:text-stone-100">{% trans "24°C · Partly cloudy" %}</p>
+                            <p class="text-[11px] text-stone-500 dark:text-stone-400">{% trans "Clear skies ahead - good window for haymaking" %}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 grid grid-cols-3 gap-2.5 text-center sm:gap-3">
                         <div class="rounded-2xl bg-stone-50 p-3 dark:bg-stone-950 sm:p-4">
                             <p class="text-xl font-extrabold text-stone-900 dark:text-stone-100 sm:text-2xl">7</p>
                             <p class="text-[11px] font-medium text-stone-500 dark:text-stone-400 sm:text-xs">{% trans "Cows" %}</p>
@@ -152,7 +169,7 @@
 
 <footer class="border-t border-stone-200 py-8 dark:border-stone-800">
     <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 text-center text-xs text-stone-500 dark:text-stone-400 sm:flex-row sm:px-6 sm:text-left sm:text-sm lg:px-8">
-        <p>{% now "Y" as current_year %}{% blocktrans %}© {{ current_year }} Miginon Farm. Built for smarter dairy operations.{% endblocktrans %}</p>
+        <p>{% now "Y" as current_year %}{% blocktrans %}© {{ current_year }} FarmIQ. Built for smarter dairy operations.{% endblocktrans %}</p>
         <a href="{% url 'accounts:admin_login' %}" class="hover:text-stone-700 dark:hover:text-stone-200">{% trans "Platform admin" %}</a>
     </div>
 </footer>

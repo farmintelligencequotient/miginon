@@ -56,7 +56,7 @@ class KenyaLocationFieldsMixin:
 
 class FarmForm(TailwindFormMixin, KenyaLocationFieldsMixin, forms.Form):
     farm_name = forms.CharField(label=_('Farm name'), max_length=150, widget=forms.TextInput(
-        attrs={'placeholder': _('e.g. Miginon Dairy Farm')}
+        attrs={'placeholder': _('e.g. Green Valley Dairy Farm')}
     ))
 
     def __init__(self, *args, **kwargs):

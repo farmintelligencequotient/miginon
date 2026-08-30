@@ -413,7 +413,7 @@ def signup_otp(request):
             notify(farm, user, Notification.Verb.CREATED, 'farm', farm.name)
             send_styled_email_safely(
                 to=user.email,
-                subject=_('Welcome to Farm IQ - your Farm ID is %(code)s') % {'code': farm.code},
+                subject=_('Welcome to FarmIQ - your Farm ID is %(code)s') % {'code': farm.code},
                 template_name='emails/welcome.html',
                 context={
                     'user': user, 'farm': farm,

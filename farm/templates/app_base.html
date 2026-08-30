@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 {% block body %}
 <div class="flex min-h-screen flex-col bg-stone-50 dark:bg-stone-950">
     <header class="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-stone-200 bg-white/90 px-4 py-3 backdrop-blur dark:border-stone-800 dark:bg-stone-950/90 lg:px-8">
         <div class="flex items-center gap-2">
-            <a href="{% url 'farms:dashboard' %}" class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-lg text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-400 dark:hover:bg-emerald-900" aria-label="{% trans 'Home' %}">
-                <ion-icon name="leaf-outline"></ion-icon>
+            <a href="{% url 'farms:dashboard' %}" class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl opacity-90 hover:opacity-100" aria-label="{% trans 'Home' %}">
+                <img src="{% static 'images/logo-mark.svg' %}" alt="FarmIQ" class="h-9 w-9 rounded-xl">
             </a>
             {% if my_memberships|length > 1 %}
             <div class="relative">

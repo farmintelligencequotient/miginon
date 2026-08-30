@@ -1,3 +1,4 @@
+from datetime import time
 from decimal import Decimal
 
 from django.conf import settings
@@ -9,6 +10,17 @@ class Session(models.TextChoices):
     AM = 'AM', _('Morning')
     NOON = 'NOON', _('Noon')
     PM = 'PM', _('Evening')
+
+
+def session_for_time(t):
+    """Map a clock time to the session it falls in, so a record's AM/Noon/
+    Evening label always matches when it was actually recorded rather than
+    being picked independently and risking a mismatch."""
+    if t < time(11, 0):
+        return Session.AM
+    if t < time(16, 0):
+        return Session.NOON
+    return Session.PM
 
 
 class Cow(models.Model):
@@ -150,6 +162,10 @@ class MilkRecord(models.Model):
     )
     date = models.DateField()
     session = models.CharField(max_length=4, choices=Session.choices)
+    recorded_time = models.TimeField(
+        null=True, blank=True,
+        help_text=_('The actual time of day this was recorded - determines the session (AM/Noon/Evening).')
+    )
     liters = models.DecimalField(max_digits=7, decimal_places=2, default=Decimal('0'))
     recorded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True,
