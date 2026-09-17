@@ -1,8 +1,11 @@
 from django.conf import settings
+from django.contrib.auth import login as django_login
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy as _
 
 from accounts.models import User
+
+from .demo import get_or_create_demo_farm
 
 THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365  # 1 year
 
@@ -55,6 +58,10 @@ def landing(request):
     features = [
         ('layers-outline', _('3D farm visualization'), _('Explore your whole farm in an interactive 3D view - paddocks, herd, crops, tasks, inventory and finance, all in one place.')),
         ('trending-up-outline', _('AI production predictions'), _('Get milk yield forecasts per cow, block or herd, with an honest, exact breakdown of what’s driving each prediction - not a black box.')),
+        ('diamond-outline', _('Blockchain-verified herd & harvest'), _('Every cow and every harvest earns a real NFT on Hedera Hashgraph - a tamper-evident, publicly verifiable record that it happened exactly as logged.')),
+        ('wallet-outline', _('FIQ rewards wallet'), _('Earn FIQ, a farm-wide reward token, for registering cows, logging harvests and certifying milk production - track your balance and full activity history in one wallet.')),
+        ('shield-checkmark-outline', _('Tamper-proof predictions & finance'), _('AI yield predictions and every recorded transaction are hash-anchored on Hedera the moment they’re created - proof after the fact that nothing was quietly altered.')),
+        ('speedometer-outline', _('AI credit score, explained'), _('A 0-100 credit score computed from your farm’s own operational history, ranked against peer farms, anchored on Hedera, and broken down feature by feature so you always know exactly what’s driving it.')),
         ('partly-sunny-outline', _('Weather & field advisory'), _('Live 5-day forecasts for your exact farm location, plus plain-language advisories - know when to hold off spraying or add extra water before a hot, dry spell.')),
         ('school-outline', _('Farming & dairy advisory'), _('A sourced disease catalog for dairy cattle and crops with symptoms, prevention and treatment, step-by-step guides for silage, milk value addition and planting, and the nearest KALRO center to your farm.')),
         ('water-outline', _('Milk production'), _('Log AM, noon and PM yields per cow and block, with the session set automatically from the time you record - production becomes trackable stock, and a sale updates your finances and inventory together.')),
@@ -83,3 +90,17 @@ def landing(request):
     ]
 
     return render(request, 'core/landing.html', {'features': features, 'steps': steps})
+
+
+def demo_login(request):
+    """Public, no-signup entry point into a real, populated farm - signs the
+    visitor into the shared demo account (core.demo.get_or_create_demo_farm,
+    idempotent) and drops them straight on the dashboard. Every other view
+    in the app runs completely unmodified from here; the only thing that
+    makes this safe to leave open to the internet is
+    core.middleware.DemoModeMiddleware blocking that account from ever
+    saving a change."""
+    farm, user = get_or_create_demo_farm()
+    django_login(request, user)
+    request.session['active_farm_id'] = farm.id
+    return redirect('farms:dashboard')

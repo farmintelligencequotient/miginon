@@ -1345,14 +1345,16 @@ msgstr ""
 
 msgid ""
 "Milk, feeding, herd, crops, inventory and finance - tracked block by block, cow by cow,\n"
-"                    with an interactive 3D view of your farm, AI-powered yield predictions, live weather\n"
+"                    with an interactive 3D view of your farm, AI-powered yield predictions, blockchain-verified\n"
+"                    herd and harvest records, and an explainable AI credit score, plus live weather\n"
 "                    forecasts with field advisories, a dairy and crop disease library, and device notifications\n"
 "                    that keep the whole team in sync. No passwords to remember, just your Farm ID and a\n"
 "                    one-time code."
 msgstr ""
 "Maziwa, chakula, mifugo, mazao, bidhaa na fedha - vinavyofuatiliwa kizuizi kwa kizuizi, ng'ombe kwa ng'ombe,\n"
-"                    ukiwa na muonekano wa 3D unaoshirikisha wa shamba lako, utabiri wa uzalishaji kwa AI,\n"
-"                    utabiri wa hali ya anga wa moja kwa moja na ushauri wa shambani, maktaba ya magonjwa ya\n"
+"                    ukiwa na muonekano wa 3D unaoshirikisha wa shamba lako, utabiri wa uzalishaji kwa AI, rekodi\n"
+"                    za mifugo na mavuno zilizothibitishwa kwenye blockchain, na alama ya mkopo ya AI inayoeleweka,\n"
+"                    pamoja na utabiri wa hali ya anga wa moja kwa moja na ushauri wa shambani, maktaba ya magonjwa ya\n"
 "                    maziwa na mazao, na arifa za kifaa zinazoiweka timu yote sawa. Hakuna nywila za kukumbuka,\n"
 "                    Kitambulisho chako cha Shamba na nambari ya mara moja tu."
 
@@ -2761,3 +2763,466 @@ msgstr "Uvunaji"
 
 msgid "Farming & dairy advisory"
 msgstr "Ushauri wa kilimo na maziwa"
+
+msgid "Verified on Hedera"
+msgstr "Imethibitishwa kwenye Hedera"
+
+msgid "Wallet"
+msgstr "Pochi"
+
+msgid "FIQ tokens earned for verified farm activity, backed by Hedera Hashgraph."
+msgstr "Tokeni za FIQ zilizopatikana kwa shughuli za shamba zilizothibitishwa, zinazoungwa mkono na Hedera Hashgraph."
+
+msgid "FIQ balance"
+msgstr "Salio la FIQ"
+
+msgid "Mint a milk production certificate"
+msgstr "Toa cheti cha uzalishaji wa maziwa"
+
+msgid "Mints FIQ for verified milk production over a date range - one manual action, not per record."
+msgstr "Hutoa FIQ kwa uzalishaji wa maziwa ulioidhinishwa kwa kipindi cha tarehe - kitendo kimoja cha mkono, si kwa kila rekodi."
+
+msgid "Start date"
+msgstr "Tarehe ya kuanza"
+
+msgid "End date"
+msgstr "Tarehe ya mwisho"
+
+msgid "Mint certificate"
+msgstr "Toa cheti"
+
+msgid "Milk certificates"
+msgstr "Vyeti vya maziwa"
+
+msgid "FIQ earned"
+msgstr "FIQ zilizopatikana"
+
+msgid "No certificates minted yet."
+msgstr "Hakuna vyeti vilivyotolewa bado."
+
+msgid "Reason"
+msgstr "Sababu"
+
+msgid "No FIQ activity yet."
+msgstr "Hakuna shughuli za FIQ bado."
+
+msgid "Enter a valid date range."
+msgstr "Weka kipindi sahihi cha tarehe."
+
+msgid "Start date must be before the end date."
+msgstr "Tarehe ya kuanza lazima iwe kabla ya tarehe ya mwisho."
+
+msgid "No milk records found for that date range."
+msgstr "Hakuna rekodi za maziwa zilizopatikana kwa kipindi hicho cha tarehe."
+
+msgid "Couldn't reach Hedera to mint this certificate. Please try again shortly."
+msgstr "Imeshindwa kufikia Hedera kutoa cheti hiki. Tafadhali jaribu tena baadaye."
+
+msgid "Certificate minted for %(liters)sL - %(fiq)s FIQ earned."
+msgstr "Cheti kimetolewa kwa lita %(liters)s - FIQ %(fiq)s zimepatikana."
+
+msgid "Verified"
+msgstr "Imethibitishwa"
+
+msgid "Credit score"
+msgstr "Alama ya mkopo"
+
+msgid "Not yet computed"
+msgstr "Bado haijahesabiwa"
+
+msgid "Derived from your farm's own operations - production, finance, tasks, and FIQ activity - and anchored on Hedera whenever it changes."
+msgstr "Imetokana na shughuli za shamba lako mwenyewe - uzalishaji, fedha, kazi, na shughuli za FIQ - na kuwekwa kwenye Hedera kila inapobadilika."
+
+msgid "Recompute"
+msgstr "Hesabu upya"
+
+msgid "Score"
+msgstr "Alama"
+
+msgid "Ranked against %(n)s peer farms on the platform right now - this score is relative to your current peers, not an absolute measure, and can move if they change even if you don't."
+msgstr "Imeorodheshwa dhidi ya mashamba rika %(n)s kwenye jukwaa hivi sasa - alama hii ni ya kulinganisha na wenzako wa sasa, si kipimo kamili, na inaweza kubadilika iwapo wao watabadilika hata kama wewe hujabadilika."
+
+msgid "Provisional score - there aren't enough peer farms on the platform yet for a population-relative ranking, so this is a standalone estimate from your own data only."
+msgstr "Alama ya muda - hakuna mashamba rika ya kutosha kwenye jukwaa bado kwa ulinganisho wa kundi, kwa hivyo hii ni makadirio ya pekee kutoka kwa data yako mwenyewe tu."
+
+msgid "Computed"
+msgstr "Imehesabiwa"
+
+msgid "Category breakdown"
+msgstr "Mgawanyo wa kategoria"
+
+msgid "History"
+msgstr "Historia"
+
+msgid "Tier"
+msgstr "Kiwango"
+
+msgid "Method"
+msgstr "Mbinu"
+
+msgid "No credit score yet - tap Recompute to generate one from your farm's operational history."
+msgstr "Hakuna alama ya mkopo bado - gusa Hesabu upya kuunda moja kutoka historia ya shughuli za shamba lako."
+
+msgid "No credit score yet. A farmer, manager or supervisor needs to compute one first."
+msgstr "Hakuna alama ya mkopo bado. Mkulima, meneja au msimamizi anahitaji kuihesabu kwanza."
+
+msgid "Nothing has changed since the last recompute."
+msgstr "Hakuna kilichobadilika tangu hesabu ya mwisho."
+
+msgid "Credit score recomputed: %(score)s (%(tier)s)."
+msgstr "Alama ya mkopo imehesabiwa upya: %(score)s (%(tier)s)."
+
+msgid "Poor"
+msgstr "Duni"
+
+msgid "Fair"
+msgstr "Wastani"
+
+msgid "Good"
+msgstr "Nzuri"
+
+msgid "Excellent"
+msgstr "Bora Zaidi"
+
+msgid "Population PCA/KMeans"
+msgstr "PCA/KMeans ya kundi"
+
+msgid "Provisional composite (limited peer data)"
+msgstr "Mchanganyiko wa muda (data chache za wenzako)"
+
+msgid "Task completed"
+msgstr "Kazi imekamilika"
+
+msgid "Data recorded"
+msgstr "Data imerekodiwa"
+
+msgid "No records logged by %(name)s in that date range."
+msgstr "Hakuna rekodi zilizowekwa na %(name)s katika kipindi hicho cha tarehe."
+
+msgid "Couldn't reach Hedera to mint this reward. Please try again shortly."
+msgstr "Imeshindwa kufikia Hedera kutoa zawadi hii. Tafadhali jaribu tena baadaye."
+
+msgid "%(fiq)s FIQ awarded to %(name)s for %(count)s logged records."
+msgstr "FIQ %(fiq)s zimetolewa kwa %(name)s kwa rekodi %(count)s zilizowekwa."
+
+msgid "Reward a worker for logged records"
+msgstr "Mpe mfanyakazi zawadi kwa rekodi alizoweka"
+
+msgid "Mints FIQ for a worker's milk, feeding, crop activity and stock movement records over a date range - one manual action, not per record."
+msgstr "Hutoa FIQ kwa rekodi za maziwa, chakula, shughuli za mazao na mienendo ya bidhaa za mfanyakazi katika kipindi cha tarehe - hatua moja ya mkono, si kwa kila rekodi."
+
+msgid "Worker"
+msgstr "Mfanyakazi"
+
+msgid "No workers on this farm yet"
+msgstr "Hakuna wafanyakazi kwenye shamba hili bado"
+
+msgid "Award FIQ"
+msgstr "Toa FIQ"
+
+msgid "Top contributors"
+msgstr "Wachangiaji bora"
+
+msgid "FIQ earned per worker from tasks completed and records logged - the wallet balance above stays one shared farm pool."
+msgstr "FIQ zilizopatikana kwa kila mfanyakazi kutokana na kazi zilizokamilika na rekodi zilizowekwa - salio la pochi hapo juu linabaki kuwa akiba moja ya shamba inayoshirikiwa."
+
+msgid "Earned by"
+msgstr "Imepatikana na"
+
+msgid "%(c)s record, %(start)s – %(end)s"
+msgid_plural "%(c)s records, %(start)s – %(end)s"
+msgstr[0] "rekodi %(c)s, %(start)s – %(end)s"
+msgstr[1] "rekodi %(c)s, %(start)s – %(end)s"
+
+msgid "Why this score"
+msgstr "Kwa nini alama hii"
+
+msgid "Blockchain-verified herd & harvest"
+msgstr "Mifugo na mavuno yaliyothibitishwa kwenye blockchain"
+
+msgid "Every cow and every harvest earns a real NFT on Hedera Hashgraph - a tamper-evident, publicly verifiable record that it happened exactly as logged."
+msgstr "Kila ng'ombe na kila mavuno hupata NFT halisi kwenye Hedera Hashgraph - rekodi isiyoweza kuvurugwa na inayoweza kuthibitishwa hadharani kuwa ilitokea kama ilivyorekodiwa."
+
+msgid "FIQ rewards wallet"
+msgstr "Pochi ya zawadi za FIQ"
+
+msgid "Earn FIQ, a farm-wide reward token, for registering cows, logging harvests and certifying milk production - track your balance and full activity history in one wallet."
+msgstr "Pata FIQ, ishara ya zawadi ya shamba lote, kwa kusajili ng'ombe, kurekodi mavuno na kuthibitisha uzalishaji wa maziwa - fuatilia salio lako na historia kamili ya shughuli kwenye pochi moja."
+
+msgid "Tamper-proof predictions & finance"
+msgstr "Utabiri na fedha zisizoweza kuvurugwa"
+
+msgid "AI yield predictions and every recorded transaction are hash-anchored on Hedera the moment they’re created - proof after the fact that nothing was quietly altered."
+msgstr "Utabiri wa uzalishaji wa AI na kila muamala uliorekodiwa huwekwa nanga kwenye Hedera mara tu unapoundwa - uthibitisho wa baadaye kuwa hakuna kilichobadilishwa kimya kimya."
+
+msgid "AI credit score, explained"
+msgstr "Alama ya mkopo ya AI, iliyoelezwa"
+
+msgid "A 0-100 credit score computed from your farm’s own operational history, ranked against peer farms, anchored on Hedera, and broken down feature by feature so you always know exactly what’s driving it."
+msgstr "Alama ya mkopo ya 0-100 inayohesabiwa kutoka historia ya shughuli za shamba lako mwenyewe, ikilinganishwa na mashamba rika, ikiwekwa nanga kwenye Hedera, na kugawanywa kipengele kwa kipengele ili ujue kila wakati ni nini hasa kinachoichochea."
+
+msgid "Exact per-factor drivers of your score (not approximated), scaled relative to the strongest factor this time - not literal score points."
+msgstr "Vichocheo halisi vya kila kipengele katika alama yako (havijakadiriwa), vimepimwa kulingana na kipengele chenye nguvu zaidi wakati huu - si pointi halisi za alama."
+
+msgid "5-day forecast for your farm's location"
+msgstr "Utabiri wa siku 5 kwa mahali pa shamba lako"
+
+msgid "Milk, feed, crops, stock & expenses"
+msgstr "Maziwa, chakula, mazao, bidhaa na matumizi"
+
+msgid "Manage cows by block"
+msgstr "Simamia ng'ombe kwa kizuizi"
+
+msgid "%(liters)sL"
+msgstr "Lita %(liters)s"
+
+msgid "Log AM, noon & PM sessions"
+msgstr "Rekodi vipindi vya asubuhi, mchana na jioni"
+
+msgid "Assign and track farm work"
+msgstr "Gawa na fuatilia kazi za shamba"
+
+msgid "Disease guides & KALRO centers"
+msgstr "Miongozo ya magonjwa na vituo vya KALRO"
+
+msgid "FIQ rewards, verified on Hedera"
+msgstr "Zawadi za FIQ, zilizothibitishwa kwenye Hedera"
+
+msgid "AI score from your real farm history"
+msgstr "Alama ya AI kutoka historia halisi ya shamba lako"
+
+msgid "Organize paddocks and land"
+msgstr "Panga vizuizi na ardhi"
+
+msgid "Track planting to harvest"
+msgstr "Fuatilia kutoka upanzi hadi mavuno"
+
+msgid "Feed, supplies & equipment"
+msgstr "Chakula, vifaa na zana"
+
+msgid "Income, expenses & net position"
+msgstr "Mapato, matumizi na hali halisi ya fedha"
+
+msgid "Analytics, AI predictions & exports"
+msgstr "Uchambuzi, utabiri wa AI na upakuaji"
+
+msgid "Invite and manage workers"
+msgstr "Alika na simamia wafanyakazi"
+
+msgid "Profile & notifications"
+msgstr "Wasifu na arifa"
+
+msgid "Run more than one farm"
+msgstr "Endesha zaidi ya shamba moja"
+
+msgid "Website"
+msgstr "Tovuti"
+
+msgid "Publish your farm's public site"
+msgstr "Chapisha tovuti ya umma ya shamba lako"
+
+msgid "Publish your own public site - marketing pages, and your verified farm record, at one address."
+msgstr "Chapisha tovuti yako ya umma - kurasa za uuzaji, na rekodi yako ya shamba iliyothibitishwa, kwenye anwani moja."
+
+msgid "Your address"
+msgstr "Anwani yako"
+
+msgid "Live"
+msgstr "Hai"
+
+msgid "Draft - not public yet"
+msgstr "Rasimu - bado haijachapishwa hadharani"
+
+msgid "View your live site"
+msgstr "Tazama tovuti yako hai"
+
+msgid "Save settings"
+msgstr "Hifadhi mipangilio"
+
+msgid "Pages"
+msgstr "Kurasa"
+
+msgid "%(c)s page published to your site"
+msgid_plural "%(c)s pages published to your site"
+msgstr[0] "ukurasa %(c)s umechapishwa kwenye tovuti yako"
+msgstr[1] "kurasa %(c)s zimechapishwa kwenye tovuti yako"
+
+msgid "Manage pages"
+msgstr "Simamia kurasa"
+
+msgid "Powered by FarmIQ"
+msgstr "Inaendeshwa na FarmIQ"
+
+msgid "Edit page"
+msgstr "Hariri ukurasa"
+
+msgid "Add page"
+msgstr "Ongeza ukurasa"
+
+msgid "Add a page"
+msgstr "Ongeza ukurasa"
+
+msgid "About layouts"
+msgstr "Kuhusu miundo"
+
+msgid "Hero landing & Article - use headline, subheading, body, image and the call-to-action button."
+msgstr "Ukurasa mkuu na Makala - tumia kichwa, kichwa kidogo, maandishi, picha na kitufe cha wito wa kutenda."
+
+msgid "Verified farm stats - fills itself in from your real, Hedera-verified farm record. No fields needed."
+msgstr "Takwimu za shamba zilizothibitishwa - hujaza yenyewe kutoka rekodi yako halisi ya shamba iliyothibitishwa na Hedera. Hakuna sehemu zinazohitajika."
+
+msgid "Contact - uses body plus your phone and email."
+msgstr "Wasiliana - hutumia maandishi pamoja na simu na barua pepe yako."
+
+msgid "Add page →"
+msgstr "Ongeza ukurasa →"
+
+msgid "Every page on your public website."
+msgstr "Kila ukurasa kwenye tovuti yako ya umma."
+
+msgid "Delete page"
+msgstr "Futa ukurasa"
+
+msgid "Delete this page? This cannot be undone."
+msgstr "Futa ukurasa huu? Hili haliwezi kutenduliwa."
+
+msgid "Draft preview - not visible to the public yet"
+msgstr "Muhtasari wa rasimu - bado haujaonekana kwa umma"
+
+msgid "Emerald"
+msgstr "Zumaridi"
+
+msgid "Harvest (amber)"
+msgstr "Mavuno (rangi ya dhahabu)"
+
+msgid "Sky (blue)"
+msgstr "Anga (bluu)"
+
+msgid "Berry (rose)"
+msgstr "Beri (waridi)"
+
+msgid "Earth (terracotta)"
+msgstr "Udongo (kaharabu)"
+
+msgid "Site settings"
+msgstr "Mipangilio ya tovuti"
+
+msgid "+ Add page"
+msgstr "+ Ongeza ukurasa"
+
+msgid "Title"
+msgstr "Kichwa"
+
+msgid "Address"
+msgstr "Anwani"
+
+msgid "Layout"
+msgstr "Muundo"
+
+msgid "Homepage"
+msgstr "Ukurasa mkuu"
+
+msgid "No pages yet - add your first one to get your site live."
+msgstr "Hakuna kurasa bado - ongeza ya kwanza ili kuifanya tovuti yako iwe hai."
+
+msgid "Phone"
+msgstr "Simu"
+
+msgid "This site is still being built"
+msgstr "Tovuti hii bado inajengwa"
+
+msgid "%(name)s hasn't published a homepage yet."
+msgstr "%(name)s bado haijachapisha ukurasa mkuu."
+
+msgid "Verified on Hedera Hashgraph"
+msgstr "Imethibitishwa kwenye Hedera Hashgraph"
+
+msgid "Active herd"
+msgstr "Mifugo hai"
+
+msgid "Cows verified on-chain"
+msgstr "Ng'ombe walioidhinishwa kwenye blockchain"
+
+msgid "Harvests verified on-chain"
+msgstr "Mavuno yaliyoidhinishwa kwenye blockchain"
+
+msgid "Milk production certified"
+msgstr "Uzalishaji wa maziwa ulioidhinishwa"
+
+msgid "Years on FarmIQ"
+msgstr "Miaka kwenye FarmIQ"
+
+msgid "Credit tier"
+msgstr "Kiwango cha mkopo"
+
+msgid "Verify independently"
+msgstr "Thibitisha kwa kujitegemea"
+
+msgid "Every figure above comes straight from this farm's own FarmIQ records - herd and harvest counts are backed by real tokens on Hedera Hashgraph, independently checkable by anyone."
+msgstr "Kila nambari hapo juu inatoka moja kwa moja kwenye rekodi za FarmIQ za shamba hili - idadi za mifugo na mavuno zinaungwa mkono na ishara halisi kwenye Hedera Hashgraph, zinazoweza kuthibitishwa na mtu yeyote kwa kujitegemea."
+
+msgid "Hero landing"
+msgstr "Ukurasa mkuu"
+
+msgid "Article / About"
+msgstr "Makala / Kuhusu"
+
+msgid "Verified farm stats"
+msgstr "Takwimu za shamba zilizothibitishwa"
+
+msgid "Contact"
+msgstr "Wasiliana"
+
+msgid "Leave blank to make this the homepage."
+msgstr "Acha wazi kuifanya hii kuwa ukurasa mkuu."
+
+msgid "Link to an image hosted elsewhere."
+msgstr "Kiungo cha picha iliyowekwa mahali pengine."
+
+msgid "e.g. green-valley-farm"
+msgstr "mf. green-valley-farm"
+
+msgid "e.g. Certified dairy, Uasin Gishu"
+msgstr "mf. Maziwa yaliyoidhinishwa, Uasin Gishu"
+
+msgid "That address is already taken - try another."
+msgstr "Anwani hiyo tayari imechukuliwa - jaribu nyingine."
+
+msgid "e.g. Home, About us, Contact"
+msgstr "mf. Nyumbani, Kuhusu sisi, Wasiliana"
+
+msgid "Leave blank for the homepage"
+msgstr "Acha wazi kwa ukurasa mkuu"
+
+msgid "The big line visitors see first"
+msgstr "Mstari mkubwa ambao wageni wanaona kwanza"
+
+msgid "Optional supporting line"
+msgstr "Mstari wa ziada wa hiari"
+
+msgid "e.g. Contact us"
+msgstr "mf. Wasiliana nasi"
+
+msgid "This farm already has a page at that address."
+msgstr "Shamba hili tayari lina ukurasa kwenye anwani hiyo."
+
+msgid "This farm already has a homepage - only one page can be blank."
+msgstr "Shamba hili tayari lina ukurasa mkuu - ukurasa mmoja tu unaweza kuwa wazi."
+
+msgid "Draft"
+msgstr "Rasimu"
+
+msgid "Preview"
+msgstr "Hakiki"
+
+msgid "Mobile"
+msgstr "Simu"
+
+msgid "Desktop"
+msgstr "Kompyuta"
+
+msgid "Publish your site to preview it here"
+msgstr "Chapisha tovuti yako ili kuihakiki hapa"
+
+msgid "Go to site settings"
+msgstr "Nenda kwa mipangilio ya tovuti"

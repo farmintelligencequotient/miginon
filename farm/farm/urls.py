@@ -18,6 +18,15 @@ urlpatterns = [
     path('tasks/', include('tasks.urls')),
     path('weather/', include('weather.urls')),
     path('advisory/', include('advisory.urls')),
+    path('wallet/', include('blockchain.urls')),
+    path('credit-score/', include('creditscore.urls')),
+    path('geomap/', include('geomap.urls')),
+    path('insights/', include('insights.urls')),
+    path('website/', include('website.urls')),
+    # Kept last: a catch-all "<slug>/" for public farm sites, so every
+    # other named route above always wins first (see website.models
+    # .RESERVED_SLUGS for the corresponding slug-generation guard).
+    path('', include('website.public_urls')),
 ]
 
 if settings.DEBUG:

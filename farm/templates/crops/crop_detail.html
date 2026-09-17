@@ -1,12 +1,17 @@
 {% extends "app_base.html" %}
-{% load i18n %}
+{% load i18n hedera %}
 {% block title %}{{ crop.name }} - FarmIQ{% endblock %}
 {% block app_content %}
 {% trans "No field set" as no_field_set %}
 <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
     <div>
         <h1 class="text-2xl font-extrabold tracking-tight text-stone-900 dark:text-stone-100">{{ crop.name }}</h1>
-        <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">{{ crop.field_name|default:no_field_set }} · {{ crop.get_status_display }}</p>
+        <p class="mt-1 flex items-center gap-1 text-sm text-stone-500 dark:text-stone-400">
+            {% if crop.land_parcel %}<ion-icon name="locate-outline" class="text-xs text-teal-600 dark:text-teal-400"></ion-icon>{% endif %}
+            {{ crop.field_label|default:no_field_set }}
+            {% if crop.land_parcel %}· {{ crop.land_parcel.area_ha|floatformat:2 }} {% trans "ha" %}{% endif %}
+            · {{ crop.get_status_display }}
+        </p>
     </div>
     <div class="flex items-center gap-3">
         {% if active_membership.can_edit_or_delete %}
@@ -53,6 +58,12 @@
                     <td class="px-6 py-3 text-stone-600 dark:text-stone-300">{{ a.date }}</td>
                     <td class="px-6 py-3">
                         <span class="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-bold text-stone-600 dark:bg-stone-800 dark:text-stone-300">{{ a.get_activity_type_display }}</span>
+                        {% if a.hedera_token_id %}
+                        {% hedera_token_url a.hedera_token_id a.hedera_serial_number as hedera_url %}
+                        <a href="{{ hedera_url }}" target="_blank" rel="noopener" class="ml-1 inline-flex items-center text-violet-600 hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-300" title="{% trans 'Verified on Hedera' %}">
+                            <ion-icon name="shield-checkmark-outline"></ion-icon>
+                        </a>
+                        {% endif %}
                     </td>
                     <td class="px-6 py-3 font-semibold text-stone-800 dark:text-stone-200">{{ a.quantity_harvested_kg|default:"—" }}{% if a.quantity_harvested_kg %} kg{% endif %}</td>
                     <td class="px-6 py-3 text-stone-500 dark:text-stone-400">{{ a.notes|default:"—" }}</td>
