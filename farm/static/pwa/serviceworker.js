@@ -4,11 +4,12 @@
 // show fresh data when the device is online. The cache only exists to make
 // the app shell (icons + the offline page) available when there's no
 // connection at all - it deliberately does not cache farm data pages.
-var CACHE_NAME = 'farmiq-v1';
+var CACHE_NAME = 'farmiq-v2';
 var FILES_TO_CACHE = [
     '/offline/',
     '/static/images/icons/icon-192x192.png',
     '/static/images/icons/icon-512x512.png',
+    '/static/images/logo-mark.png',
     '/static/images/icons/icon-512x512-maskable.png',
     '/static/images/icons/apple-icon-180.png',
     '/static/images/icons/splash-640x1136.png',
