@@ -1,13 +1,16 @@
 from django.conf import settings
 from django.contrib import messages
+from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 
-from farms.permissions import any_member_required, manage_herd_required
+from farms.models import Farm
+from farms.permissions import any_member_required, manage_herd_required, platform_admin_required
 from notifications.models import Notification
 from notifications.services import notify
 
+from .colors import farm_color, farm_parcel_color, parcel_color
 from .forms import LandParcelForm
 from .models import LandParcel
 
@@ -24,10 +27,16 @@ def _tomtom_style_url():
 @any_member_required
 def parcel_map(request):
     farm = request.farm
-    parcels = LandParcel.objects.filter(farm=farm).select_related('block', 'created_by')
+    # Parcels are private to the farm that mapped them: this page only ever
+    # queries request.farm's own parcels (platform admins see every farm's on
+    # geomap:admin_map instead).
+    parcels = list(LandParcel.objects.filter(farm=farm).select_related('block', 'created_by'))
+    for index, p in enumerate(parcels):
+        p.color = parcel_color(index)
     parcels_data = [
         {
             'id': p.id,
+            'color': p.color,
             'name': p.name,
             'coordinates': p.coordinates,
             'area_sqm': float(p.area_sqm),
@@ -48,6 +57,43 @@ def parcel_map(request):
         'parcels_data': parcels_data,
         'config': config,
         'form': LandParcelForm(farm=farm),
+    })
+
+
+@platform_admin_required
+def admin_map(request):
+    """Every farm's mapped parcels on one map, colour-coded per farm."""
+    farm_stats = {
+        row['farm_id']: row
+        for row in LandParcel.objects.values('farm_id').annotate(n=Count('id'), sqm=Sum('area_sqm'))
+    }
+    farms = Farm.objects.filter(id__in=farm_stats.keys()).select_related('owner').order_by('name')
+    groups, farm_index = [], {}
+    for index, farm in enumerate(farms):
+        farm_index[farm.id] = index
+        stats = farm_stats[farm.id]
+        groups.append({
+            'id': farm.id, 'name': farm.name, 'owner': farm.owner.get_full_name() or farm.owner.email,
+            'color': farm_color(index), 'parcel_count': stats['n'],
+            'total_ha': float((stats['sqm'] or 0) / 10000),
+        })
+
+    parcel_counter = {}
+    parcels_data = []
+    for p in LandParcel.objects.filter(farm_id__in=farm_index).select_related('farm', 'block', 'created_by').order_by('farm_id', 'id'):
+        n = parcel_counter.get(p.farm_id, 0)
+        parcel_counter[p.farm_id] = n + 1
+        parcels_data.append({
+            'id': p.id, 'farm_id': p.farm_id, 'farm': p.farm.name, 'name': p.name,
+            'coordinates': p.coordinates, 'area_ha': float(p.area_ha),
+            'block': p.block.name if p.block_id else '',
+            'by': (p.created_by.get_full_name() or p.created_by.email) if p.created_by_id else '',
+            'on': p.created_at.strftime('%d %b %Y'),
+            'color': farm_parcel_color(farm_index[p.farm_id], n),
+        })
+    config = {'styleUrl': _tomtom_style_url(), 'center': [36.817223, -1.286389]}
+    return render(request, 'geomap/admin_map.html', {
+        'groups': groups, 'parcels_data': parcels_data, 'config': config,
     })
 
 

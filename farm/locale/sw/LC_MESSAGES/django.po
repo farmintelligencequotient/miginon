@@ -3262,3 +3262,69 @@ msgstr "Kubali na uendelee"
 
 msgid "Sign out instead"
 msgstr "Toka badala yake"
+
+msgid "A period can't end in the future - records for those days are still being logged."
+msgstr "Kipindi hakiwezi kuishia siku zijazo - rekodi za siku hizo bado zinaandikwa."
+
+msgid "That period overlaps a certificate already minted (%(period)s). Pick dates that start after it so no milk is rewarded twice."
+msgstr "Kipindi hicho kinaingiliana na cheti kilichokwisha tolewa (%(period)s). Chagua tarehe zinazoanza baada yake ili maziwa yasituzwe mara mbili."
+
+msgid "%(name)s was already rewarded for a period overlapping those dates (%(period)s). Pick dates that start after it so no records are rewarded twice."
+msgstr "%(name)s alikwisha tuzwa kwa kipindi kinachoingiliana na tarehe hizo (%(period)s). Chagua tarehe zinazoanza baada yake ili rekodi zisituzwe mara mbili."
+
+msgid "Mints FIQ for verified milk production over a date range - one manual action, not per record. Each day can only be minted once: a period that overlaps an earlier certificate is blocked."
+msgstr "Hutoa FIQ kwa uzalishaji wa maziwa uliothibitishwa katika kipindi cha tarehe - hatua moja ya mkono, si kwa kila rekodi. Kila siku inaweza kutolewa mara moja tu: kipindi kinachoingiliana na cheti cha awali kimezuiwa."
+
+msgid "Mints FIQ for a worker's milk, feeding, crop activity and stock movement records over a date range - one manual action, not per record. A period that overlaps one already rewarded for that worker is blocked."
+msgstr "Hutoa FIQ kwa rekodi za maziwa, lishe, shughuli za mazao na mienendo ya ghala za mfanyakazi katika kipindi cha tarehe - hatua moja ya mkono, si kwa kila rekodi. Kipindi kinachoingiliana na kile alichokwisha tuzwa mfanyakazi huyo kimezuiwa."
+
+msgid "Full screen"
+msgstr "Skrini nzima"
+
+msgid "Exit full screen"
+msgstr "Toka skrini nzima"
+
+msgid "Explore your whole farm in an interactive 3D view - blocks, herd, crops, tasks and more."
+msgstr "Chunguza shamba lako lote kwa mwonekano wa 3D unaoingiliana - vitalu, mifugo, mazao, kazi na zaidi."
+
+msgid "Your FIQ tokens"
+msgstr "Tokeni zako za FIQ"
+
+msgid "FIQ tokens you earn for keeping good records. Tap to open your wallet."
+msgstr "Tokeni za FIQ unazopata kwa kutunza rekodi nzuri. Gusa kufungua pochi yako."
+
+msgid "Light or dark"
+msgstr "Mwanga au giza"
+
+msgid "Switch between a bright and a dark theme any time - it is remembered on every device."
+msgstr "Badilisha kati ya mandhari angavu na ya giza wakati wowote - hukumbukwa kwenye kila kifaa."
+
+msgid "English or Kiswahili"
+msgstr "Kiingereza au Kiswahili"
+
+msgid "Change the language of the whole app here."
+msgstr "Badilisha lugha ya programu nzima hapa."
+
+msgid "See the FIQ your farm and team have earned - every reward is verified on Hedera."
+msgstr "Angalia FIQ ambazo shamba lako na timu yako mmepata - kila zawadi huthibitishwa kwenye Hedera."
+
+msgid "An explainable AI score built from your records. It is shared with a lender only when you approve it."
+msgstr "Alama ya AI inayoelezeka iliyojengwa kutokana na rekodi zako. Hushirikiwa na mkopeshaji tu unapoidhinisha."
+
+msgid "Income, expenses and your real-time net position."
+msgstr "Mapato, matumizi na hali yako ya faida au hasara kwa wakati halisi."
+
+msgid "Analytics, AI yield predictions and one-click CSV, Excel or PDF exports."
+msgstr "Uchanganuzi, utabiri wa mavuno wa AI na uhamishaji wa CSV, Excel au PDF kwa mbofyo mmoja."
+
+msgid "Insights"
+msgstr "Maarifa"
+
+msgid "Plain-language findings about what your farm data is telling you."
+msgstr "Matokeo kwa lugha rahisi kuhusu kile data ya shamba lako inachokuambia."
+
+msgid "Invite managers, supervisors and workers - no passwords, just one-time codes."
+msgstr "Alika mameneja, wasimamizi na wafanyakazi - hakuna nenosiri, misimbo ya mara moja tu."
+
+msgid "Step"
+msgstr "Hatua"

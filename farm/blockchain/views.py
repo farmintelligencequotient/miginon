@@ -1,17 +1,19 @@
 from datetime import date, timedelta
 
 from django.contrib import messages
+from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 
 from cows.models import FeedingRecord, MilkRecord
 from crops.models import CropActivity
-from farms.models import FarmMembership, FarmRole
+from farms.models import Farm, FarmMembership, FarmRole
 from farms.permissions import any_member_required, manage_records_required
 from inventory.models import StockMovement
 
 from .models import FiqLedgerEntry, MilkProductionCertificate
+from .periods import format_period, next_certificate_start, overlapping_certificates, overlapping_worker_rewards
 from .services import FIQ_REWARD_PER_DATA_RECORD, FIQ_REWARD_PER_LITER, mint_fiq
 
 
@@ -37,6 +39,8 @@ def wallet_view(request):
         'top_contributors': top_contributors,
         'workers': workers,
         'default_start': date.today() - timedelta(days=30),
+        'certificate_default_start': next_certificate_start(farm),
+        'today': date.today(),
         'default_end': date.today(),
     })
 
@@ -60,28 +64,45 @@ def certificate_create(request):
         messages.error(request, _('Start date must be before the end date.'))
         return redirect('blockchain:wallet')
 
-    total_liters = MilkRecord.objects.filter(
-        farm=farm, date__gte=start, date__lte=end
-    ).aggregate(total=Sum('liters'))['total'] or 0
-
-    if not total_liters:
-        messages.error(request, _('No milk records found for that date range.'))
+    if end > date.today():
+        messages.error(request, _("A period can't end in the future - records for those days are still being logged."))
         return redirect('blockchain:wallet')
 
-    fiq_amount = total_liters * FIQ_REWARD_PER_LITER
-    result = mint_fiq(fiq_amount)
-    if not result:
-        messages.error(request, _("Couldn't reach Hedera to mint this certificate. Please try again shortly."))
-        return redirect('blockchain:wallet')
+    # Lock the farm row so two simultaneous requests (double-click, two
+    # managers) can't both pass the overlap check and mint the same days twice.
+    with transaction.atomic():
+        Farm.objects.select_for_update().get(pk=farm.pk)
 
-    certificate = MilkProductionCertificate.objects.create(
-        farm=farm, start_date=start, end_date=end, total_liters=total_liters,
-        fiq_amount=fiq_amount, hedera_transaction_id=result['transaction_id'], created_by=request.user,
-    )
-    FiqLedgerEntry.objects.create(
-        farm=farm, amount=fiq_amount, reason=FiqLedgerEntry.Reason.MILK_CERTIFICATE,
-        hedera_transaction_id=result['transaction_id'], milk_certificate=certificate,
-    )
+        clash = overlapping_certificates(farm, start, end).first()
+        if clash:
+            messages.error(request, _(
+                'That period overlaps a certificate already minted (%(period)s). '
+                'Pick dates that start after it so no milk is rewarded twice.'
+            ) % {'period': format_period(clash.start_date, clash.end_date)})
+            return redirect('blockchain:wallet')
+
+        total_liters = MilkRecord.objects.filter(
+            farm=farm, date__gte=start, date__lte=end
+        ).aggregate(total=Sum('liters'))['total'] or 0
+
+        if not total_liters:
+            messages.error(request, _('No milk records found for that date range.'))
+            return redirect('blockchain:wallet')
+
+        fiq_amount = total_liters * FIQ_REWARD_PER_LITER
+        result = mint_fiq(fiq_amount)
+        if not result:
+            messages.error(request, _("Couldn't reach Hedera to mint this certificate. Please try again shortly."))
+            return redirect('blockchain:wallet')
+
+        certificate = MilkProductionCertificate.objects.create(
+            farm=farm, start_date=start, end_date=end, total_liters=total_liters,
+            fiq_amount=fiq_amount, hedera_transaction_id=result['transaction_id'], created_by=request.user,
+        )
+        FiqLedgerEntry.objects.create(
+            farm=farm, amount=fiq_amount, reason=FiqLedgerEntry.Reason.MILK_CERTIFICATE,
+            hedera_transaction_id=result['transaction_id'], milk_certificate=certificate,
+        )
     messages.success(
         request,
         _('Certificate minted for %(liters)sL - %(fiq)s FIQ earned.') % {'liters': total_liters, 'fiq': fiq_amount}
@@ -96,8 +117,8 @@ def worker_reward_create(request):
     record, matching the same reasoning as the milk certificate above (a
     fast data-entry workflow shouldn't carry a live Hedera transaction on
     every log). A manager/farmer picks the worker and period; nothing
-    prevents picking overlapping periods twice, same trust model as the
-    milk certificate."""
+    lets the same worker be rewarded twice for the same days: a period that
+    overlaps one already rewarded for that worker is refused."""
     if request.method != 'POST':
         return redirect('blockchain:wallet')
 
@@ -115,27 +136,43 @@ def worker_reward_create(request):
         messages.error(request, _('Start date must be before the end date.'))
         return redirect('blockchain:wallet')
 
-    record_count = (
-        MilkRecord.objects.filter(farm=farm, recorded_by=worker_user, date__gte=start, date__lte=end).count()
-        + FeedingRecord.objects.filter(farm=farm, recorded_by=worker_user, date__gte=start, date__lte=end).count()
-        + CropActivity.objects.filter(farm=farm, recorded_by=worker_user, date__gte=start, date__lte=end).count()
-        + StockMovement.objects.filter(farm=farm, recorded_by=worker_user, date__gte=start, date__lte=end).count()
-    )
-    if not record_count:
-        messages.error(request, _('No records logged by %(name)s in that date range.') % {'name': worker_user.get_full_name()})
+    if end > date.today():
+        messages.error(request, _("A period can't end in the future - records for those days are still being logged."))
         return redirect('blockchain:wallet')
 
-    fiq_amount = FIQ_REWARD_PER_DATA_RECORD * record_count
-    result = mint_fiq(fiq_amount)
-    if not result:
-        messages.error(request, _("Couldn't reach Hedera to mint this reward. Please try again shortly."))
-        return redirect('blockchain:wallet')
+    # Same farm-row lock as the milk certificate, so concurrent requests can't double-reward.
+    with transaction.atomic():
+        Farm.objects.select_for_update().get(pk=farm.pk)
 
-    FiqLedgerEntry.objects.create(
-        farm=farm, amount=fiq_amount, reason=FiqLedgerEntry.Reason.DATA_RECORDED,
-        hedera_transaction_id=result['transaction_id'], earned_by=worker_user,
-        period_start=start, period_end=end, record_count=record_count,
-    )
+        clash = overlapping_worker_rewards(farm, worker_user, start, end).first()
+        if clash:
+            messages.error(request, _(
+                '%(name)s was already rewarded for a period overlapping those dates (%(period)s). '
+                'Pick dates that start after it so no records are rewarded twice.'
+            ) % {'name': worker_user.get_full_name(), 'period': format_period(clash.period_start, clash.period_end)})
+            return redirect('blockchain:wallet')
+
+        record_count = (
+            MilkRecord.objects.filter(farm=farm, recorded_by=worker_user, date__gte=start, date__lte=end).count()
+            + FeedingRecord.objects.filter(farm=farm, recorded_by=worker_user, date__gte=start, date__lte=end).count()
+            + CropActivity.objects.filter(farm=farm, recorded_by=worker_user, date__gte=start, date__lte=end).count()
+            + StockMovement.objects.filter(farm=farm, recorded_by=worker_user, date__gte=start, date__lte=end).count()
+        )
+        if not record_count:
+            messages.error(request, _('No records logged by %(name)s in that date range.') % {'name': worker_user.get_full_name()})
+            return redirect('blockchain:wallet')
+
+        fiq_amount = FIQ_REWARD_PER_DATA_RECORD * record_count
+        result = mint_fiq(fiq_amount)
+        if not result:
+            messages.error(request, _("Couldn't reach Hedera to mint this reward. Please try again shortly."))
+            return redirect('blockchain:wallet')
+
+        FiqLedgerEntry.objects.create(
+            farm=farm, amount=fiq_amount, reason=FiqLedgerEntry.Reason.DATA_RECORDED,
+            hedera_transaction_id=result['transaction_id'], earned_by=worker_user,
+            period_start=start, period_end=end, record_count=record_count,
+        )
     messages.success(
         request,
         _('%(fiq)s FIQ awarded to %(name)s for %(count)s logged records.') % {

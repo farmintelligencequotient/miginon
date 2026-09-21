@@ -5,6 +5,60 @@
 {% if show_tour %}
 {% block extra_head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css">
+<style>
+    /* FarmIQ-themed onboarding tour (driver.js). Emerald brand colours, rounded
+       cards and pill buttons like the rest of the app, with a dark variant. */
+    .driver-popover.farmiq-tour {
+        min-width: 280px; max-width: 340px; padding: 1.1rem 1.15rem 1rem;
+        background: #ffffff; color: #1c1917; border: 1px solid #d7f5e3; border-radius: 1.25rem;
+        box-shadow: 0 28px 70px -22px rgba(15, 69, 49, .6);
+        font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    }
+    .dark .driver-popover.farmiq-tour { background: #1c1917; color: #e7e5e4; border-color: #14543c; }
+    .farmiq-tour .driver-popover-title {
+        display: flex; align-items: center; gap: .65rem; margin: 0; padding-right: 1.5rem;
+        font-size: 1rem; font-weight: 800; letter-spacing: -.01em; line-height: 1.25; color: #124533;
+    }
+    .dark .farmiq-tour .driver-popover-title { color: #d7f5e3; }
+    .farmiq-tour .ft-badge {
+        display: inline-flex; flex: none; align-items: center; justify-content: center;
+        width: 2.1rem; height: 2.1rem; border-radius: .8rem; font-size: 1.15rem;
+        background: #eefbf3; color: #146a4a;
+    }
+    .dark .farmiq-tour .ft-badge { background: #14543c; color: #b1eaca; }
+    .farmiq-tour .driver-popover-description { margin-top: .55rem; font-size: .85rem; line-height: 1.55; color: #57534e; }
+    .dark .farmiq-tour .driver-popover-description { color: #a8a29e; }
+    .farmiq-tour .driver-popover-footer { margin-top: .95rem; align-items: center; }
+    .farmiq-tour .driver-popover-progress-text { font-size: .7rem; font-weight: 700; letter-spacing: .04em; color: #a8a29e; }
+    .farmiq-tour .driver-popover-footer button {
+        border: 1px solid #e7e5e4; border-radius: 9999px; padding: .5rem 1rem; text-shadow: none;
+        background: #ffffff; color: #57534e; font-size: .8rem; font-weight: 700;
+        font-family: inherit; transition: background .15s, border-color .15s;
+    }
+    .farmiq-tour .driver-popover-footer button:hover { background: #f5f5f4; }
+    .farmiq-tour .driver-popover-footer .driver-popover-next-btn {
+        background: #146a4a; border-color: #146a4a; color: #ffffff;
+    }
+    .farmiq-tour .driver-popover-footer .driver-popover-next-btn:hover { background: #14543c; border-color: #14543c; }
+    .dark .farmiq-tour .driver-popover-footer button { background: #292524; border-color: #44403c; color: #d6d3d1; }
+    .dark .farmiq-tour .driver-popover-footer button:hover { background: #44403c; }
+    .dark .farmiq-tour .driver-popover-footer .driver-popover-next-btn { background: #17835a; border-color: #17835a; color: #fff; }
+    .dark .farmiq-tour .driver-popover-footer .driver-popover-next-btn:hover { background: #25a56f; border-color: #25a56f; }
+    .farmiq-tour .driver-popover-close-btn { top: .75rem; right: .75rem; color: #a8a29e; }
+    .farmiq-tour .driver-popover-close-btn:hover { color: #146a4a; }
+    /* The push-notification and install banners are pinned over the header;
+       hide them while the tour points at header items, so nothing is covered. */
+    html.farmiq-touring #push-banner, html.farmiq-touring #pwa-install-banner { display: none !important; }
+    /* popover arrow follows the card colour */
+    .driver-popover.farmiq-tour .driver-popover-arrow-side-left.driver-popover-arrow { border-left-color: #ffffff; }
+    .driver-popover.farmiq-tour .driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: #ffffff; }
+    .driver-popover.farmiq-tour .driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: #ffffff; }
+    .driver-popover.farmiq-tour .driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: #ffffff; }
+    .dark .driver-popover.farmiq-tour .driver-popover-arrow-side-left.driver-popover-arrow { border-left-color: #1c1917; }
+    .dark .driver-popover.farmiq-tour .driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: #1c1917; }
+    .dark .driver-popover.farmiq-tour .driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: #1c1917; }
+    .dark .driver-popover.farmiq-tour .driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: #1c1917; }
+</style>
 {% endblock %}
 {% endif %}
 
@@ -16,7 +70,7 @@
         </h1>
         <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">{{ farm.name }}</p>
     </div>
-    <a href="{% url 'farms:farm_map' %}" class="flex flex-shrink-0 items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-2 text-xs font-bold text-stone-700 shadow-sm hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:border-emerald-800 dark:hover:bg-emerald-950 dark:hover:text-emerald-300">
+    <a href="{% url 'farms:farm_map' %}" data-tour="farm-3d" class="flex flex-shrink-0 items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-2 text-xs font-bold text-stone-700 shadow-sm hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:border-emerald-800 dark:hover:bg-emerald-950 dark:hover:text-emerald-300">
         <ion-icon name="layers-outline" class="text-base"></ion-icon>
         {% trans "3D view" %}
     </a>
@@ -135,7 +189,7 @@ module actually does.
         </div>
     </a>
 
-    <a href="{% url 'blockchain:wallet' %}" class="flex min-h-[132px] flex-col justify-between gap-4 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm hover:border-emerald-200 dark:border-stone-800/60 dark:bg-stone-900 dark:hover:border-emerald-800">
+    <a href="{% url 'blockchain:wallet' %}" data-tour="wallet-tile" class="flex min-h-[132px] flex-col justify-between gap-4 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm hover:border-emerald-200 dark:border-stone-800/60 dark:bg-stone-900 dark:hover:border-emerald-800">
         <div class="flex items-center justify-between">
             <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400">
                 <ion-icon name="wallet-outline" class="text-xl"></ion-icon>
@@ -148,7 +202,7 @@ module actually does.
         </div>
     </a>
 
-    <a href="{% url 'creditscore:overview' %}" class="row-span-2 flex min-h-[280px] flex-col justify-between gap-4 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm hover:border-emerald-200 dark:border-stone-800/60 dark:bg-stone-900 dark:hover:border-emerald-800">
+    <a href="{% url 'creditscore:overview' %}" data-tour="credit-tile" class="row-span-2 flex min-h-[280px] flex-col justify-between gap-4 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm hover:border-emerald-200 dark:border-stone-800/60 dark:bg-stone-900 dark:hover:border-emerald-800">
         <div class="flex items-center justify-between">
             <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-600 dark:bg-cyan-950/40 dark:text-cyan-400">
                 <ion-icon name="speedometer-outline" class="text-xl"></ion-icon>
@@ -213,7 +267,7 @@ module actually does.
         </div>
     </a>
 
-    <a href="{% url 'finance:transaction_list' %}" class="row-span-2 flex min-h-[280px] flex-col justify-between gap-4 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm hover:border-emerald-200 dark:border-stone-800/60 dark:bg-stone-900 dark:hover:border-emerald-800">
+    <a href="{% url 'finance:transaction_list' %}" data-tour="finance-tile" class="row-span-2 flex min-h-[280px] flex-col justify-between gap-4 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm hover:border-emerald-200 dark:border-stone-800/60 dark:bg-stone-900 dark:hover:border-emerald-800">
         <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400">
             <ion-icon name="cash-outline" class="text-xl"></ion-icon>
         </span>
@@ -223,7 +277,7 @@ module actually does.
         </div>
     </a>
 
-    <a href="{% url 'analysis:overview' %}" class="col-span-2 flex min-h-[132px] flex-col justify-between gap-4 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm hover:border-emerald-200 dark:border-stone-800/60 dark:bg-stone-900 dark:hover:border-emerald-800">
+    <a href="{% url 'analysis:overview' %}" data-tour="reports-tile" class="col-span-2 flex min-h-[132px] flex-col justify-between gap-4 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm hover:border-emerald-200 dark:border-stone-800/60 dark:bg-stone-900 dark:hover:border-emerald-800">
         <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
             <ion-icon name="stats-chart-outline" class="text-xl"></ion-icon>
         </span>
@@ -233,7 +287,7 @@ module actually does.
         </div>
     </a>
 
-    <a href="{% url 'insights:overview' %}" class="flex min-h-[132px] flex-col justify-between gap-4 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm hover:border-emerald-200 dark:border-stone-800/60 dark:bg-stone-900 dark:hover:border-emerald-800">
+    <a href="{% url 'insights:overview' %}" data-tour="insights-tile" class="flex min-h-[132px] flex-col justify-between gap-4 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm hover:border-emerald-200 dark:border-stone-800/60 dark:bg-stone-900 dark:hover:border-emerald-800">
         <div class="flex items-center justify-between">
             <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-yellow-50 text-yellow-600 dark:bg-yellow-950/40 dark:text-yellow-400">
                 <ion-icon name="bulb-outline" class="text-xl"></ion-icon>
@@ -260,7 +314,7 @@ module actually does.
     {% endif %}
 
     {% if membership.can_manage_workers %}
-    <a href="{% url 'farms:worker_list' %}" class="flex min-h-[132px] flex-col justify-between gap-4 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm hover:border-emerald-200 dark:border-stone-800/60 dark:bg-stone-900 dark:hover:border-emerald-800">
+    <a href="{% url 'farms:worker_list' %}" data-tour="team-tile" class="flex min-h-[132px] flex-col justify-between gap-4 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm hover:border-emerald-200 dark:border-stone-800/60 dark:bg-stone-900 dark:hover:border-emerald-800">
         <div class="flex items-center justify-between">
             <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
                 <ion-icon name="people-outline" class="text-xl"></ion-icon>
@@ -318,29 +372,72 @@ module actually does.
         }).catch(function () { /* best-effort - a retry next load is harmless */ });
     }
 
+    // Top of the page first (header controls), then the dashboard tiles. Steps
+    // whose element isn't on screen for this user/role (e.g. Team for a worker)
+    // are dropped below, so the tour only ever points at things they can see.
     var stepDefs = [
-        { selector: '[data-tour="quick-actions"]', title: '{% trans "Log a record" %}', description: '{% trans "Milk, feed, crops, stock or an expense - everything starts here." %}' },
-        { selector: '[data-tour="herd-tile"]', title: '{% trans "Your herd" %}', description: '{% trans "Every cow, organized by block." %}' },
-        { selector: '[data-tour="milk-tile"]', title: '{% trans "Milk records" %}', description: '{% trans "Yield logged per cow, per session." %}' },
-        { selector: '[data-tour="geomap-tile"]', title: '{% trans "GeoMap" %}', description: '{% trans "Walk your farm boundary with GPS to measure area and perimeter." %}' },
-        { selector: '[data-tour="tasks-tile"]', title: '{% trans "Tasks" %}', description: '{% trans "Assign work and track what your team has done." %}' },
-        { selector: '[data-tour="farm-switcher"]', title: '{% trans "Your farms" %}', description: '{% trans "Switch farms or add another one here." %}' },
-        { selector: '[data-tour="notifications"]', title: '{% trans "Activity feed" %}', description: '{% trans "Everything happening on your farm, in one place." %}' },
+        { selector: '[data-tour="farm-3d"]', icon: 'layers-outline', title: '{% trans "3D view" %}', description: '{% trans "Explore your whole farm in an interactive 3D view - blocks, herd, crops, tasks and more." %}' },
+        { selector: '[data-tour="fiq-token"]', icon: 'wallet-outline', title: '{% trans "Your FIQ tokens" %}', description: '{% trans "FIQ tokens you earn for keeping good records. Tap to open your wallet." %}' },
+        { selector: '[data-tour="theme-toggle"]', icon: 'contrast-outline', title: '{% trans "Light or dark" %}', description: '{% trans "Switch between a bright and a dark theme any time - it is remembered on every device." %}' },
+        { selector: '[data-tour="language-toggle"]', icon: 'language-outline', title: '{% trans "English or Kiswahili" %}', description: '{% trans "Change the language of the whole app here." %}' },
+        { selector: '[data-tour="notifications"]', icon: 'notifications-outline', title: '{% trans "Activity feed" %}', description: '{% trans "Everything happening on your farm, in one place." %}' },
+        { selector: '[data-tour="farm-switcher"]', icon: 'business-outline', title: '{% trans "Your farms" %}', description: '{% trans "Switch farms or add another one here." %}' },
+        { selector: '[data-tour="quick-actions"]', icon: 'add-circle-outline', title: '{% trans "Log a record" %}', description: '{% trans "Milk, feed, crops, stock or an expense - everything starts here." %}' },
+        { selector: '[data-tour="herd-tile"]', icon: 'paw-outline', title: '{% trans "Your herd" %}', description: '{% trans "Every cow, organized by block." %}' },
+        { selector: '[data-tour="milk-tile"]', icon: 'water-outline', title: '{% trans "Milk records" %}', description: '{% trans "Yield logged per cow, per session." %}' },
+        { selector: '[data-tour="tasks-tile"]', icon: 'checkbox-outline', title: '{% trans "Tasks" %}', description: '{% trans "Assign work and track what your team has done." %}' },
+        { selector: '[data-tour="wallet-tile"]', icon: 'wallet-outline', title: '{% trans "Wallet" %}', description: '{% trans "See the FIQ your farm and team have earned - every reward is verified on Hedera." %}' },
+        { selector: '[data-tour="credit-tile"]', icon: 'ribbon-outline', title: '{% trans "Credit score" %}', description: '{% trans "An explainable AI score built from your records. It is shared with a lender only when you approve it." %}' },
+        { selector: '[data-tour="finance-tile"]', icon: 'cash-outline', title: '{% trans "Finance" %}', description: '{% trans "Income, expenses and your real-time net position." %}' },
+        { selector: '[data-tour="reports-tile"]', icon: 'bar-chart-outline', title: '{% trans "Reports" %}', description: '{% trans "Analytics, AI yield predictions and one-click CSV, Excel or PDF exports." %}' },
+        { selector: '[data-tour="insights-tile"]', icon: 'bulb-outline', title: '{% trans "Insights" %}', description: '{% trans "Plain-language findings about what your farm data is telling you." %}' },
+        { selector: '[data-tour="team-tile"]', icon: 'people-outline', title: '{% trans "Team" %}', description: '{% trans "Invite managers, supervisors and workers - no passwords, just one-time codes." %}' },
+        { selector: '[data-tour="geomap-tile"]', icon: 'map-outline', title: '{% trans "GeoMap" %}', description: '{% trans "Walk your farm boundary with GPS to measure area and perimeter." %}' },
     ];
 
-    var steps = stepDefs
-        .filter(function (s) { return document.querySelector(s.selector); })
-        .map(function (s) { return { element: s.selector, popover: { title: s.title, description: s.description } }; });
+    function isVisible(el) {
+        var rect = el.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+    }
 
-    if (!steps.length) { markSeen(); return; }
+    var visibleDefs = stepDefs.filter(function (s) {
+        var el = document.querySelector(s.selector);
+        return el && isVisible(el);
+    });
+
+    if (!visibleDefs.length) { markSeen(); return; }
+
+    var steps = visibleDefs.map(function (s) {
+        return { element: s.selector, popover: { title: s.title, description: s.description } };
+    });
 
     var tour = window.driver.js.driver({
         showProgress: true,
+        progressText: '{% trans "Step" %} {% verbatim %}{{current}} / {{total}}{% endverbatim %}',
         nextBtnText: '{% trans "Next" %}',
         prevBtnText: '{% trans "Back" %}',
         doneBtnText: '{% trans "Done" %}',
+        popoverClass: 'farmiq-tour',
+        overlayColor: '#0b2e21',
+        overlayOpacity: 0.78,
+        stagePadding: 6,
+        stageRadius: 14,
+        smoothScroll: true,
         steps: steps,
-        onDestroyed: markSeen,
+        // Put each step's icon in a badge before its title.
+        onPopoverRender: function (popover, opts) {
+            var def = visibleDefs[opts.state.activeIndex || 0];
+            if (!def) return;
+            var title = def.title.replace(/[&<>"]/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+            });
+            popover.title.innerHTML = '<span class="ft-badge"><ion-icon name="' + def.icon + '"></ion-icon></span><span>' + title + '</span>';
+        },
+        onHighlightStarted: function () { document.documentElement.classList.add('farmiq-touring'); },
+        onDestroyed: function () {
+            document.documentElement.classList.remove('farmiq-touring');
+            markSeen();
+        },
     });
     tour.drive();
 })();

@@ -43,7 +43,7 @@
 
         <div class="flex items-center gap-1.5">
             {% if active_membership %}
-            <a href="{% url 'blockchain:wallet' %}" class="flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-700 hover:bg-violet-100 dark:bg-violet-950 dark:text-violet-400 dark:hover:bg-violet-900" title="{% trans 'FIQ balance' %}">
+            <a href="{% url 'blockchain:wallet' %}" data-tour="fiq-token" class="flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-700 hover:bg-violet-100 dark:bg-violet-950 dark:text-violet-400 dark:hover:bg-violet-900" title="{% trans 'FIQ balance' %}">
                 <ion-icon name="wallet-outline" class="text-sm"></ion-icon> {{ fiq_balance }} <span class="hidden sm:inline">FIQ</span>
             </a>
             <span class="hidden rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 sm:inline">
@@ -70,7 +70,7 @@
             <form method="post" action="{% url 'core:set_theme' %}">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100" aria-label="{% trans 'Toggle dark mode' %}">
+                <button type="submit" data-tour="theme-toggle" class="flex h-9 w-9 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100" aria-label="{% trans 'Toggle dark mode' %}">
                     <ion-icon name="{% if theme == 'dark' %}sunny-outline{% else %}moon-outline{% endif %}" class="text-lg"></ion-icon>
                 </button>
             </form>
@@ -79,7 +79,7 @@
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                 <input type="hidden" name="language" value="{% if LANGUAGE_CODE == 'sw' %}en{% else %}sw{% endif %}">
-                <button type="submit" class="flex h-9 items-center justify-center rounded-full px-2 text-xs font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-800 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100" aria-label="{% trans 'Switch language' %}">
+                <button type="submit" data-tour="language-toggle" class="flex h-9 items-center justify-center rounded-full px-2 text-xs font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-800 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100" aria-label="{% trans 'Switch language' %}">
                     {% if LANGUAGE_CODE == 'sw' %}EN{% else %}SW{% endif %}
                 </button>
             </form>

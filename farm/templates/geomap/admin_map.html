@@ -1,0 +1,175 @@
+{% extends "farms/_admin_base.html" %}
+{% load i18n static %}
+{% block title %}{% trans "All farms map" %} - FarmIQ{% endblock %}
+
+{% block extra_head %}
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+    .maplibregl-popup-content { border-radius: .75rem !important; padding: .75rem 1rem !important; }
+    .geomap-fs-btn ion-icon { font-size: 18px; vertical-align: middle; }
+    /* Fullscreen: the shell (map + legend + controls) fills the screen. */
+    #geomap-admin-shell:fullscreen, #geomap-admin-shell.geomap-pseudo-fs {
+        height: 100vh !important; height: 100dvh !important; border-radius: 0 !important; border: 0 !important;
+    }
+    #geomap-admin-shell.geomap-pseudo-fs { position: fixed; inset: 0; z-index: 9999; width: 100%; }
+    html.geomap-fs-lock, html.geomap-fs-lock body { overflow: hidden; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <div>
+        <h1 class="text-2xl font-extrabold tracking-tight text-stone-900">{% trans "All farms map" %}</h1>
+        <p class="mt-1 text-sm text-stone-500">
+            {% blocktrans %}Every parcel mapped on FarmIQ. Each farm has its own colour; farm users only ever see their own parcels.{% endblocktrans %}
+        </p>
+    </div>
+    <a href="{% url 'farms:admin_dashboard' %}" class="rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-700 hover:bg-stone-50">&larr; {% trans "Platform overview" %}</a>
+</div>
+
+{% if not config.styleUrl %}
+<div class="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
+    {% trans "GeoMap isn't configured yet - set TOMTOM_API_KEY and TOMTOM_STYLE_ID." %}
+</div>
+{% elif not groups %}
+<div class="rounded-2xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-500">
+    {% trans "No farm has mapped a parcel yet." %}
+</div>
+{% else %}
+<div id="geomap-admin-shell" class="relative h-[75vh] w-full overflow-hidden rounded-2xl border border-stone-200 bg-stone-100">
+    <div id="geomap-admin-canvas" class="absolute inset-0"></div>
+
+    <!-- Legend: one row per farm, with a switch to show/hide its parcels -->
+    <div class="absolute left-3 top-3 z-10 flex max-h-[70%] w-64 flex-col rounded-2xl border border-stone-200 bg-white/95 text-xs shadow-soft backdrop-blur">
+        <div class="flex items-center justify-between gap-2 border-b border-stone-100 px-3 py-2">
+            <p class="text-[10px] font-bold uppercase tracking-wide text-stone-400">{% trans "Farms" %} ({{ groups|length }})</p>
+            <div class="flex gap-1">
+                <button type="button" id="geomap-admin-all" class="rounded-full px-2 py-0.5 font-bold text-emerald-700 hover:bg-emerald-50">{% trans "All" %}</button>
+                <button type="button" id="geomap-admin-none" class="rounded-full px-2 py-0.5 font-bold text-stone-500 hover:bg-stone-100">{% trans "None" %}</button>
+                <button type="button" id="geomap-admin-fit" class="rounded-full px-2 py-0.5 font-bold text-stone-500 hover:bg-stone-100" title="{% trans 'Zoom to fit' %}"><ion-icon name="scan-outline"></ion-icon></button>
+            </div>
+        </div>
+        <div class="overflow-y-auto p-1.5">
+            {% for g in groups %}
+            <label class="flex cursor-pointer items-center justify-between gap-2 rounded-lg px-1.5 py-1.5 transition has-[:checked]:bg-stone-50">
+                <span class="flex min-w-0 items-center gap-2">
+                    <span class="h-3 w-3 shrink-0 rounded-full" style="background: {{ g.color }}"></span>
+                    <span class="min-w-0">
+                        <span class="block truncate font-bold text-stone-800">{{ g.name }}</span>
+                        <span class="block text-[11px] text-stone-400">{{ g.parcel_count }} {% trans "parcels" %} &middot; {{ g.total_ha|floatformat:2 }} {% trans "ha" %}</span>
+                    </span>
+                </span>
+                <input type="checkbox" data-farm="{{ g.id }}" checked class="peer sr-only">
+                <span aria-hidden="true" class="relative h-5 w-9 shrink-0 rounded-full bg-stone-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:bg-emerald-600 peer-checked:after:translate-x-4"></span>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="mt-6 overflow-x-auto rounded-2xl border border-stone-200 bg-white">
+    <table class="w-full text-left text-sm">
+        <thead class="border-b border-stone-100 text-xs uppercase tracking-wide text-stone-400">
+            <tr><th class="px-6 py-3"></th><th class="px-6 py-3">{% trans "Farm" %}</th><th class="px-6 py-3">{% trans "Owner" %}</th><th class="px-6 py-3">{% trans "Parcels" %}</th><th class="px-6 py-3">{% trans "Mapped area" %}</th></tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+            {% for g in groups %}
+            <tr>
+                <td class="px-6 py-3"><span class="inline-block h-3 w-3 rounded-full" style="background: {{ g.color }}"></span></td>
+                <td class="px-6 py-3 font-semibold text-stone-800">{{ g.name }}</td>
+                <td class="px-6 py-3 text-stone-500">{{ g.owner }}</td>
+                <td class="px-6 py-3 text-stone-600">{{ g.parcel_count }}</td>
+                <td class="px-6 py-3 text-stone-600">{{ g.total_ha|floatformat:2 }} {% trans "ha" %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{{ config|json_script:"geomap-admin-config" }}
+{{ parcels_data|json_script:"geomap-admin-parcels" }}
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+{% if config.styleUrl and groups %}
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="{% static 'js/map_fullscreen.js' %}"></script>
+<script>
+(function () {
+    var config = JSON.parse(document.getElementById('geomap-admin-config').textContent);
+    var parcels = JSON.parse(document.getElementById('geomap-admin-parcels').textContent);
+    var shell = document.getElementById('geomap-admin-shell');
+
+    function closedRing(points) { return points.concat([points[0]]); }
+    function esc(text) {
+        var d = document.createElement('div'); d.textContent = text == null ? '' : String(text); return d.innerHTML;
+    }
+
+    var map = new maplibregl.Map({ container: 'geomap-admin-canvas', style: config.styleUrl, center: config.center, zoom: 5 });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
+    FarmIQMapFullscreen(shell, map, { enter: '{% trans "Full screen" %}', exit: '{% trans "Exit full screen" %}' });
+
+    var features = parcels.map(function (p) {
+        return {
+            type: 'Feature',
+            properties: { id: p.id, farm_id: p.farm_id, farm: p.farm, name: p.name, color: p.color, area_ha: p.area_ha, block: p.block, by: p.by, on: p.on },
+            geometry: { type: 'Polygon', coordinates: [closedRing(p.coordinates)] },
+        };
+    });
+
+    function fitAll() {
+        var b = new maplibregl.LngLatBounds();
+        var any = false;
+        parcels.forEach(function (p) { p.coordinates.forEach(function (c) { b.extend(c); any = true; }); });
+        if (any) map.fitBounds(b, { padding: 60, maxZoom: 16, duration: 600 });
+    }
+
+    var visible = {};
+    document.querySelectorAll('input[data-farm]').forEach(function (box) { visible[box.dataset.farm] = true; });
+
+    function applyFilter() {
+        var ids = Object.keys(visible).filter(function (k) { return visible[k]; }).map(Number);
+        var filter = ['in', ['get', 'farm_id'], ['literal', ids]];
+        ['geomap-admin-fill', 'geomap-admin-line', 'geomap-admin-label'].forEach(function (layer) {
+            if (map.getLayer(layer)) map.setFilter(layer, filter);
+        });
+    }
+
+    map.on('load', function () {
+        map.addSource('geomap-admin', { type: 'geojson', data: { type: 'FeatureCollection', features: features } });
+        map.addLayer({ id: 'geomap-admin-fill', type: 'fill', source: 'geomap-admin', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.4 } });
+        map.addLayer({ id: 'geomap-admin-line', type: 'line', source: 'geomap-admin', paint: { 'line-color': ['get', 'color'], 'line-width': 2.5 } });
+        map.addLayer({ id: 'geomap-admin-label', type: 'symbol', source: 'geomap-admin', minzoom: 12,
+            layout: { 'text-field': ['get', 'name'], 'text-size': 12 },
+            paint: { 'text-color': '#1c1917', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
+
+        map.on('click', 'geomap-admin-fill', function (e) {
+            var p = e.features[0].properties;
+            var html = '<p class="font-bold text-stone-900">' + esc(p.name) + '</p>' +
+                '<p class="mt-0.5 text-xs font-semibold text-stone-600">' + esc(p.farm) + '</p>' +
+                '<p class="mt-1 text-xs text-stone-500">' + Number(p.area_ha).toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' ha' +
+                (p.block ? ' &middot; ' + esc(p.block) : '') + '</p>' +
+                '<p class="mt-0.5 text-xs text-stone-400">' + esc(p.by) + ' &middot; ' + esc(p.on) + '</p>';
+            new maplibregl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
+        });
+        map.on('mouseenter', 'geomap-admin-fill', function () { map.getCanvas().style.cursor = 'pointer'; });
+        map.on('mouseleave', 'geomap-admin-fill', function () { map.getCanvas().style.cursor = ''; });
+        fitAll();
+    });
+
+    document.querySelectorAll('input[data-farm]').forEach(function (box) {
+        box.addEventListener('change', function () { visible[box.dataset.farm] = box.checked; applyFilter(); });
+    });
+    function setAll(on) {
+        document.querySelectorAll('input[data-farm]').forEach(function (box) { box.checked = on; visible[box.dataset.farm] = on; });
+        applyFilter();
+    }
+    document.getElementById('geomap-admin-all').addEventListener('click', function () { setAll(true); });
+    document.getElementById('geomap-admin-none').addEventListener('click', function () { setAll(false); });
+    document.getElementById('geomap-admin-fit').addEventListener('click', fitAll);
+})();
+</script>
+{% endif %}
+{% endblock %}

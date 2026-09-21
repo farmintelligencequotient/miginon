@@ -19,6 +19,9 @@ def _reward_task_completion(task, worker_user):
     transaction per completion is fine, unlike raw record logging (see
     blockchain.services and the DATA_RECORDED batching in blockchain.views).
     Best-effort: a Hedera hiccup never blocks marking the task done."""
+    # A task that's reopened and finished again must not pay out twice.
+    if FiqLedgerEntry.objects.filter(task=task, reason=FiqLedgerEntry.Reason.TASK_COMPLETED).exists():
+        return
     result = mint_fiq(FIQ_REWARD_PER_TASK)
     if result:
         FiqLedgerEntry.objects.create(

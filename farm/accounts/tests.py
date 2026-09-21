@@ -239,6 +239,19 @@ class DashboardTourTests(TestCase):
         response = self.client.get('/farm/')
         self.assertTrue(response.context['show_tour'])
 
+    def test_tour_points_at_every_highlighted_control(self):
+        page = self.client.get('/farm/').content.decode()
+        for hook in ('farm-3d', 'fiq-token', 'theme-toggle', 'language-toggle', 'wallet-tile', 'credit-tile',
+                     'finance-tile', 'reports-tile', 'insights-tile', 'team-tile'):
+            self.assertIn(f'data-tour="{hook}"', page, hook)
+            self.assertIn(f"[data-tour=\"{hook}\"]", page, f'{hook} step missing from the tour script')
+
+    def test_tour_uses_the_farmiq_theme_and_keeps_its_step_counter(self):
+        page = self.client.get('/farm/').content.decode()
+        self.assertIn("popoverClass: 'farmiq-tour'", page)
+        # {{current}}/{{total}} are driver.js placeholders - Django must not have eaten them
+        self.assertIn('{{current}} / {{total}}', page)
+
     def test_show_tour_is_false_once_seen(self):
         self.user.has_seen_dashboard_tour = True
         self.user.save(update_fields=['has_seen_dashboard_tour'])

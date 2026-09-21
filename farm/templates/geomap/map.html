@@ -1,5 +1,5 @@
 {% extends "app_base.html" %}
-{% load i18n %}
+{% load i18n static %}
 {% block title %}{% trans "GeoMap" %} - FarmIQ{% endblock %}
 
 {% block extra_head %}
@@ -23,6 +23,13 @@
        Only our own draggable vertex pins (.geomap-vertex) need to stay
        interactive. */
     .maplibregl-marker:not(.geomap-vertex) { pointer-events: none; }
+    .geomap-fs-btn ion-icon { font-size: 18px; vertical-align: middle; }
+    /* Fullscreen: the shell (map + every floating button/panel) fills the screen. */
+    #geomap-shell:fullscreen, #geomap-shell.geomap-pseudo-fs {
+        height: 100vh !important; height: 100dvh !important; border-radius: 0 !important; border: 0 !important;
+    }
+    #geomap-shell.geomap-pseudo-fs { position: fixed; inset: 0; z-index: 9999; width: 100%; }
+    html.geomap-fs-lock, html.geomap-fs-lock body { overflow: hidden; }
 </style>
 {% endblock %}
 
@@ -121,7 +128,7 @@
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {% for parcel in parcels %}
         <div class="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
-            <p class="font-bold text-stone-900 dark:text-stone-100">{{ parcel.name }}</p>
+            <p class="flex items-center gap-2 font-bold text-stone-900 dark:text-stone-100"><span class="inline-block h-3 w-3 shrink-0 rounded-full" style="background: {{ parcel.color }}"></span>{{ parcel.name }}</p>
             {% if parcel.block %}
             <p class="mt-0.5 text-xs text-stone-400 dark:text-stone-500">{% trans "Block:" %} {{ parcel.block.name }}</p>
             {% endif %}
@@ -158,6 +165,7 @@
 {% if config.styleUrl %}
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+<script src="{% static 'js/map_fullscreen.js' %}"></script>
 <script>
 (function () {
     var DEFAULT_CENTER = [36.817223, -1.286389]; // Nairobi - fallback when the farm has no saved coordinates yet
@@ -179,6 +187,9 @@
         showAccuracyCircle: true,
     });
     map.addControl(geolocate, 'top-right');
+    FarmIQMapFullscreen(document.getElementById('geomap-shell'), map, {
+        enter: '{% trans "Full screen" %}', exit: '{% trans "Exit full screen" %}',
+    });
 
     var lastPosition = null;
     geolocate.on('geolocate', function (e) {
@@ -297,14 +308,14 @@
         var savedFeatures = savedParcels.map(function (p) {
             return {
                 type: 'Feature',
-                properties: { id: p.id, name: p.name, area_sqm: p.area_sqm, perimeter_m: p.perimeter_m, block: p.block },
+                properties: { id: p.id, name: p.name, area_sqm: p.area_sqm, perimeter_m: p.perimeter_m, block: p.block, color: p.color },
                 geometry: { type: 'Polygon', coordinates: [closedRing(p.coordinates)] },
             };
         });
         map.addSource('geomap-saved', { type: 'geojson', data: { type: 'FeatureCollection', features: savedFeatures } });
-        map.addLayer({ id: 'geomap-saved-fill', type: 'fill', source: 'geomap-saved', paint: { 'fill-color': '#0ea5e9', 'fill-opacity': 0.15 } });
-        map.addLayer({ id: 'geomap-saved-line', type: 'line', source: 'geomap-saved', paint: { 'line-color': '#0284c7', 'line-width': 2 } });
-        map.addLayer({ id: 'geomap-saved-label', type: 'symbol', source: 'geomap-saved', layout: { 'text-field': ['get', 'name'], 'text-size': 12, 'text-offset': [0, 0.2] }, paint: { 'text-color': '#0c4a6e', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
+        map.addLayer({ id: 'geomap-saved-fill', type: 'fill', source: 'geomap-saved', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.3 } });
+        map.addLayer({ id: 'geomap-saved-line', type: 'line', source: 'geomap-saved', paint: { 'line-color': ['get', 'color'], 'line-width': 2.5 } });
+        map.addLayer({ id: 'geomap-saved-label', type: 'symbol', source: 'geomap-saved', layout: { 'text-field': ['get', 'name'], 'text-size': 12, 'text-offset': [0, 0.2] }, paint: { 'text-color': '#1c1917', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
 
         map.on('click', 'geomap-saved-fill', function (e) {
             var props = e.features[0].properties;

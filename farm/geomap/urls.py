@@ -6,6 +6,7 @@ app_name = 'geomap'
 
 urlpatterns = [
     path('', views.parcel_map, name='map'),
+    path('admin/', views.admin_map, name='admin_map'),
     path('save/', views.parcel_create, name='parcel_create'),
     path('<int:parcel_id>/delete/', views.parcel_delete, name='parcel_delete'),
 ]

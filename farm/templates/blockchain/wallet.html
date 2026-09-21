@@ -15,16 +15,16 @@
 {% if active_membership.can_manage_herd %}
 <div class="mt-6 rounded-2xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900">
     <h2 class="font-bold text-stone-900 dark:text-stone-100">{% trans "Mint a milk production certificate" %}</h2>
-    <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">{% trans "Mints FIQ for verified milk production over a date range - one manual action, not per record." %}</p>
+    <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">{% trans "Mints FIQ for verified milk production over a date range - one manual action, not per record. Each day can only be minted once: a period that overlaps an earlier certificate is blocked." %}</p>
     <form method="post" action="{% url 'blockchain:certificate_create' %}" class="mt-4 flex flex-wrap items-end gap-3">
         {% csrf_token %}
         <div>
             <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">{% trans "Start date" %}</label>
-            <input type="date" name="start_date" value="{{ default_start|date:'Y-m-d' }}" class="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100">
+            <input type="date" name="start_date" max="{{ today|date:'Y-m-d' }}" value="{{ certificate_default_start|date:'Y-m-d' }}" class="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100">
         </div>
         <div>
             <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">{% trans "End date" %}</label>
-            <input type="date" name="end_date" value="{{ default_end|date:'Y-m-d' }}" class="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100">
+            <input type="date" name="end_date" max="{{ today|date:'Y-m-d' }}" value="{{ default_end|date:'Y-m-d' }}" class="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100">
         </div>
         <button type="submit" class="rounded-xl bg-violet-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-violet-800">{% trans "Mint certificate" %}</button>
     </form>
@@ -32,7 +32,7 @@
 
 <div class="mt-6 rounded-2xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900">
     <h2 class="font-bold text-stone-900 dark:text-stone-100">{% trans "Reward a worker for logged records" %}</h2>
-    <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">{% trans "Mints FIQ for a worker's milk, feeding, crop activity and stock movement records over a date range - one manual action, not per record." %}</p>
+    <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">{% trans "Mints FIQ for a worker's milk, feeding, crop activity and stock movement records over a date range - one manual action, not per record. A period that overlaps one already rewarded for that worker is blocked." %}</p>
     <form method="post" action="{% url 'blockchain:worker_reward_create' %}" class="mt-4 flex flex-wrap items-end gap-3">
         {% csrf_token %}
         <div>
@@ -47,11 +47,11 @@
         </div>
         <div>
             <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">{% trans "Start date" %}</label>
-            <input type="date" name="start_date" value="{{ default_start|date:'Y-m-d' }}" class="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100">
+            <input type="date" name="start_date" max="{{ today|date:'Y-m-d' }}" value="{{ default_start|date:'Y-m-d' }}" class="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100">
         </div>
         <div>
             <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">{% trans "End date" %}</label>
-            <input type="date" name="end_date" value="{{ default_end|date:'Y-m-d' }}" class="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100">
+            <input type="date" name="end_date" max="{{ today|date:'Y-m-d' }}" value="{{ default_end|date:'Y-m-d' }}" class="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100">
         </div>
         <button type="submit" class="rounded-xl bg-violet-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-violet-800">{% trans "Award FIQ" %}</button>
     </form>
