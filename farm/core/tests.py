@@ -184,3 +184,110 @@ class ResendBackendTests(TestCase):
         with override_settings(RESEND_API_KEY='bad'), mock.patch('core.resend_backend.urllib.request.urlopen', side_effect=err):
             with self.assertRaises(ResendError):
                 ResendEmailBackend().send_messages([EmailMessage('s', 'b', 'a@b.co', ['c@d.co'])])
+
+
+class ZeptoMailBackendTests(TestCase):
+    """The backend must build the exact JSON ZeptoMail's v1.1 API expects and
+    surface failures (OTP delivery relies on errors being raised)."""
+
+    def _send(self, **overrides):
+        import json
+        from unittest import mock
+        from django.core.mail import EmailMultiAlternatives
+        from django.test import override_settings
+        captured = {}
+
+        class FakeResponse:
+            def read(self):
+                return b'{"data":[]}'
+            def __enter__(self):
+                return self
+            def __exit__(self, *a):
+                return False
+
+        def fake_urlopen(request, timeout=None):
+            captured['url'] = request.full_url
+            captured['auth'] = request.get_header('Authorization')
+            captured['body'] = json.loads(request.data)
+            return FakeResponse()
+
+        msg = EmailMultiAlternatives('Hi', 'plain body', 'FarmIQ <noreply@farmiq.solutions>', ['a@example.com'])
+        msg.attach_alternative('<p>html body</p>', 'text/html')
+        msg.attach('r.pdf', b'%PDF', 'application/pdf')
+        settings_kw = {'ZEPTOMAIL_API_TOKEN': 'tok123', 'ZEPTOMAIL_API_HOST': 'api.zeptomail.com', **overrides}
+        with override_settings(**settings_kw), mock.patch('core.zeptomail.urllib.request.urlopen', fake_urlopen):
+            from core.zeptomail import ZeptoMailAPIEmailBackend
+            count = ZeptoMailAPIEmailBackend().send_messages([msg])
+        return count, captured
+
+    def test_builds_api_request(self):
+        count, sent = self._send()
+        self.assertEqual(count, 1)
+        self.assertEqual(sent['url'], 'https://api.zeptomail.com/v1.1/email')
+        self.assertEqual(sent['auth'], 'Zoho-enczapikey tok123')
+        body = sent['body']
+        self.assertEqual(body['from'], {'address': 'noreply@farmiq.solutions', 'name': 'FarmIQ'})
+        self.assertEqual(body['to'], [{'email_address': {'address': 'a@example.com'}}])
+        self.assertEqual(body['subject'], 'Hi')
+        self.assertEqual(body['htmlbody'], '<p>html body</p>')
+        self.assertEqual(body['textbody'], 'plain body')
+        self.assertEqual(body['attachments'][0]['name'], 'r.pdf')
+        self.assertEqual(body['attachments'][0]['mime_type'], 'application/pdf')
+
+    def test_regional_host_is_used(self):
+        _, sent = self._send(ZEPTOMAIL_API_HOST='api.zeptomail.eu')
+        self.assertEqual(sent['url'], 'https://api.zeptomail.eu/v1.1/email')
+
+    def test_missing_token_raises_so_otp_delivery_fails_loudly(self):
+        from core.zeptomail import ZeptoMailError
+        with self.assertRaises(ZeptoMailError):
+            self._send(ZEPTOMAIL_API_TOKEN='')
+
+    def test_api_rejection_raises(self):
+        import io, urllib.error
+        from unittest import mock
+        from django.core.mail import EmailMessage
+        from django.test import override_settings
+        from core.zeptomail import ZeptoMailAPIEmailBackend, ZeptoMailError
+        err = urllib.error.HTTPError('u', 401, 'Unauthorized', {}, io.BytesIO(b'{"error":"Invalid API Token found"}'))
+        with override_settings(ZEPTOMAIL_API_TOKEN='bad'), mock.patch('core.zeptomail.urllib.request.urlopen', side_effect=err):
+            with self.assertRaises(ZeptoMailError):
+                ZeptoMailAPIEmailBackend().send_messages([EmailMessage('s', 'b', 'a@b.co', ['c@d.co'])])
+
+
+class FallbackBackendTests(TestCase):
+    def _run(self, chain, behaviours):
+        """behaviours: {backend_path: 'ok' | Exception}; returns (sent_count, calls)."""
+        from unittest import mock
+        from django.core.mail import EmailMessage
+        from django.test import override_settings
+        from core.email_backends import FallbackEmailBackend
+        calls = []
+
+        def fake_get_connection(path, fail_silently=False, **kw):
+            conn = mock.Mock()
+            def send(messages):
+                calls.append(path)
+                outcome = behaviours[path]
+                if isinstance(outcome, Exception):
+                    raise outcome
+                return len(messages)
+            conn.send_messages.side_effect = send
+            return conn
+
+        with override_settings(EMAIL_FALLBACK_BACKENDS=chain),                 mock.patch('core.email_backends.get_connection', fake_get_connection):
+            count = FallbackEmailBackend().send_messages([EmailMessage('s', 'b', 'a@b.co', ['c@d.co'])])
+        return count, calls
+
+    def test_primary_success_does_not_touch_fallback(self):
+        count, calls = self._run(['a', 'b'], {'a': 'ok', 'b': 'ok'})
+        self.assertEqual((count, calls), (1, ['a']))
+
+    def test_falls_back_when_primary_fails(self):
+        count, calls = self._run(['a', 'b'], {'a': RuntimeError('resend down'), 'b': 'ok'})
+        self.assertEqual((count, calls), (1, ['a', 'b']))
+
+    def test_raises_when_every_provider_fails(self):
+        with self.assertRaises(RuntimeError):
+            self._run(['a', 'b'], {'a': RuntimeError('one'), 'b': RuntimeError('two')})
+

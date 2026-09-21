@@ -249,10 +249,18 @@ EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')  # type: ignore[arg-type]
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')  # type: ignore[arg-type]
-# Production sends through Resend's HTTP API: set
-# EMAIL_BACKEND=core.resend_backend.ResendEmailBackend and RESEND_API_KEY.
-# DEFAULT_FROM_EMAIL must be on a domain verified in Resend.
+# Production sends through Resend's HTTP API, with ZeptoMail's API as a
+# fallback if Resend fails: EMAIL_BACKEND=core.email_backends.FallbackEmailBackend
+# (tries EMAIL_FALLBACK_BACKENDS in order). Or point EMAIL_BACKEND at either
+# provider's backend directly. DEFAULT_FROM_EMAIL must be on a domain verified
+# with each provider.
 RESEND_API_KEY = env('RESEND_API_KEY', default='')  # type: ignore[arg-type]
+ZEPTOMAIL_API_TOKEN = env('ZEPTOMAIL_API_TOKEN', default='')  # type: ignore[arg-type]
+ZEPTOMAIL_API_HOST = env('ZEPTOMAIL_API_HOST', default='api.zeptomail.com')  # type: ignore[arg-type]
+EMAIL_FALLBACK_BACKENDS = env.list('EMAIL_FALLBACK_BACKENDS', default=[  # type: ignore[arg-type]
+    'core.resend_backend.ResendEmailBackend',
+    'core.zeptomail.ZeptoMailAPIEmailBackend',
+])
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='FarmIQ <noreply@farmiq.solutions>')  # type: ignore[arg-type]
 
 OTP_VALIDITY_MINUTES = 10
