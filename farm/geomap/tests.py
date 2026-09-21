@@ -155,6 +155,20 @@ class ParcelPrivacyAndAdminMapTests(TestCase):
         self.assertLess(shell_start, page.index('id="geomap-draw-toolbar"'))
         self.assertLess(shell_start, page.index('id="geomap-save-panel"'))
 
+    def test_parcels_are_drawn_without_a_symbol_layer(self):
+        """A symbol (text) layer on the parcel source makes MapLibre's worker throw with the
+        TomTom style, which drops the whole source - so parcels must never be given one."""
+        self._login_farm(self.farmer, self.farm)
+        page = self.client.get('/geomap/').content.decode()
+        self.assertNotIn("type: 'symbol'", page)
+        self.assertIn('geomap-parcel-label', page)
+        self.assertIn('#geomap-shell [hidden] { display: none !important; }', page)
+
+    def test_admin_map_has_no_symbol_layer_either(self):
+        self.client.force_login(self.admin)
+        page = self.client.get('/geomap/admin/').content.decode()
+        self.assertNotIn("type: 'symbol'", page)
+
     def test_farm_users_cannot_open_the_admin_map(self):
         self._login_farm(self.farmer, self.farm)
         response = self.client.get('/geomap/admin/')

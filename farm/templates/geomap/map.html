@@ -23,7 +23,23 @@
        Only our own draggable vertex pins (.geomap-vertex) need to stay
        interactive. */
     .maplibregl-marker:not(.geomap-vertex) { pointer-events: none; }
-    .geomap-fs-btn ion-icon { font-size: 18px; vertical-align: middle; }
+    /* Full-screen / zoom-to-parcels buttons: a labelled pill with dark text so it
+       reads on the white MapLibre control box in light AND dark mode. */
+    .maplibregl-ctrl-group > button.geomap-fs-btn, .maplibregl-ctrl-group > button.geomap-fit-btn {
+        width: auto !important; height: 34px !important; padding: 0 .7rem; display: flex; align-items: center; gap: .4rem;
+        color: #1c1917 !important; font: 700 12px/1 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+        white-space: nowrap; cursor: pointer;
+    }
+    .geomap-fs-btn ion-icon, .geomap-fit-btn ion-icon { font-size: 18px; color: #146a4a; flex: none; }
+    @media (max-width: 420px) { .geomap-fs-label, .geomap-fit-label { display: none; } }
+    .geomap-parcel-label {
+        pointer-events: none; white-space: nowrap; padding: 2px 8px; border: 2px solid #0284c7; border-radius: 9999px;
+        background: rgba(255, 255, 255, .92); color: #1c1917; font: 700 11px/1.2 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+    }
+    /* Tailwind's display utilities (flex, ...) beat the [hidden] attribute, which made the
+       drawing toolbar, readouts and Cancel button show all the time. */
+    #geomap-shell [hidden] { display: none !important; }
     /* Fullscreen: the shell (map + every floating button/panel) fills the screen. */
     #geomap-shell:fullscreen, #geomap-shell.geomap-pseudo-fs {
         height: 100vh !important; height: 100dvh !important; border-radius: 0 !important; border: 0 !important;
@@ -242,7 +258,8 @@
         if (drawState.points.length >= 3) {
             features.push({ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [closedRing(drawState.points)] } });
         }
-        map.getSource('geomap-draw').setData({ type: 'FeatureCollection', features: features });
+        var drawSource = map.getSource('geomap-draw');
+        if (drawSource) drawSource.setData({ type: 'FeatureCollection', features: features });
 
         var areaVal = 0, perimVal = 0;
         if (drawState.points.length >= 3) {
@@ -300,35 +317,114 @@
         map.getCanvas().style.cursor = active ? 'crosshair' : '';
     }
 
-    map.on('load', function () {
-        map.addSource('geomap-draw', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-        map.addLayer({ id: 'geomap-draw-fill', type: 'fill', source: 'geomap-draw', filter: ['==', '$type', 'Polygon'], paint: { 'fill-color': '#17835a', 'fill-opacity': 0.25 } });
-        map.addLayer({ id: 'geomap-draw-line', type: 'line', source: 'geomap-draw', paint: { 'line-color': '#17835a', 'line-width': 3 } });
+    // ---- parcels & drawing layers -------------------------------------------
+    // Added once the style is ready. 'load' can be late or missing with a
+    // remote style (a failed tile is enough), so 'styledata' is a second
+    // trigger and the whole thing is idempotent.
+    var layersReady = false;
+    var parcelBounds = null;
 
-        var savedFeatures = savedParcels.map(function (p) {
-            return {
-                type: 'Feature',
-                properties: { id: p.id, name: p.name, area_sqm: p.area_sqm, perimeter_m: p.perimeter_m, block: p.block, color: p.color },
-                geometry: { type: 'Polygon', coordinates: [closedRing(p.coordinates)] },
-            };
-        });
-        map.addSource('geomap-saved', { type: 'geojson', data: { type: 'FeatureCollection', features: savedFeatures } });
-        map.addLayer({ id: 'geomap-saved-fill', type: 'fill', source: 'geomap-saved', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.3 } });
-        map.addLayer({ id: 'geomap-saved-line', type: 'line', source: 'geomap-saved', paint: { 'line-color': ['get', 'color'], 'line-width': 2.5 } });
-        map.addLayer({ id: 'geomap-saved-label', type: 'symbol', source: 'geomap-saved', layout: { 'text-field': ['get', 'name'], 'text-size': 12, 'text-offset': [0, 0.2] }, paint: { 'text-color': '#1c1917', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
+    (function computeBounds() {
+        var b = new maplibregl.LngLatBounds();
+        var any = false;
+        savedParcels.forEach(function (p) { (p.coordinates || []).forEach(function (c) { b.extend(c); any = true; }); });
+        if (any) parcelBounds = b;
+    })();
 
-        map.on('click', 'geomap-saved-fill', function (e) {
-            var props = e.features[0].properties;
-            var html = '<p class="font-bold text-stone-900">' + props.name + '</p>' +
-                '<p class="mt-1 text-xs text-stone-500">' + formatArea(props.area_sqm) + ' &middot; ' + formatLength(props.perimeter_m) + '</p>' +
-                (props.block ? '<p class="mt-0.5 text-xs text-stone-400">' + props.block + '</p>' : '');
-            new maplibregl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
-        });
-        map.on('mouseenter', 'geomap-saved-fill', function () { map.getCanvas().style.cursor = 'pointer'; });
-        map.on('mouseleave', 'geomap-saved-fill', function () { map.getCanvas().style.cursor = drawState.active ? 'crosshair' : ''; });
+    function fitToParcels(animate) {
+        if (!parcelBounds) return;
+        map.fitBounds(parcelBounds, { padding: 70, maxZoom: 18, duration: animate === false ? 0 : 700 });
+    }
 
-        geolocate.trigger();
-    });
+    function initLayers() {
+        if (layersReady || !map.isStyleLoaded()) return;
+        layersReady = true;
+        try {
+            map.addSource('geomap-draw', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+            map.addLayer({ id: 'geomap-draw-fill', type: 'fill', source: 'geomap-draw', filter: ['==', '$type', 'Polygon'], paint: { 'fill-color': '#17835a', 'fill-opacity': 0.25 } });
+            map.addLayer({ id: 'geomap-draw-line', type: 'line', source: 'geomap-draw', paint: { 'line-color': '#17835a', 'line-width': 3 } });
+
+            var savedFeatures = savedParcels.map(function (p) {
+                return {
+                    type: 'Feature',
+                    properties: { id: p.id, name: p.name, area_sqm: p.area_sqm, perimeter_m: p.perimeter_m, block: p.block, color: p.color || '#0284c7' },
+                    geometry: { type: 'Polygon', coordinates: [closedRing(p.coordinates)] },
+                };
+            });
+            map.addSource('geomap-saved', { type: 'geojson', data: { type: 'FeatureCollection', features: savedFeatures } });
+            map.addLayer({ id: 'geomap-saved-fill', type: 'fill', source: 'geomap-saved', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.35 } });
+            map.addLayer({ id: 'geomap-saved-line', type: 'line', source: 'geomap-saved', paint: { 'line-color': ['get', 'color'], 'line-width': 3 } });
+            // Parcel names are HTML tags at each parcel's centre, NOT a map "symbol"
+            // layer: a symbol layer on this source throws inside MapLibre's worker
+            // ("Expected value to be of type number, but found null") with this
+            // TomTom style, which discards the whole source - and every parcel
+            // with it.
+            savedParcels.forEach(function (p) {
+                if (!p.coordinates || !p.coordinates.length) return;
+                var lng = 0, lat = 0;
+                p.coordinates.forEach(function (c) { lng += c[0]; lat += c[1]; });
+                var tag = document.createElement('div');
+                tag.className = 'geomap-parcel-label';
+                tag.textContent = p.name;
+                tag.style.borderColor = p.color || '#0284c7';
+                new maplibregl.Marker({ element: tag, anchor: 'center' })
+                    .setLngLat([lng / p.coordinates.length, lat / p.coordinates.length])
+                    .addTo(map);
+            });
+
+            map.on('click', 'geomap-saved-fill', function (e) {
+                if (drawState.active) return;
+                var props = e.features[0].properties;
+                var el = document.createElement('div');
+                var title = document.createElement('p');
+                title.className = 'font-bold text-stone-900'; title.textContent = props.name;
+                var meta = document.createElement('p');
+                meta.className = 'mt-1 text-xs text-stone-500';
+                meta.textContent = formatArea(props.area_sqm) + ' \u00b7 ' + formatLength(props.perimeter_m);
+                el.appendChild(title); el.appendChild(meta);
+                if (props.block) {
+                    var blk = document.createElement('p');
+                    blk.className = 'mt-0.5 text-xs text-stone-400'; blk.textContent = props.block;
+                    el.appendChild(blk);
+                }
+                new maplibregl.Popup().setLngLat(e.lngLat).setDOMContent(el).addTo(map);
+            });
+            map.on('mouseenter', 'geomap-saved-fill', function () { map.getCanvas().style.cursor = 'pointer'; });
+            map.on('mouseleave', 'geomap-saved-fill', function () { map.getCanvas().style.cursor = drawState.active ? 'crosshair' : ''; });
+        } catch (error) {
+            console.error('GeoMap: could not add the parcel layers', error);
+            layersReady = false;
+            return;
+        }
+
+        // Show the farm's parcels first. Jumping straight to the phone's GPS
+        // position (the old behaviour) hid them whenever the person mapping was
+        // not standing on the farm; the locate button is still one tap away.
+        if (parcelBounds) fitToParcels(false);
+        else geolocate.trigger();
+    }
+    map.on('load', initLayers);
+    map.on('styledata', initLayers);
+
+    // "Zoom to my parcels" - only when there is something to zoom to.
+    if (parcelBounds) {
+        map.addControl({
+            onAdd: function () {
+                var box = document.createElement('div');
+                box.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'geomap-fit-btn';
+                btn.title = '{% trans "Zoom to my parcels" %}';
+                btn.innerHTML = '<ion-icon name="scan-outline"></ion-icon><span class="geomap-fit-label"></span>';
+                btn.querySelector('.geomap-fit-label').textContent = '{% trans "My parcels" %}';
+                btn.addEventListener('click', function () { fitToParcels(true); });
+                box.appendChild(btn);
+                return box;
+            },
+            onRemove: function () {},
+        }, 'top-right');
+    }
 
     map.on('click', function (e) {
         if (!drawState.active) return;

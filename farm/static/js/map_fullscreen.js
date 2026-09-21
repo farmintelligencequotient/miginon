@@ -41,6 +41,8 @@
                 button.title = button.ariaLabel = on ? exitLabel : enterLabel;
                 var icon = button.querySelector('ion-icon');
                 if (icon) icon.setAttribute('name', on ? 'contract-outline' : 'expand-outline');
+                var text = button.querySelector('.geomap-fs-label');
+                if (text) text.textContent = on ? exitLabel : enterLabel;
             }
             // The container's size changes - the canvas must be told (twice: once
             // now, once after layout/animation has settled).
@@ -88,7 +90,9 @@
                 button = document.createElement('button');
                 button.type = 'button';
                 button.className = 'geomap-fs-btn';
-                button.innerHTML = '<ion-icon name="expand-outline"></ion-icon>';
+                // Icon + words: a bare "expand" glyph on a white square is easy to miss.
+                button.innerHTML = '<ion-icon name="expand-outline"></ion-icon><span class="geomap-fs-label"></span>';
+                button.querySelector('.geomap-fs-label').textContent = enterLabel;
                 button.title = button.ariaLabel = enterLabel;
                 button.addEventListener('click', toggle);
                 container.appendChild(button);

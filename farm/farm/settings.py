@@ -56,6 +56,12 @@ CSRF_TRUSTED_ORIGINS += [f'https://{h}' for h in _vercel_hosts]
 # request.build_absolute_uri() call (used throughout the email templates for
 # login/dashboard links) would wrongly resolve to http:// in production.
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# The website builder shows the site in an <iframe> on our own origin. Django's
+# default (DENY) turns every response in that frame - a 404, a 500, a redirect -
+# into the browser's blank "refused to connect" page. SAMEORIGIN still stops any
+# *other* site from framing FarmIQ (clickjacking), but lets our own pages frame
+# each other, so the preview always shows what actually came back.
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SECURE_SSL_REDIRECT = not DEBUG

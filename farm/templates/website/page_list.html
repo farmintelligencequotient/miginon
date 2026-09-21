@@ -122,9 +122,9 @@ real-time WYSIWYG engine).
                 looking at.
                 {% endcomment %}
                 {% if active_page and not active_page.is_homepage %}
-                {% url 'website_public:page' site.slug active_page.slug as preview_url %}
+                {% url 'website:preview_page' active_page.slug as preview_url %}
                 {% else %}
-                {% url 'website_public:home' site.slug as preview_url %}
+                {% url 'website:preview' as preview_url %}
                 {% endif %}
                 <iframe id="site-preview-frame" src="{{ preview_url }}"
                         class="h-full min-h-[70vh] w-full rounded-2xl border border-stone-200 bg-white shadow-soft transition-all dark:border-stone-800 sm:min-h-[640px]"></iframe>

@@ -326,3 +326,66 @@ class OrderListPermissionTests(TestCase):
         self.client.post(reverse('website:order_status_update', args=[self.order.id]), {'status': Order.Status.FULFILLED})
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, Order.Status.FULFILLED)
+
+
+class BuilderPreviewFrameTests(TestCase):
+    """The builder's live-preview <iframe> must never come back as the browser's
+    blank "refused to connect" page (an X-Frame-Options mismatch)."""
+
+    def setUp(self):
+        self.farm, self.owner = _farm_with_owner('Frame Farm')
+        self.site = FarmSite.objects.create(farm=self.farm, is_published=False)
+        SitePage.objects.create(site=self.site, title='Home', slug='', template=SitePage.Template.HERO, headline='Frame headline')
+        SitePage.objects.create(site=self.site, title='About', slug='about', template=SitePage.Template.HERO, headline='About us')
+        self.worker = User.objects.create_user(email='frame_worker@example.com', first_name='Wes')
+        FarmMembership.objects.create(farm=self.farm, user=self.worker, role=FarmRole.WORKER)
+        self.client.force_login(self.owner)
+        session = self.client.session
+        session['active_farm_id'] = self.farm.id
+        session.save()
+
+    def test_builder_iframe_points_at_the_preview_route(self):
+        resp = self.client.get(reverse('website:page_list'))
+        self.assertContains(resp, f'src="{reverse("website:preview")}"')
+
+    def test_preview_works_for_an_unpublished_site_and_can_be_framed(self):
+        resp = self.client.get(reverse('website:preview'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Frame headline')
+        self.assertContains(resp, 'Draft preview')
+        self.assertEqual(resp.headers['X-Frame-Options'], 'SAMEORIGIN')
+
+    def test_preview_of_an_inner_page(self):
+        resp = self.client.get(reverse('website:preview_page', args=['about']))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'About us')
+
+    def test_preview_is_scoped_to_the_signed_in_farm(self):
+        _other_farm, other_owner = _farm_with_owner('Someone Else Farm')
+        self.client.force_login(other_owner)
+        session = self.client.session
+        session['active_farm_id'] = _other_farm.id
+        session.save()
+        resp = self.client.get(reverse('website:preview'))
+        self.assertNotContains(resp, 'Frame headline')
+
+    def test_workers_cannot_use_the_builder_preview(self):
+        self.client.force_login(self.worker)
+        session = self.client.session
+        session['active_farm_id'] = self.farm.id
+        session.save()
+        self.assertNotEqual(self.client.get(reverse('website:preview')).status_code, 200)
+
+    def test_every_response_is_same_origin_frameable_project_wide(self):
+        """Even a 404 in the frame shows the page instead of "refused to connect"."""
+        self.client.logout()
+        resp = self.client.get(reverse('website_public:home', args=[self.site.slug]))  # unpublished, anonymous
+        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(resp.headers['X-Frame-Options'], 'SAMEORIGIN')
+
+    def test_platform_admin_can_preview_any_unpublished_site(self):
+        admin = User.objects.create_user(email='frame_admin@example.com', first_name='Ada', platform_role='admin')
+        self.client.force_login(admin)
+        resp = self.client.get(reverse('website_public:home', args=[self.site.slug]))
+        self.assertEqual(resp.status_code, 200)
+

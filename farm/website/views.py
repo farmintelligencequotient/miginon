@@ -102,6 +102,22 @@ def site_settings(request):
 
 
 @manage_records_required
+@xframe_options_sameorigin
+def preview(request, page_slug=''):
+    """What the builder's live-preview iframe loads. Unlike the public URL it
+    is scoped to the signed-in user's own farm and never depends on the site's
+    slug, whether it is published, or a public-route 404 - so the team can
+    always preview their draft (the amber banner in public_base.html says
+    it's a draft)."""
+    site = _get_or_create_site(request.farm)
+    if page_slug:
+        page = get_object_or_404(SitePage, site=site, slug=page_slug)
+    else:
+        page = site.pages.filter(slug='').first()
+    return _render_site_page(request, site, page)
+
+
+@manage_records_required
 def page_list(request):
     site = _get_or_create_site(request.farm)
     return _builder_shell(request, site)
@@ -257,6 +273,8 @@ def _can_preview_unpublished(request, site):
     if not request.user.is_authenticated:
         return False
     from farms.models import FarmMembership
+    if request.user.is_platform_admin:
+        return True
     return FarmMembership.objects.filter(farm=site.farm, user=request.user).exists()
 
 

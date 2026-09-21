@@ -6,8 +6,17 @@
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <style>
     .maplibregl-popup-content { border-radius: .75rem !important; padding: .75rem 1rem !important; }
-    .geomap-fs-btn ion-icon { font-size: 18px; vertical-align: middle; }
+    /* Full-screen / zoom-to-parcels buttons: a labelled pill with dark text so it
+       reads on the white MapLibre control box in light AND dark mode. */
+    .maplibregl-ctrl-group > button.geomap-fs-btn, .maplibregl-ctrl-group > button.geomap-fit-btn {
+        width: auto !important; height: 34px !important; padding: 0 .7rem; display: flex; align-items: center; gap: .4rem;
+        color: #1c1917 !important; font: 700 12px/1 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+        white-space: nowrap; cursor: pointer;
+    }
+    .geomap-fs-btn ion-icon, .geomap-fit-btn ion-icon { font-size: 18px; color: #146a4a; flex: none; }
+    @media (max-width: 420px) { .geomap-fs-label, .geomap-fit-label { display: none; } }
     /* Fullscreen: the shell (map + legend + controls) fills the screen. */
+    #geomap-admin-shell [hidden] { display: none !important; }
     #geomap-admin-shell:fullscreen, #geomap-admin-shell.geomap-pseudo-fs {
         height: 100vh !important; height: 100dvh !important; border-radius: 0 !important; border: 0 !important;
     }
@@ -132,32 +141,39 @@
     function applyFilter() {
         var ids = Object.keys(visible).filter(function (k) { return visible[k]; }).map(Number);
         var filter = ['in', ['get', 'farm_id'], ['literal', ids]];
-        ['geomap-admin-fill', 'geomap-admin-line', 'geomap-admin-label'].forEach(function (layer) {
+        ['geomap-admin-fill', 'geomap-admin-line'].forEach(function (layer) {
             if (map.getLayer(layer)) map.setFilter(layer, filter);
         });
     }
 
-    map.on('load', function () {
-        map.addSource('geomap-admin', { type: 'geojson', data: { type: 'FeatureCollection', features: features } });
-        map.addLayer({ id: 'geomap-admin-fill', type: 'fill', source: 'geomap-admin', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.4 } });
-        map.addLayer({ id: 'geomap-admin-line', type: 'line', source: 'geomap-admin', paint: { 'line-color': ['get', 'color'], 'line-width': 2.5 } });
-        map.addLayer({ id: 'geomap-admin-label', type: 'symbol', source: 'geomap-admin', minzoom: 12,
-            layout: { 'text-field': ['get', 'name'], 'text-size': 12 },
-            paint: { 'text-color': '#1c1917', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
-
-        map.on('click', 'geomap-admin-fill', function (e) {
-            var p = e.features[0].properties;
-            var html = '<p class="font-bold text-stone-900">' + esc(p.name) + '</p>' +
-                '<p class="mt-0.5 text-xs font-semibold text-stone-600">' + esc(p.farm) + '</p>' +
-                '<p class="mt-1 text-xs text-stone-500">' + Number(p.area_ha).toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' ha' +
-                (p.block ? ' &middot; ' + esc(p.block) : '') + '</p>' +
-                '<p class="mt-0.5 text-xs text-stone-400">' + esc(p.by) + ' &middot; ' + esc(p.on) + '</p>';
-            new maplibregl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
-        });
-        map.on('mouseenter', 'geomap-admin-fill', function () { map.getCanvas().style.cursor = 'pointer'; });
-        map.on('mouseleave', 'geomap-admin-fill', function () { map.getCanvas().style.cursor = ''; });
+    var layersReady = false;
+    function initLayers() {
+        if (layersReady || !map.isStyleLoaded()) return;
+        layersReady = true;
+        try {
+            map.addSource('geomap-admin', { type: 'geojson', data: { type: 'FeatureCollection', features: features } });
+            map.addLayer({ id: 'geomap-admin-fill', type: 'fill', source: 'geomap-admin', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.4 } });
+            map.addLayer({ id: 'geomap-admin-line', type: 'line', source: 'geomap-admin', paint: { 'line-color': ['get', 'color'], 'line-width': 2.5 } });
+            map.on('click', 'geomap-admin-fill', function (e) {
+                var p = e.features[0].properties;
+                var html = '<p class="font-bold text-stone-900">' + esc(p.name) + '</p>' +
+                    '<p class="mt-0.5 text-xs font-semibold text-stone-600">' + esc(p.farm) + '</p>' +
+                    '<p class="mt-1 text-xs text-stone-500">' + Number(p.area_ha).toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' ha' +
+                    (p.block ? ' &middot; ' + esc(p.block) : '') + '</p>' +
+                    '<p class="mt-0.5 text-xs text-stone-400">' + esc(p.by) + ' &middot; ' + esc(p.on) + '</p>';
+                new maplibregl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
+            });
+            map.on('mouseenter', 'geomap-admin-fill', function () { map.getCanvas().style.cursor = 'pointer'; });
+            map.on('mouseleave', 'geomap-admin-fill', function () { map.getCanvas().style.cursor = ''; });
+        } catch (error) {
+            console.error('GeoMap: could not add the parcel layers', error);
+            layersReady = false;
+            return;
+        }
         fitAll();
-    });
+    }
+    map.on('load', initLayers);
+    map.on('styledata', initLayers);
 
     document.querySelectorAll('input[data-farm]').forEach(function (box) {
         box.addEventListener('change', function () { visible[box.dataset.farm] = box.checked; applyFilter(); });
