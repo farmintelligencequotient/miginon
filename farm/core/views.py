@@ -104,3 +104,11 @@ def demo_login(request):
     django_login(request, user)
     request.session['active_farm_id'] = farm.id
     return redirect('farms:dashboard')
+
+
+def terms(request):
+    return render(request, 'core/terms.html', {'terms_version': settings.TERMS_VERSION})
+
+
+def privacy(request):
+    return render(request, 'core/privacy.html', {'terms_version': settings.TERMS_VERSION})

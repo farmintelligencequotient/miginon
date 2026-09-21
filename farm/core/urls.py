@@ -9,4 +9,6 @@ urlpatterns = [
     path('theme/', views.set_theme, name='set_theme'),
     path('language/', views.set_language, name='set_language'),
     path('demo/', views.demo_login, name='demo_login'),
+    path('terms/', views.terms, name='terms'),
+    path('privacy/', views.privacy, name='privacy'),
 ]

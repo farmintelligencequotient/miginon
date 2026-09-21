@@ -3,7 +3,9 @@ import re
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.templatetags.static import static
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import strip_tags
 
@@ -27,6 +29,21 @@ def _html_to_text(html):
     return text.strip()
 
 
+def _absolute(path):
+    return path if path.startswith(('http://', 'https://')) else f'{settings.SITE_URL}{path}'
+
+
+def _email_site_context():
+    """Absolute URLs for the shared email layout. Emails render outside a
+    request (and outside the site), so nothing here can be relative."""
+    return {
+        'site_url': settings.SITE_URL,
+        'logo_url': _absolute(static('images/logo-mark.png')),
+        'terms_url': _absolute(reverse('core:terms')),
+        'privacy_url': _absolute(reverse('core:privacy')),
+    }
+
+
 def send_styled_email(to, subject, template_name, context=None, attachments=None):
     """Render `template_name` (an emails/*.html template extending
     emails/base_email.html) to HTML, derive a plain-text fallback from it,
@@ -35,7 +52,7 @@ def send_styled_email(to, subject, template_name, context=None, attachments=None
     `attachments` is an optional list of (filename, content_bytes, mimetype)
     tuples, e.g. for attaching a generated PDF report.
     """
-    context = {**(context or {}), 'current_year': timezone.now().year}
+    context = {**_email_site_context(), **(context or {}), 'current_year': timezone.now().year}
     html_body = render_to_string(template_name, context)
     text_body = _html_to_text(html_body)
 

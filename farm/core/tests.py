@@ -83,3 +83,28 @@ class LandingPageTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '/demo/')
         self.assertContains(response, '/credit-score/partners/apply/')
+
+
+class LegalPagesTests(TestCase):
+    def test_terms_and_privacy_are_public(self):
+        for path, heading in (('/terms/', 'Terms of Service'), ('/privacy/', 'Privacy Policy')):
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, heading)
+
+    def test_landing_footer_links_to_legal_pages(self):
+        response = self.client.get('/')
+        self.assertContains(response, 'href="/terms/"')
+        self.assertContains(response, 'href="/privacy/"')
+
+
+class EmailBrandingTests(TestCase):
+    def test_email_uses_absolute_logo_and_legal_links(self):
+        from django.core import mail
+        from core.email import send_styled_email
+        send_styled_email(to='a@example.com', subject='Hi', template_name='emails/welcome.html',
+                          context={'user': None, 'farm': None, 'login_url': 'https://x.test/login/'})
+        html = mail.outbox[0].alternatives[0][0]
+        self.assertIn('src="https://www.farmiq.solutions/static/images/logo-mark.png"', html)
+        self.assertIn('href="https://www.farmiq.solutions/terms/"', html)
+        self.assertIn('href="https://www.farmiq.solutions/privacy/"', html)

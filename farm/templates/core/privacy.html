@@ -1,0 +1,83 @@
+{% extends "core/legal_base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Privacy Policy" %} - FarmIQ{% endblock %}
+{% block legal_title %}{% trans "Privacy Policy" %}{% endblock %}
+{% block legal_content %}
+<h2>1. Who we are</h2>
+<p>FarmIQ is operated by <strong>AppCross Company Limited</strong>, a private limited company registered in Kenya (Company No. PVT-5JUZ2J2D), P.O. Box 25216, G.P.O Nairobi, Kenya. We are the <strong>data controller</strong> for personal data processed through FarmIQ under the Kenya Data Protection Act, 2019. Contact: <a href="mailto:info@farmiq.solutions">info@farmiq.solutions</a>. This policy should be read with our <a href="{% url 'core:terms' %}">Terms of Service</a>.</p>
+
+<h2>2. What we collect</h2>
+<h3>Account details</h3>
+<ul>
+    <li>Your name, email address and (optionally) phone number, your language and theme preference, and the time you accepted our Terms and Privacy Policy.</li>
+</ul>
+<h3>Farm details and records</h3>
+<ul>
+    <li>Your farm's name, county and location (and the coordinates we derive from it), plus the records you or your team enter: blocks and plot boundaries, herd and health records, milk, feeding, crops, inventory, tasks and finance.</li>
+    <li>Details of team members you invite (name, email, role) and their activity in the app.</li>
+</ul>
+<h3>Scores and predictions</h3>
+<ul>
+    <li>Milk-yield predictions and the farm credit score, which we calculate from your records.</li>
+</ul>
+<h3>Notifications and devices</h3>
+<ul>
+    <li>Your notification preferences; a WhatsApp number if you turn WhatsApp notifications on; and a device push subscription if you allow browser or device notifications.</li>
+</ul>
+<h3>Technical data</h3>
+<ul>
+    <li>Session, security, theme and language cookies, and standard server logs (such as IP address and browser type) used to keep the Service secure and working.</li>
+</ul>
+
+<h2>3. How and why we use it</h2>
+<ul>
+    <li><strong>To provide the Service</strong> (contract): create and secure your account, send one-time login codes, store and display your farm records, produce predictions, reports, weather and advisories, and send the notifications you choose.</li>
+    <li><strong>With your consent:</strong> sharing your farm's credit score and related data with a specific lender or partner, and WhatsApp and device notifications. You can withdraw consent at any time.</li>
+    <li><strong>Legitimate interests:</strong> keeping the Service safe, preventing abuse, fixing bugs, improving features, and sending you service and product-update emails.</li>
+    <li><strong>Legal obligations:</strong> where the law requires us to keep or disclose information.</li>
+</ul>
+<p>We do <strong>not</strong> sell your personal data, and we do not use it for advertising.</p>
+
+<h2>4. Who we share it with</h2>
+<p>We use service providers ("processors") who handle data only on our instructions:</p>
+<ul>
+    <li><strong>Hosting and database:</strong> Vercel (application hosting) and Neon (managed Postgres database).</li>
+    <li><strong>Email:</strong> ZeptoMail by Zoho, to send login codes, welcome messages and reports.</li>
+    <li><strong>Media storage:</strong> Amazon Web Services (S3), for uploaded files.</li>
+    <li><strong>WhatsApp:</strong> Meta's WhatsApp Cloud API, only if you enable WhatsApp notifications (your number and the message are sent to Meta).</li>
+    <li><strong>Weather and location lookup:</strong> Open-Meteo, which receives your farm's location text or coordinates to return coordinates and forecasts, without your name or contact details.</li>
+    <li><strong>Blockchain:</strong> the Hedera public network, which receives cryptographic hashes of predictions and limited public token details (cow tag ID, breed, farm name; harvest crop, quantity, date and farm name). Public blockchain entries cannot be edited or deleted.</li>
+    <li><strong>Lenders and data partners:</strong> only those you have expressly authorised, and only what that partner's access allows. You can revoke access in the app at any time.</li>
+</ul>
+<p>Pages you view load fonts and scripts from third-party content networks (for example Google Fonts, the Tailwind CDN and unpkg), which can see your IP address and browser details when they do. We may also disclose information where required by law or to protect rights and safety, or to a successor if the business is transferred, with the same protections.</p>
+
+<h2>5. Transfers outside Kenya</h2>
+<p>Some of our providers process data outside Kenya. Where personal data is transferred abroad we rely on the safeguards allowed by the Data Protection Act, 2019, such as contractual protections with the provider, or your consent.</p>
+
+<h2>6. How long we keep it</h2>
+<ul>
+    <li>Account and farm records are kept while your account is active.</li>
+    <li>One-time login codes are kept only briefly.</li>
+    <li>When you delete your account we delete your personal data and, for a farm you own, that farm's records, subject to short backup cycles and anything we must keep by law. Records already written to a public blockchain cannot be removed.</li>
+    <li>A record of data-sharing consents you gave or revoked may be kept so there is an audit trail.</li>
+</ul>
+
+<h2>7. Your rights</h2>
+<p>Under the Data Protection Act, 2019 you have the right to be informed about how your data is used, to access it, to object to processing, to have inaccurate data corrected, to have data deleted, to receive your data in a portable format, and to withdraw consent. You can edit your details and notification preferences and delete your account in <strong>Settings</strong>, and export records from the app. For anything else, email <a href="mailto:info@farmiq.solutions">info@farmiq.solutions</a>. We will respond within the time the law allows.</p>
+<p>If you are unhappy with how we handle your data you can complain to the Office of the Data Protection Commissioner of Kenya (<a href="https://www.odpc.go.ke" rel="noopener">www.odpc.go.ke</a>).</p>
+
+<h2>8. Security</h2>
+<p>We use passwordless sign-in with one-time codes, encrypted connections (HTTPS), role-based access so people only see what their role needs, and per-farm data separation. No system is perfectly secure. If a breach is likely to harm you, we will notify you and the regulator as the law requires.</p>
+
+<h2>9. Cookies and local storage</h2>
+<p>We use only essential cookies and similar storage: to keep you signed in, protect forms from forgery (CSRF), and remember your theme and language. The app's service worker stores the app icons and an offline page on your device so it can open without a connection. We do not currently use advertising cookies or third-party analytics.</p>
+
+<h2>10. Children</h2>
+<p>FarmIQ is for people aged 18 and over. We do not knowingly collect data from children. If you believe a child has given us data, contact us and we will delete it.</p>
+
+<h2>11. Changes to this policy</h2>
+<p>We may update this policy. When we make a material change we will update the version shown above and notify you in the app or by email.</p>
+
+<h2>12. Contact</h2>
+<p>AppCross Company Limited (FarmIQ), P.O. Box 25216, G.P.O Nairobi, Kenya &middot; <a href="mailto:info@farmiq.solutions">info@farmiq.solutions</a></p>
+{% endblock %}

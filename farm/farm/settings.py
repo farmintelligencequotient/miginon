@@ -263,6 +263,16 @@ MESSAGE_TAGS = {
     40: 'error',    # ERROR
 }
 
+# --- Public site identity & legal documents ----------------------------------
+# SITE_URL is the canonical public address. Emails can't use relative URLs
+# (they're opened outside the site), so the logo and legal links in
+# emails/base_email.html are built from this. TERMS_VERSION is bumped
+# whenever the Terms of Service or Privacy Policy change materially; it's
+# stored on each account at signup so we can show who agreed to which text.
+SITE_URL = env('SITE_URL', default='https://www.farmiq.solutions').rstrip('/')  # type: ignore[union-attr]
+TERMS_VERSION = '2026-09-21'
+LEGAL_CONTACT_EMAIL = env('LEGAL_CONTACT_EMAIL', default='info@farmiq.solutions')  # type: ignore[arg-type]
+
 # --- Progressive Web App (django-pwa) ---------------------------------------
 
 PWA_APP_NAME = 'FarmIQ'

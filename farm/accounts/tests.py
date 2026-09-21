@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core import mail
 from django.test import Client, TestCase
 from django.utils import timezone
@@ -19,7 +20,8 @@ class SignupFlowTests(TestCase):
         self.assertEqual(r.status_code, 200)
 
         r = c.post('/accounts/signup/', {
-            'first_name': 'Test', 'last_name': 'Farmer', 'email': 'newfarmer@example.com', 'phone': '0712345678'
+            'first_name': 'Test', 'last_name': 'Farmer', 'email': 'newfarmer@example.com', 'phone': '0712345678',
+            'accept_terms': 'on',
         })
         self.assertRedirects(r, '/accounts/signup/farm/')
 
@@ -57,15 +59,32 @@ class SignupFlowTests(TestCase):
         membership = FarmMembership.objects.filter(user=user, farm=farm).first()
         self.assertIsNotNone(membership)
         self.assertEqual(membership.role, 'farmer')
+        self.assertIsNotNone(user.terms_accepted_at)
+        self.assertEqual(user.terms_version, settings.TERMS_VERSION)
 
         r = c.get('/farm/')
         self.assertEqual(r.status_code, 200)
+
+    def test_signup_requires_accepting_terms_and_privacy(self):
+        c = Client()
+        payload = {'first_name': 'Test', 'last_name': 'Farmer', 'email': 'noterms@example.com', 'phone': ''}
+        r = c.post('/accounts/signup/', payload)
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'must accept the Terms of Service')
+        # The step is not completed, so the next wizard step is still locked.
+        self.assertRedirects(c.get('/accounts/signup/farm/'), '/accounts/signup/')
+
+    def test_signup_form_links_to_terms_and_privacy(self):
+        r = Client().get('/accounts/signup/')
+        self.assertContains(r, 'href="/terms/"')
+        self.assertContains(r, 'href="/privacy/"')
 
     def test_duplicate_signup_email_rejected_at_otp_stage(self):
         User.objects.create_user(email='dupe@example.com', first_name='Existing')
         c = Client()
         c.post('/accounts/signup/', {
-            'first_name': 'Test', 'last_name': 'Farmer', 'email': 'dupe@example.com', 'phone': ''
+            'first_name': 'Test', 'last_name': 'Farmer', 'email': 'dupe@example.com', 'phone': '',
+            'accept_terms': 'on',
         })
         r = c.post('/accounts/signup/farm/', {
             'farm_name': 'Dupe Farm', 'country': 'KE', 'county': 'Nairobi', 'location': 'Westlands'

@@ -103,6 +103,15 @@ class User(AbstractBaseUser, PermissionsMixin):
                     'walkthrough - per-user (not per-farm), so a worker invited onto an '
                     'already-set-up farm still sees it once on their own first login.')
     )
+    terms_accepted_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text=_('When this user accepted the Terms of Service and Privacy Policy at signup. '
+                    'Empty for accounts created before acceptance was recorded, or added by a farm owner.')
+    )
+    terms_version = models.CharField(
+        max_length=20, blank=True,
+        help_text=_('Which version of the Terms/Privacy Policy (settings.TERMS_VERSION) was accepted.')
+    )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)

@@ -11,7 +11,7 @@ RESERVED_SLUGS = frozenset({
     'django-admin', 'admin', 'accounts', 'farm', 'cows', 'crops', 'finance',
     'inventory', 'analysis', 'notifications', 'tasks', 'weather', 'advisory',
     'wallet', 'credit-score', 'website', 'static', 'media', 'theme',
-    'language', 'offline', 'robots.txt', 'favicon.ico',
+    'language', 'offline', 'robots.txt', 'favicon.ico', 'terms', 'privacy',
 })
 
 

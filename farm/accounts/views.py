@@ -377,6 +377,10 @@ def signup_otp(request):
     if not account or not farm_data:
         return redirect('accounts:signup_account')
 
+    if not account.get('accept_terms'):
+        # A wizard started before terms acceptance existed: go back and tick the box.
+        return redirect('accounts:signup_account')
+
     email = account['email']
     form = OTPForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -400,6 +404,8 @@ def signup_otp(request):
                 first_name=account['first_name'],
                 last_name=account.get('last_name', ''),
                 phone=account.get('phone', ''),
+                terms_accepted_at=timezone.now(),
+                terms_version=settings.TERMS_VERSION,
             )
             farm = Farm.objects.create(
                 name=farm_data['farm_name'],

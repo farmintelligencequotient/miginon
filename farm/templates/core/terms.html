@@ -1,0 +1,66 @@
+{% extends "core/legal_base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Terms of Service" %} - FarmIQ{% endblock %}
+{% block legal_title %}{% trans "Terms of Service" %}{% endblock %}
+{% block legal_content %}
+<h2>1. About these terms</h2>
+<p>FarmIQ is a digital farm management platform operated by <strong>AppCross Company Limited</strong>, a private limited company registered in Kenya (Company No. PVT-5JUZ2J2D), P.O. Box 25216, G.P.O Nairobi, Kenya ("<strong>FarmIQ</strong>", "<strong>we</strong>", "<strong>us</strong>"). These Terms govern your use of the FarmIQ website, web app and related services (the "<strong>Service</strong>"). By creating an account or using the Service you agree to these Terms and to our <a href="{% url 'core:privacy' %}">Privacy Policy</a>. If you do not agree, please do not use the Service.</p>
+
+<h2>2. Who can use FarmIQ</h2>
+<p>You must be at least 18 years old and able to enter into a binding agreement. If you sign up on behalf of a farm, cooperative or business, you confirm that you are authorised to accept these Terms for it.</p>
+
+<h2>3. Your account and your team</h2>
+<ul>
+    <li>Accounts use your email address, your farm's Farm ID and a one-time code sent to your email. There are no passwords. Keep access to your email secure and do not share codes.</li>
+    <li>You must give accurate information and keep it up to date.</li>
+    <li>The person who creates a farm is its owner (the "Farmer"). Owners may invite managers, supervisors and workers and are responsible for the people they invite, for the roles they assign, and for having the right to share those people's details with FarmIQ.</li>
+    <li>You are responsible for activity under your account. Tell us promptly if you think your account has been used without your permission.</li>
+</ul>
+
+<h2>4. Your data</h2>
+<p>You keep ownership of the records you put into FarmIQ (for example herd, milk, feeding, crop, inventory, finance and task records). You give us a limited licence to store, process and display that data solely to provide, secure and improve the Service for you, as described in the <a href="{% url 'core:privacy' %}">Privacy Policy</a>. We do not sell your personal data.</p>
+<p>You are responsible for the accuracy and lawfulness of what you enter.</p>
+
+<h2>5. Acceptable use</h2>
+<ul>
+    <li>Do not use the Service unlawfully, to harm others, or to upload malicious code.</li>
+    <li>Do not try to access other farms' data, probe or disrupt the Service, or bypass its security or usage limits.</li>
+    <li>Do not resell or commercially redistribute the Service or its outputs without our written permission.</li>
+</ul>
+
+<h2>6. Predictions, weather, advisories and scores are guidance only</h2>
+<p>FarmIQ provides AI-based milk-yield predictions, weather forecasts and field advisories, a crop and disease library, and a credit score. These are <strong>estimates and general information</strong>. They depend on the data available and can be wrong. They are not veterinary, agronomic, financial, legal or insurance advice, and you remain responsible for your own farm decisions. Consult a qualified professional where appropriate.</p>
+
+<h2>7. Credit score and data sharing</h2>
+<p>Your farm's credit score is calculated from records in FarmIQ. It is not a loan offer and does not guarantee that any lender or partner will provide credit. Your farm's data is shared with a lender or partner through FarmIQ's partner API only where you have given that specific partner your explicit consent, and you can revoke that consent at any time from within the app. We keep a record of consents given and revoked.</p>
+
+<h2>8. Blockchain records</h2>
+<p>Some records use the Hedera public network. We anchor cryptographic fingerprints (hashes) of predictions, and we mint tokens that carry limited public details: for a registered cow, its tag ID, breed and farm name; for a recorded harvest, the crop, quantity, date and farm name. <strong>Information written to a public blockchain cannot be edited or deleted</strong>, even if you later delete your account or the underlying record. Do not use a farm name or tag ID that you would not want to be public.</p>
+
+<h2>9. Availability and changes to the Service</h2>
+<p>FarmIQ is under active development. We aim to keep the Service available but do not promise it will be uninterrupted or error-free. Features may change, be added or be withdrawn, and we will try to give reasonable notice of changes that materially affect you. Keep your own copies of records that matter to you: you can export data from within the app.</p>
+
+<h2>10. Fees</h2>
+<p>The core Service is currently free of charge. We may introduce paid plans or premium features in future. We will tell you before you are charged anything, and paid features will not apply to you without your agreement.</p>
+
+<h2>11. Demo mode</h2>
+<p>The public demo uses sample data and is read-only. Nothing you view in the demo is your data.</p>
+
+<h2>12. Intellectual property</h2>
+<p>FarmIQ, its software, design, logos and content (other than your data) belong to us or our licensors. These Terms give you no right to use our name or logo except to refer to the Service.</p>
+
+<h2>13. Suspension, termination and account deletion</h2>
+<p>You may stop using the Service and delete your account at any time from Settings. Deleting an account you own as a Farmer also deletes that farm and its records for everyone on the team; deleting an account you hold as a team member removes only your own membership. We may suspend or end access if you breach these Terms, put the Service or other users at risk, or where the law requires. Provisions that by their nature should continue (including sections 8, 14 and 15) continue after termination.</p>
+
+<h2>14. Disclaimers and limits of liability</h2>
+<p>To the fullest extent permitted by Kenyan law, the Service is provided "as is" and "as available" without warranties of any kind, and we are not liable for indirect or consequential loss, loss of profit, loss of livestock or crops, or loss of data arising from your use of the Service or reliance on its predictions and advice. Our total liability for any claim relating to the Service is limited to the amount you paid us for it in the 12 months before the claim (or KES 10,000 if you paid nothing). Nothing in these Terms limits liability that cannot be limited by law.</p>
+
+<h2>15. Governing law and disputes</h2>
+<p>These Terms are governed by the laws of Kenya. We will try to resolve any dispute informally first; if that fails, the courts of Kenya have jurisdiction.</p>
+
+<h2>16. Changes to these Terms</h2>
+<p>We may update these Terms. When we make a material change we will update the version shown above and notify you in the app or by email. Continuing to use the Service after the change takes effect means you accept the updated Terms.</p>
+
+<h2>17. Contact</h2>
+<p>Questions about these Terms: <a href="mailto:info@farmiq.solutions">info@farmiq.solutions</a>, or write to AppCross Company Limited (FarmIQ), P.O. Box 25216, G.P.O Nairobi, Kenya.</p>
+{% endblock %}
