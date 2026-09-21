@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 
 import environ
+import sys
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -109,6 +110,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.DemoModeMiddleware',
+    'core.middleware.TermsAcceptanceMiddleware',
 ]
 
 ROOT_URLCONF = 'farm.urls'
@@ -271,6 +273,11 @@ MESSAGE_TAGS = {
 # stored on each account at signup so we can show who agreed to which text.
 SITE_URL = env('SITE_URL', default='https://www.farmiq.solutions').rstrip('/')  # type: ignore[union-attr]
 TERMS_VERSION = '2026-09-21'
+# Signed-in users who haven't accepted the current TERMS_VERSION are sent to the
+# acceptance page. Off under `manage.py test` so the many existing tests that
+# log in fixture users aren't all redirected; the acceptance tests switch it
+# back on with override_settings.
+REQUIRE_TERMS_ACCEPTANCE = env.bool('REQUIRE_TERMS_ACCEPTANCE', default='test' not in sys.argv)  # type: ignore[arg-type]
 LEGAL_CONTACT_EMAIL = env('LEGAL_CONTACT_EMAIL', default='info@farmiq.solutions')  # type: ignore[arg-type]
 
 # --- Progressive Web App (django-pwa) ---------------------------------------

@@ -1,0 +1,83 @@
+{% extends "core/legal_base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Privacy Policy" %} - FarmIQ{% endblock %}
+{% block legal_title %}{% trans "Privacy Policy" %}{% endblock %}
+{% block legal_content %}
+<h2>1. Sisi ni nani</h2>
+<p>FarmIQ inaendeshwa na <strong>AppCross Company Limited</strong>, kampuni binafsi yenye dhima ndogo iliyosajiliwa nchini Kenya (Nambari ya Kampuni PVT-5JUZ2J2D), S.L.P. 25216, G.P.O Nairobi, Kenya. Sisi ni <strong>mdhibiti wa data</strong> kwa data binafsi inayochakatwa kupitia FarmIQ chini ya Sheria ya Ulinzi wa Data ya Kenya, 2019. Mawasiliano: <a href="mailto:info@farmiq.solutions">info@farmiq.solutions</a>. Sera hii isomwe pamoja na <a href="{% url 'core:terms' %}">Masharti yetu ya Huduma</a>.</p>
+
+<h2>2. Tunachokusanya</h2>
+<h3>Taarifa za akaunti</h3>
+<ul>
+    <li>Jina lako, barua pepe na (hiari) nambari ya simu, lugha na mandhari unayopendelea, na wakati uliokubali Masharti na Sera ya Faragha.</li>
+</ul>
+<h3>Taarifa na rekodi za shamba</h3>
+<ul>
+    <li>Jina la shamba lako, kaunti na eneo (pamoja na viwianishi tunavyovipata kutoka kwa eneo hilo), na rekodi unazoweka wewe au timu yako: vitalu na mipaka ya mashamba, rekodi za mifugo na afya, maziwa, lishe, mazao, ghala, kazi na fedha.</li>
+    <li>Taarifa za wanatimu unaowaalika (jina, barua pepe, jukumu) na shughuli zao ndani ya programu.</li>
+</ul>
+<h3>Alama na utabiri</h3>
+<ul>
+    <li>Utabiri wa uzalishaji wa maziwa na alama ya mkopo ya shamba, tunavyokokotoa kutokana na rekodi zako.</li>
+</ul>
+<h3>Arifa na vifaa</h3>
+<ul>
+    <li>Mapendeleo yako ya arifa; nambari ya WhatsApp ukiwasha arifa za WhatsApp; na usajili wa kifaa kwa arifa ukiruhusu arifa za kivinjari au kifaa.</li>
+</ul>
+<h3>Data ya kiufundi</h3>
+<ul>
+    <li>Vidakuzi vya kikao, usalama, mandhari na lugha, na kumbukumbu za kawaida za seva (kama anwani ya IP na aina ya kivinjari) zinazotumika kuweka Huduma salama na kufanya kazi.</li>
+</ul>
+
+<h2>3. Tunavyotumia na kwa nini</h2>
+<ul>
+    <li><strong>Kukupa Huduma</strong> (mkataba): kufungua na kulinda akaunti yako, kutuma misimbo ya kuingia ya mara moja, kuhifadhi na kuonyesha rekodi za shamba lako, kutoa utabiri, ripoti, hali ya hewa na ushauri, na kutuma arifa unazochagua.</li>
+    <li><strong>Kwa idhini yako:</strong> kushiriki alama ya mkopo ya shamba lako na data inayohusiana na mkopeshaji au mshirika maalum, na arifa za WhatsApp na za kifaa. Unaweza kuondoa idhini wakati wowote.</li>
+    <li><strong>Maslahi halali:</strong> kuweka Huduma salama, kuzuia matumizi mabaya, kurekebisha hitilafu, kuboresha vipengele, na kukutumia barua pepe za huduma na taarifa za bidhaa.</li>
+    <li><strong>Wajibu wa kisheria:</strong> pale sheria inapotutaka kuhifadhi au kufichua taarifa.</li>
+</ul>
+<p><strong>Hatuuzi</strong> data yako binafsi, na hatuitumii kwa matangazo.</p>
+
+<h2>4. Tunaoshiriki nao</h2>
+<p>Tunatumia watoa huduma ("wachakataji") wanaoshughulikia data kwa maagizo yetu tu:</p>
+<ul>
+    <li><strong>Upangishaji na hifadhidata:</strong> Vercel (upangishaji wa programu) na Neon (hifadhidata ya Postgres inayosimamiwa).</li>
+    <li><strong>Barua pepe:</strong> ZeptoMail ya Zoho, kutuma misimbo ya kuingia, ujumbe wa kukaribisha na ripoti.</li>
+    <li><strong>Hifadhi ya faili:</strong> Amazon Web Services (S3), kwa faili zilizopakiwa.</li>
+    <li><strong>WhatsApp:</strong> WhatsApp Cloud API ya Meta, ukiwasha arifa za WhatsApp tu (nambari yako na ujumbe hutumwa kwa Meta).</li>
+    <li><strong>Hali ya hewa na utafutaji wa eneo:</strong> Open-Meteo, inayopokea maandishi ya eneo la shamba lako au viwianishi ili kurudisha viwianishi na utabiri, bila jina lako wala mawasiliano yako.</li>
+    <li><strong>Blockchain:</strong> mtandao wa umma wa Hedera, unaopokea hashes za kriptografia za utabiri na taarifa chache za hadharani za tokeni (nambari ya utambulisho wa ng'ombe, aina, jina la shamba; zao la mavuno, kiasi, tarehe na jina la shamba). Rekodi za blockchain ya umma haziwezi kubadilishwa wala kufutwa.</li>
+    <li><strong>Wakopeshaji na washirika wa data:</strong> wale tu ulioidhinisha waziwazi, na yale tu ambayo ufikiaji wa mshirika huyo unaruhusu. Unaweza kubatilisha ufikiaji ndani ya programu wakati wowote.</li>
+</ul>
+<p>Kurasa unazotazama hupakia fonti na hati kutoka mitandao ya maudhui ya wahusika wengine (kwa mfano Google Fonts, Tailwind CDN na unpkg), ambayo inaweza kuona anwani yako ya IP na maelezo ya kivinjari inapofanya hivyo. Tunaweza pia kufichua taarifa pale sheria inapohitaji au kulinda haki na usalama, au kwa mrithi biashara ikihamishwa, kwa ulinzi uleule.</p>
+
+<h2>5. Uhamishaji nje ya Kenya</h2>
+<p>Baadhi ya watoa huduma wetu huchakata data nje ya Kenya. Data binafsi inapohamishiwa nje ya nchi tunategemea kinga zinazoruhusiwa na Sheria ya Ulinzi wa Data, 2019, kama vile ulinzi wa kimkataba na mtoa huduma, au idhini yako.</p>
+
+<h2>6. Muda tunaohifadhi</h2>
+<ul>
+    <li>Rekodi za akaunti na shamba huhifadhiwa akaunti yako ikiwa hai.</li>
+    <li>Misimbo ya kuingia ya mara moja huhifadhiwa kwa muda mfupi tu.</li>
+    <li>Ukifuta akaunti yako tunafuta data yako binafsi na, kwa shamba unalomiliki, rekodi za shamba hilo, kulingana na mizunguko mifupi ya nakala rudufu na chochote tunachopaswa kuhifadhi kisheria. Rekodi zilizokwisha andikwa kwenye blockchain ya umma haziwezi kuondolewa.</li>
+    <li>Kumbukumbu ya idhini za kushiriki data ulizotoa au kubatilisha inaweza kuhifadhiwa ili kuwe na ufuatiliaji.</li>
+</ul>
+
+<h2>7. Haki zako</h2>
+<p>Chini ya Sheria ya Ulinzi wa Data, 2019 una haki ya kufahamishwa jinsi data yako inavyotumika, kuifikia, kupinga uchakataji, kusahihishwa data isiyo sahihi, kufutiwa data, kupokea data yako katika muundo unaohamishika, na kuondoa idhini. Unaweza kuhariri taarifa zako na mapendeleo ya arifa na kufuta akaunti yako ndani ya <strong>Mipangilio</strong>, na kuhamisha rekodi kutoka kwenye programu. Kwa jambo lingine lolote, tuandikie <a href="mailto:info@farmiq.solutions">info@farmiq.solutions</a>. Tutajibu ndani ya muda unaoruhusiwa na sheria.</p>
+<p>Kama hujaridhika na jinsi tunavyoshughulikia data yako unaweza kulalamika kwa Ofisi ya Kamishna wa Ulinzi wa Data ya Kenya (<a href="https://www.odpc.go.ke" rel="noopener">www.odpc.go.ke</a>).</p>
+
+<h2>8. Usalama</h2>
+<p>Tunatumia kuingia bila nenosiri kwa misimbo ya mara moja, miunganisho iliyosimbwa (HTTPS), ufikiaji kulingana na majukumu ili kila mtu aone anachohitaji tu, na utenganishaji wa data kwa kila shamba. Hakuna mfumo ulio salama kabisa. Ikiwa uvunjaji wa usalama unaweza kukudhuru, tutakujulisha wewe na mdhibiti kama sheria inavyohitaji.</p>
+
+<h2>9. Vidakuzi na hifadhi ya ndani</h2>
+<p>Tunatumia vidakuzi na hifadhi muhimu tu: kukuweka umeingia, kulinda fomu dhidi ya ughushi (CSRF), na kukumbuka mandhari na lugha yako. Service worker ya programu huhifadhi aikoni za programu na ukurasa wa nje ya mtandao kwenye kifaa chako ili ifunguke bila muunganisho. Kwa sasa hatutumii vidakuzi vya matangazo wala uchanganuzi wa wahusika wengine.</p>
+
+<h2>10. Watoto</h2>
+<p>FarmIQ ni kwa watu wenye umri wa miaka 18 na zaidi. Hatukusanyi data ya watoto kwa makusudi. Ukiamini mtoto ametupa data, wasiliana nasi tutaifuta.</p>
+
+<h2>11. Mabadiliko ya sera hii</h2>
+<p>Tunaweza kusasisha sera hii. Tukifanya mabadiliko makubwa tutasasisha toleo linaloonyeshwa hapo juu na kukujulisha ndani ya programu au kwa barua pepe.</p>
+
+<h2>12. Mawasiliano</h2>
+<p>AppCross Company Limited (FarmIQ), S.L.P. 25216, G.P.O Nairobi, Kenya &middot; <a href="mailto:info@farmiq.solutions">info@farmiq.solutions</a></p>
+{% endblock %}

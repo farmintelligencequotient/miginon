@@ -6,8 +6,10 @@
 {% for field in form %}
 <div class="mb-4">
     {% if field.field.widget.input_type == 'checkbox' %}
-    <label for="{{ field.id_for_label }}" class="flex items-start gap-2 text-sm font-semibold text-stone-700 dark:text-stone-300">
-        {{ field }} {{ field.label }}
+    <label for="{{ field.id_for_label }}" class="flex cursor-pointer items-start gap-3 rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-semibold text-stone-700 transition has-[:checked]:border-emerald-300 has-[:checked]:bg-emerald-50 has-[:checked]:text-emerald-900 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:has-[:checked]:border-emerald-700 dark:has-[:checked]:bg-emerald-950 dark:has-[:checked]:text-emerald-100">
+        {{ field }}
+        <span aria-hidden="true" class="relative mt-0.5 h-6 w-11 shrink-0 rounded-full bg-stone-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:bg-emerald-600 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-500 peer-focus-visible:ring-offset-2 dark:bg-stone-600 dark:peer-checked:bg-emerald-500"></span>
+        <span class="flex-1">{{ field.label }}</span>
     </label>
     {% else %}
     <label for="{{ field.id_for_label }}" class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">

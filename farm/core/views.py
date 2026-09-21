@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import login as django_login
 from django.shortcuts import redirect, render
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import get_language, gettext_lazy as _
 
 from accounts.models import User
 
@@ -106,9 +106,17 @@ def demo_login(request):
     return redirect('farms:dashboard')
 
 
+def _legal_template(name):
+    """Legal documents are long-form prose, so rather than a msgid per
+    sentence each language gets its own template (`terms_sw.html`, ...);
+    English is the fallback."""
+    lang = (get_language() or 'en').split('-')[0]
+    return f'core/{name}_{lang}.html' if lang != 'en' else f'core/{name}.html'
+
+
 def terms(request):
-    return render(request, 'core/terms.html', {'terms_version': settings.TERMS_VERSION})
+    return render(request, _legal_template('terms'), {'terms_version': settings.TERMS_VERSION})
 
 
 def privacy(request):
-    return render(request, 'core/privacy.html', {'terms_version': settings.TERMS_VERSION})
+    return render(request, _legal_template('privacy'), {'terms_version': settings.TERMS_VERSION})

@@ -4,7 +4,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
-from core.formhelpers import CHECKBOX_CLASSES, OTP_INPUT_CLASSES, TailwindFormMixin
+from core.formhelpers import OTP_INPUT_CLASSES, TailwindFormMixin
 from farms.forms import KenyaLocationFieldsMixin
 
 
@@ -57,26 +57,32 @@ class OTPForm(TailwindFormMixin, forms.Form):
         return code
 
 
-class SignupAccountForm(TailwindFormMixin, forms.Form):
+class TermsConsentForm(TailwindFormMixin, forms.Form):
+    """Base for any form that asks the user to accept the Terms of Service and
+    Privacy Policy (signup, and the re-acceptance prompt shown to existing
+    users), so the wording, links and error message live in one place."""
+    accept_terms = forms.BooleanField(
+        required=True,
+        error_messages={'required': _l('You must accept the Terms of Service and Privacy Policy to continue.')},
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['accept_terms'].label = format_html(
+            _('I have read and agree to the <a href="{}" target="_blank" rel="noopener" class="font-bold text-emerald-700 underline dark:text-emerald-400">Terms of Service</a> '
+              'and the <a href="{}" target="_blank" rel="noopener" class="font-bold text-emerald-700 underline dark:text-emerald-400">Privacy Policy</a>.'),
+            reverse('core:terms'), reverse('core:privacy'),
+        )
+
+
+class SignupAccountForm(TermsConsentForm):
     first_name = forms.CharField(max_length=60)
     last_name = forms.CharField(max_length=60, required=False)
     email = forms.EmailField()
     phone = forms.CharField(max_length=20, required=False, widget=forms.TextInput(
         attrs={'placeholder': '07XX XXX XXX'}
     ))
-    accept_terms = forms.BooleanField(
-        required=True,
-        error_messages={'required': _('You must accept the Terms of Service and Privacy Policy to create an account.')},
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['accept_terms'].widget.attrs['class'] = CHECKBOX_CLASSES + ' mt-0.5 shrink-0'
-        self.fields['accept_terms'].label = format_html(
-            _('I have read and agree to the <a href="{}" target="_blank" rel="noopener" class="font-bold text-emerald-700 underline dark:text-emerald-400">Terms of Service</a> '
-              'and the <a href="{}" target="_blank" rel="noopener" class="font-bold text-emerald-700 underline dark:text-emerald-400">Privacy Policy</a>.'),
-            reverse('core:terms'), reverse('core:privacy'),
-        )
+    field_order = ['first_name', 'last_name', 'email', 'phone', 'accept_terms']
 
     def clean_email(self):
         from .models import User

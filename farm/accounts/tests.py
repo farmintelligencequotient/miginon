@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.core import mail
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.utils import timezone
 
 from farms.models import Farm, FarmMembership
@@ -73,6 +73,11 @@ class SignupFlowTests(TestCase):
         self.assertContains(r, 'must accept the Terms of Service')
         # The step is not completed, so the next wizard step is still locked.
         self.assertRedirects(c.get('/accounts/signup/farm/'), '/accounts/signup/')
+
+    def test_terms_checkbox_renders_as_toggle_switch(self):
+        r = Client().get('/accounts/signup/')
+        self.assertContains(r, 'peer sr-only')
+        self.assertContains(r, 'peer-checked:bg-emerald-600')
 
     def test_signup_form_links_to_terms_and_privacy(self):
         r = Client().get('/accounts/signup/')
@@ -255,3 +260,58 @@ class DashboardTourTests(TestCase):
     def test_mark_tour_seen_requires_post(self):
         response = self.client.get('/accounts/tour/seen/')
         self.assertNotEqual(response.status_code, 200)
+
+
+@override_settings(REQUIRE_TERMS_ACCEPTANCE=True)
+class TermsAcceptancePromptTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='old@example.com', first_name='Old')
+        self.client = Client()
+        self.client.force_login(self.user)
+
+    def test_signed_in_user_without_acceptance_is_sent_to_accept_page(self):
+        r = self.client.get('/farm/')
+        self.assertRedirects(r, '/accounts/accept-terms/?next=%2Ffarm%2F', fetch_redirect_response=False)
+
+    def test_accept_page_and_documents_are_reachable_before_accepting(self):
+        for path in ('/accounts/accept-terms/', '/terms/', '/privacy/'):
+            self.assertEqual(self.client.get(path).status_code, 200, path)
+
+    def test_must_tick_the_toggle_to_continue(self):
+        r = self.client.post('/accounts/accept-terms/', {'next': '/farm/'})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'must accept the Terms of Service')
+        self.user.refresh_from_db()
+        self.assertIsNone(self.user.terms_accepted_at)
+
+    def test_accepting_records_version_and_returns_to_next(self):
+        r = self.client.post('/accounts/accept-terms/', {'accept_terms': 'on', 'next': '/farm/'})
+        self.assertRedirects(r, '/farm/', fetch_redirect_response=False)
+        self.user.refresh_from_db()
+        self.assertIsNotNone(self.user.terms_accepted_at)
+        self.assertEqual(self.user.terms_version, settings.TERMS_VERSION)
+        self.assertNotIn('accept-terms', self.client.get('/farm/').get('Location', ''))
+
+    def test_next_must_stay_on_this_site(self):
+        r = self.client.post('/accounts/accept-terms/', {'accept_terms': 'on', 'next': 'https://evil.example/'})
+        self.assertEqual(r.status_code, 302)
+        self.assertNotIn('evil.example', r['Location'])
+
+    def test_bumping_the_version_asks_everyone_again(self):
+        self.user.terms_accepted_at = timezone.now()
+        self.user.terms_version = 'older-version'
+        self.user.save()
+        r = self.client.get('/farm/')
+        self.assertIn('/accounts/accept-terms/', r['Location'])
+
+    def test_user_on_current_version_is_not_prompted(self):
+        self.user.terms_accepted_at = timezone.now()
+        self.user.terms_version = settings.TERMS_VERSION
+        self.user.save()
+        r = self.client.get('/farm/')
+        self.assertNotIn('accept-terms', r.get('Location', ''))
+
+    def test_can_still_sign_out_instead(self):
+        r = self.client.post('/accounts/logout/')
+        self.assertEqual(r.status_code, 302)
+        self.assertNotIn('accept-terms', r['Location'])

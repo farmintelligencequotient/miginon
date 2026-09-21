@@ -9,6 +9,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
@@ -28,6 +29,7 @@ from .forms import (
     ProfileForm,
     SignupAccountForm,
     SignupFarmForm,
+    TermsConsentForm,
 )
 from .models import EmailOTP, User
 from .services import OTPDeliveryError, can_resend, issue_otp
@@ -598,3 +600,23 @@ def resend_settings_email_otp(request):
     else:
         messages.warning(request, _('Please wait a little before requesting another code.'))
     return redirect('accounts:settings_email_otp')
+
+
+# ------------------------------------------------------------ terms re-acceptance
+
+@login_required
+def accept_terms(request):
+    """Shown (via core.middleware.TermsAcceptanceMiddleware) to any signed-in
+    user who hasn't accepted the current Terms/Privacy version - existing
+    accounts from before acceptance was recorded, team members added by a
+    farm owner, and everyone again whenever settings.TERMS_VERSION changes."""
+    next_url = request.POST.get('next') or request.GET.get('next') or ''
+    if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        next_url = ''
+    form = TermsConsentForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        request.user.terms_accepted_at = timezone.now()
+        request.user.terms_version = settings.TERMS_VERSION
+        request.user.save(update_fields=['terms_accepted_at', 'terms_version'])
+        return redirect(next_url or 'farms:dashboard')
+    return render(request, 'accounts/accept_terms.html', {'form': form, 'next': next_url})

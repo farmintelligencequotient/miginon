@@ -92,6 +92,16 @@ class LegalPagesTests(TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertContains(response, heading)
 
+    def test_legal_pages_are_available_in_kiswahili(self):
+        from django.conf import settings
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = 'sw'
+        terms = self.client.get('/terms/')
+        self.assertContains(terms, 'Masharti ya Huduma')
+        self.assertContains(terms, 'Masharti haya yanasimamia')
+        privacy = self.client.get('/privacy/')
+        self.assertContains(privacy, 'Sera ya Faragha')
+        self.assertContains(privacy, 'Tunachokusanya')
+
     def test_landing_footer_links_to_legal_pages(self):
         response = self.client.get('/')
         self.assertContains(response, 'href="/terms/"')

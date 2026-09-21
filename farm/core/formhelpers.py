@@ -6,7 +6,10 @@ INPUT_CLASSES = (
     'focus:ring-2 focus:ring-emerald-100 focus:outline-none transition'
 )
 SELECT_CLASSES = INPUT_CLASSES
-CHECKBOX_CLASSES = 'h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500'
+# Checkboxes render as sliding toggle switches (see partials/form_fields.html):
+# the real <input> stays in the DOM for forms/JS but is visually hidden, and the
+# sibling track span reacts to it via Tailwind's `peer-checked:` variants.
+CHECKBOX_CLASSES = 'peer sr-only'
 OTP_INPUT_CLASSES = (
     'w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-center '
     'text-2xl tracking-[0.6em] font-semibold text-stone-900 '

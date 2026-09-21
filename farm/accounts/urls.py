@@ -33,5 +33,7 @@ urlpatterns = [
     path('settings/email/otp/', views.settings_email_otp, name='settings_email_otp'),
     path('settings/email/otp/resend/', views.resend_settings_email_otp, name='resend_settings_email_otp'),
 
+    path('accept-terms/', views.accept_terms, name='accept_terms'),
+
     path('tour/seen/', views.mark_tour_seen, name='mark_tour_seen'),
 ]
