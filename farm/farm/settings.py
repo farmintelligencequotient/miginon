@@ -241,20 +241,18 @@ LOGOUT_REDIRECT_URL = 'core:landing'
 
 # Email
 # In development (no .env), OTP/welcome/report emails just print to the
-# console. Production sends through ZeptoMail (Zoho's transactional email
-# API/SMTP service, built for automated app sending unlike a regular Zoho
-# Mail mailbox) - see .env.example for the real credentials, which live only
-# in .env / .env.local, never here.
+# console. Production sends through Resend (see core/resend_backend.py) -
+# the real API key lives only in .env / the host's env vars, never here.
 EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')  # type: ignore[arg-type]
-EMAIL_HOST = env('EMAIL_HOST', default='smtp.zeptomail.com')  # type: ignore[arg-type]
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.resend.com')  # type: ignore[arg-type]
 EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')  # type: ignore[arg-type]
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')  # type: ignore[arg-type]
-# HTTP-API alternative to SMTP: set EMAIL_BACKEND=core.zeptomail.ZeptoMailAPIEmailBackend
-# and ZEPTOMAIL_API_TOKEN (the agent's "Send Mail token" - NOT the SMTP password).
-ZEPTOMAIL_API_TOKEN = env('ZEPTOMAIL_API_TOKEN', default='')  # type: ignore[arg-type]
-ZEPTOMAIL_API_HOST = env('ZEPTOMAIL_API_HOST', default='api.zeptomail.com')  # type: ignore[arg-type]
+# Production sends through Resend's HTTP API: set
+# EMAIL_BACKEND=core.resend_backend.ResendEmailBackend and RESEND_API_KEY.
+# DEFAULT_FROM_EMAIL must be on a domain verified in Resend.
+RESEND_API_KEY = env('RESEND_API_KEY', default='')  # type: ignore[arg-type]
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='FarmIQ <noreply@farmiq.solutions>')  # type: ignore[arg-type]
 
 OTP_VALIDITY_MINUTES = 10

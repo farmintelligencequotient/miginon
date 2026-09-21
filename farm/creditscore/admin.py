@@ -20,7 +20,7 @@ def approve_and_notify(modeladmin, request, queryset):
         if partner.contact_email:
             # Non-critical, like every other outbound notification in this
             # codebase (see send_styled_email_safely's docstring) - a
-            # ZeptoMail hiccup shouldn't undo the approval, since the key
+            # email-provider hiccup shouldn't undo the approval, since the key
             # is also visible to staff in this admin either way.
             send_styled_email_safely(
                 to=partner.contact_email,
