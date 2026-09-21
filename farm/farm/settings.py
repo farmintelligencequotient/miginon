@@ -251,6 +251,10 @@ EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')  # type: ignore[arg-type]
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')  # type: ignore[arg-type]
+# HTTP-API alternative to SMTP: set EMAIL_BACKEND=core.zeptomail.ZeptoMailAPIEmailBackend
+# and ZEPTOMAIL_API_TOKEN (the agent's "Send Mail token" - NOT the SMTP password).
+ZEPTOMAIL_API_TOKEN = env('ZEPTOMAIL_API_TOKEN', default='')  # type: ignore[arg-type]
+ZEPTOMAIL_API_HOST = env('ZEPTOMAIL_API_HOST', default='api.zeptomail.com')  # type: ignore[arg-type]
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='FarmIQ <noreply@farmiq.solutions>')  # type: ignore[arg-type]
 
 OTP_VALIDITY_MINUTES = 10
