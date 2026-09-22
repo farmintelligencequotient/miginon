@@ -3328,3 +3328,816 @@ msgstr "Alika mameneja, wasimamizi na wafanyakazi - hakuna nenosiri, misimbo ya 
 
 msgid "Step"
 msgstr "Hatua"
+
+msgid " and %(count)d more."
+msgstr " na %(count)d zaidi."
+
+msgid "%(count)d overdue task(s)"
+msgstr "%(count)d kazi zilizochelewa"
+
+msgid "%(name)s added to your storefront."
+msgstr "%(name)s imeongezwa kwenye duka lako."
+
+msgid "%(name)s deleted."
+msgstr "%(name)s imefutwa."
+
+msgid "%(name)s harvest coming up"
+msgstr "Mavuno ya %(name)s yanakaribia"
+
+msgid "%(name)s is low on stock"
+msgstr "%(name)s inapungua kwenye hisa"
+
+msgid "%(name)s removed from your storefront."
+msgstr "%(name)s imeondolewa kwenye duka lako."
+
+msgid "%(stock)s %(unit)s left (reorder level: %(level)s)."
+msgstr "%(stock)s %(unit)s zimebaki (kiwango cha kuagiza tena: %(level)s)."
+
+msgid "%(type)s logged for %(cow)s."
+msgstr "%(type)s imerekodiwa kwa %(cow)s."
+
+msgid "+ Add"
+msgstr "+ Ongeza"
+
+msgid "+ Add product"
+msgstr "+ Ongeza bidhaa"
+
+msgid "+ Log"
+msgstr "+ Rekodi"
+
+msgid "+ Log event"
+msgstr "+ Rekodi tukio"
+
+msgid "+ Log health record"
+msgstr "+ Rekodi afya"
+
+msgid "+ Log weight"
+msgstr "+ Rekodi uzito"
+
+msgid "1 (emaciated) to 5 (obese), in 0.25 steps."
+msgstr "1 (dhaifu) hadi 5 (mnene), kwa hatua za 0.25."
+
+msgid "A GPS-mapped field from GeoMap, if this crop has one - preferred over field_name when set."
+msgstr "Shamba lililopimwa kwa GPS kutoka GeoMap, kama zao hili lina moja - hupewa kipaumbele kuliko field_name likiwekwa."
+
+msgid "A human reviews every application before any API key goes live. Even once approved, your key only ever returns a score for a farm that has explicitly agreed to share it with you."
+msgstr "Mtu hukagua kila maombi kabla ya funguo yoyote ya API kuanza kutumika. Hata ikiidhinishwa, funguo yako hurudisha alama tu kwa shamba lililokubali waziwazi kuishiriki nawe."
+
+msgid "API key"
+msgstr "Funguo ya API"
+
+msgid "Abortion / loss"
+msgstr "Kuharibika kwa mimba / kupoteza"
+
+msgid "Add a product"
+msgstr "Ongeza bidhaa"
+
+msgid "Add product"
+msgstr "Ongeza bidhaa"
+
+msgid "Add product →"
+msgstr "Ongeza bidhaa →"
+
+msgid "All farms map"
+msgstr "Ramani ya mashamba yote"
+
+msgid "Application received"
+msgstr "Maombi yamepokelewa"
+
+msgid "Apply for API access"
+msgstr "Omba ufikiaji wa API"
+
+msgid "Approved"
+msgstr "Imeidhinishwa"
+
+msgid "Assign work and track what your team has done."
+msgstr "Gawa kazi na fuatilia kile timu yako imefanya."
+
+msgid "BCS"
+msgstr "BCS"
+
+msgid "Back to credit score"
+msgstr "Rudi kwenye alama ya mkopo"
+
+msgid "Become a FarmIQ data partner"
+msgstr "Kuwa mshirika wa data wa FarmIQ"
+
+msgid "Block:"
+msgstr "Kizuizi:"
+
+msgid "Breed society / pedigree registration number, if registered."
+msgstr "Nambari ya usajili wa chama cha ufugaji / nasaba, kama imesajiliwa."
+
+msgid "Breeding calendar"
+msgstr "Kalenda ya uzalishaji"
+
+msgid "Breeding events"
+msgstr "Matukio ya uzalishaji"
+
+msgid "Buyer"
+msgstr "Mnunuzi"
+
+msgid "Calved"
+msgstr "Amezaa"
+
+msgid "Change"
+msgstr "Badilisha"
+
+msgid "Check your details, then we'll email you a verification code."
+msgstr "Angalia taarifa zako, kisha tutakutumia msimbo wa uthibitisho kwa barua pepe."
+
+msgid "Checkup"
+msgstr "Ukaguzi"
+
+msgid "Choose which lenders and other approved partners can look up your farm's credit score. Nothing is shared until you turn it on here, and you can stop at any time."
+msgstr "Chagua wakopeshaji na washirika wengine walioidhinishwa wanaoweza kuona alama ya mkopo ya shamba lako. Hakuna kinachoshirikiwa mpaka uwashe hapa, na unaweza kusitisha wakati wowote."
+
+msgid "Confirm"
+msgstr "Thibitisha"
+
+msgid "Contacted"
+msgstr "Amewasiliana"
+
+msgid "Could not get your location. Check location permissions and try again."
+msgstr "Imeshindwa kupata eneo lako. Angalia ruhusa za eneo kisha ujaribu tena."
+
+msgid "Cow registered"
+msgstr "Ng'ombe amesajiliwa"
+
+msgid "Critical"
+msgstr "Hatari"
+
+msgid "Dam"
+msgstr "Mama"
+
+msgid "Data sharing"
+msgstr "Ushirikishaji wa data"
+
+msgid "Description"
+msgstr "Maelezo"
+
+msgid "Draw at least 3 points before saving."
+msgstr "Chora angalau pointi 3 kabla ya kuhifadhi."
+
+msgid "Draw new parcel"
+msgstr "Chora kipande kipya"
+
+msgid "Dried off"
+msgstr "Amekaushwa"
+
+msgid "Edit breeding event"
+msgstr "Hariri tukio la uzalishaji"
+
+msgid "Edit health record"
+msgstr "Hariri rekodi ya afya"
+
+msgid "Edit product"
+msgstr "Hariri bidhaa"
+
+msgid "Edit weight record"
+msgstr "Hariri rekodi ya uzito"
+
+msgid "Endpoint"
+msgstr "Endpoint"
+
+msgid "Enquiries submitted from your site - no payment is collected here, arrange it directly with the buyer."
+msgstr "Maswali yaliyotumwa kutoka tovuti yako - hakuna malipo yanayokusanywa hapa, panga moja kwa moja na mnunuzi."
+
+msgid "Enter directly from a scale, or leave blank to estimate from the tape measurement above."
+msgstr "Ingiza moja kwa moja kutoka mizani, au acha wazi ili kukadiria kutoka kipimo cha utepe hapo juu."
+
+msgid "Enter your Farm ID to get started. It's the 8-character code you received when the farm was set up."
+msgstr "Ingiza Kitambulisho cha Shamba lako ili kuanza. Ni msimbo wa herufi 8 ulioupokea shamba lilipoanzishwa."
+
+msgid "Event"
+msgstr "Tukio"
+
+msgid "Every cow, organized by block."
+msgstr "Kila ng'ombe, aliyepangwa kwa kizuizi."
+
+msgid "Everything happening on your farm, in one place."
+msgstr "Kila kinachoendelea shambani mwako, mahali pamoja."
+
+msgid "Exact per-feature drivers of the score - see creditscore.explain."
+msgstr "Vichocheo halisi vya alama kwa kila kipengele - angalia creditscore.explain."
+
+msgid "Expected calving"
+msgstr "Kuzaa kunakotarajiwa"
+
+msgid "Expected dry-off"
+msgstr "Kukaushwa kunakotarajiwa"
+
+msgid "Expected harvest on %(date)s."
+msgstr "Mavuno yanatarajiwa tarehe %(date)s."
+
+msgid "Explore the live demo"
+msgstr "Chunguza onyesho la moja kwa moja"
+
+msgid "External or AI bull not recorded in this herd, e.g. an AI code or name."
+msgstr "Fahali wa nje au wa uhimilishaji asiyerekodiwa kwenye mifugo hii, mfano msimbo wa uhimilishaji au jina."
+
+msgid "External or AI bull, e.g. an AI code or name - used instead of/alongside the field above."
+msgstr "Fahali wa nje au wa uhimilishaji, mfano msimbo wa uhimilishaji au jina - hutumika badala ya/pamoja na uga ulio juu."
+
+msgid "FIQ wallet"
+msgstr "Pochi ya FIQ"
+
+msgid "Farm"
+msgstr "Shamba"
+
+msgid "Farms"
+msgstr "Mashamba"
+
+msgid "Fields and crops you're growing alongside your herd."
+msgstr "Mashamba na mazao unayolima pamoja na mifugo yako."
+
+msgid "For SACCOs, MFIs and insurers who want verified, farmer-consented credit scores to underwrite lending - not a general account signup."
+msgstr "Kwa SACCO, taasisi za mikopo midogo na makampuni ya bima yanayotaka alama za mkopo zilizothibitishwa na kukubaliwa na mkulima kwa ajili ya mikopo - si usajili wa akaunti wa kawaida."
+
+msgid "For a Service/Insemination event, if the bull is in this herd."
+msgstr "Kwa tukio la Huduma/Uhimilishaji, kama fahali yupo kwenye mifugo hii."
+
+msgid "For a follow-up dose/checkup, if there is one."
+msgstr "Kwa dozi/ukaguzi wa ufuatiliaji, kama upo."
+
+msgid "For lenders & partners"
+msgstr "Kwa wakopeshaji na washirika"
+
+msgid "For milk that left the farm without being sold - calves, staff, spoilage. Draws down your Milk inventory the same way a sale would, but doesn't touch your finances, so production and sales figures stay honest."
+msgstr "Kwa maziwa yaliyotoka shambani bila kuuzwa - ndama, wafanyakazi, uharibifu. Hupunguza bidhaa yako ya Maziwa kama vile mauzo yangefanya, lakini haiathiri fedha zako, hivyo takwimu za uzalishaji na mauzo zinabaki sahihi."
+
+msgid "Free-text label - used only when this crop has no mapped land_parcel below."
+msgstr "Lebo ya maandishi huru - hutumika tu wakati zao hili halina land_parcel iliyopimwa hapa chini."
+
+msgid "Fulfilled"
+msgstr "Imekamilishwa"
+
+msgid "General"
+msgstr "Jumla"
+
+msgid "GeoMap"
+msgstr "GeoMap"
+
+msgid "GeoMap isn't configured yet - a platform admin needs to set TOMTOM_API_KEY and TOMTOM_STYLE_ID."
+msgstr "GeoMap haijasanidiwa bado - msimamizi wa jukwaa anahitaji kuweka TOMTOM_API_KEY na TOMTOM_STYLE_ID."
+
+msgid "GeoMap isn't configured yet - set TOMTOM_API_KEY and TOMTOM_STYLE_ID."
+msgstr "GeoMap haijasanidiwa bado - weka TOMTOM_API_KEY na TOMTOM_STYLE_ID."
+
+msgid "Getting started with your dairy farm & more"
+msgstr "Kuanza na shamba lako la maziwa na zaidi"
+
+msgid "Harvest logged"
+msgstr "Mavuno yamerekodiwa"
+
+msgid "Header"
+msgstr "Kichwa"
+
+msgid "Health record deleted."
+msgstr "Rekodi ya afya imefutwa."
+
+msgid "Health record updated."
+msgstr "Rekodi ya afya imesasishwa."
+
+msgid "Health records"
+msgstr "Rekodi za afya"
+
+msgid "Heart-girth tape"
+msgstr "Utepe wa kupima kifua"
+
+msgid "Heat observed"
+msgstr "Joto limeonekana"
+
+msgid "Heat, service, pregnancy check, drying off or calving."
+msgstr "Joto, huduma, ukaguzi wa mimba, kukausha au kuzaa."
+
+msgid "Heat, service, pregnancy checks, drying off and calving - one timeline per cow."
+msgstr "Joto, huduma, ukaguzi wa mimba, kukausha na kuzaa - ratiba moja kwa kila ng'ombe."
+
+msgid "Hidden"
+msgstr "Imefichwa"
+
+msgid "In international format, e.g. +2547XXXXXXXX - required to enable WhatsApp notifications below."
+msgstr "Kwa muundo wa kimataifa, mfano +2547XXXXXXXX - inahitajika kuwezesha arifa za WhatsApp hapa chini."
+
+msgid "Info"
+msgstr "Taarifa"
+
+msgid "Invalid shape data."
+msgstr "Data ya umbo si sahihi."
+
+msgid "Keep logging milk daily"
+msgstr "Endelea kurekodi maziwa kila siku"
+
+msgid "Keep logging milk, feed, tasks and finances - insights will show up here as patterns emerge."
+msgstr "Endelea kurekodi maziwa, lishe, kazi na fedha - maarifa yataonekana hapa mifumo inapojitokeza."
+
+msgid "Keep this email somewhere safe - if you ever forget your Farm ID, it's also shown at the top of your dashboard once signed in."
+msgstr "Hifadhi barua pepe hii mahali salama - ukisahau Kitambulisho cha Shamba lako, pia huonyeshwa juu ya dashibodi yako ukishaingia."
+
+msgid "Key terms"
+msgstr "Maneno muhimu"
+
+msgid "Learning paths"
+msgstr "Njia za kujifunza"
+
+msgid "Lesson"
+msgstr "Somo"
+
+msgid "Let's set up your account"
+msgstr "Hebu tusanidi akaunti yako"
+
+msgid "Link to a block (optional)"
+msgstr "Unganisha na kizuizi (hiari)"
+
+msgid "Linked to inventory:"
+msgstr "Imeunganishwa na bidhaa:"
+
+msgid "Listed"
+msgstr "Imeorodheshwa"
+
+msgid "Live demo"
+msgstr "Onyesho la moja kwa moja"
+
+msgid "Log a breeding event"
+msgstr "Rekodi tukio la uzalishaji"
+
+msgid "Log a health record"
+msgstr "Andika rekodi ya afya"
+
+msgid "Log a weight"
+msgstr "Andika uzito"
+
+msgid "Log breeding event"
+msgstr "Rekodi tukio la uzalishaji"
+
+msgid "Log health record"
+msgstr "Rekodi afya"
+
+msgid "Log weight"
+msgstr "Rekodi uzito"
+
+msgid "Manage products"
+msgstr "Simamia bidhaa"
+
+msgid "Manages herd, crops and inventory records and views reports. Can't manage workers or farms."
+msgstr "Husimamia rekodi za mifugo, mazao na bidhaa na kuona ripoti. Hawezi kusimamia wafanyakazi au mashamba."
+
+msgid "Manages workers, herd, crops, inventory and finance records. Can't create new farms."
+msgstr "Husimamia wafanyakazi, mifugo, mazao, bidhaa na rekodi za fedha. Hawezi kuunda mashamba mapya."
+
+msgid "Mapped area"
+msgstr "Eneo lililopimwa"
+
+msgid "Mapped field (GeoMap)"
+msgstr "Shamba lililopimwa (GeoMap)"
+
+msgid "Matches a key in farms.kenya_data.COUNTY_TOWNS."
+msgstr "Inalingana na ufunguo katika farms.kenya_data.COUNTY_TOWNS."
+
+msgid "Milk production certificate"
+msgstr "Cheti cha uzalishaji wa maziwa"
+
+msgid "Milk yield is down"
+msgstr "Uzalishaji wa maziwa umeshuka"
+
+msgid "Milk yield is up"
+msgstr "Uzalishaji wa maziwa umepanda"
+
+msgid "Milk, feed, crops, stock or an expense - everything starts here."
+msgstr "Maziwa, lishe, mazao, bidhaa au matumizi - kila kitu huanzia hapa."
+
+msgid "My parcels"
+msgstr "Vipande vyangu"
+
+msgid "Name this parcel"
+msgstr "Taja kipande hiki"
+
+msgid "Net income has dropped"
+msgstr "Mapato halisi yamepungua"
+
+msgid "Net income over the last 30 days (%(last)s) is well below the prior 30 days (%(prior)s)."
+msgstr "Mapato halisi ya siku 30 zilizopita (%(last)s) ni chini sana ya siku 30 zilizotangulia (%(prior)s)."
+
+msgid "New"
+msgstr "Mpya"
+
+msgid "Next"
+msgstr "Ijayo"
+
+msgid "Next due"
+msgstr "Inayofuata"
+
+msgid "Next heat expected"
+msgstr "Joto linalofuata linatarajiwa"
+
+msgid "Next lesson"
+msgstr "Somo linalofuata"
+
+msgid "Next, let's add your first block/paddock and a few cows so your dashboard is ready to use."
+msgstr "Ifuatayo, hebu tuongeze kizuizi/eneo lako la kwanza na ng'ombe wachache ili dashibodi yako iwe tayari kutumika."
+
+msgid "No API key works until a farm has separately agreed to share its score with you - approval only unlocks the ability to be granted that access, it doesn't grant it by itself."
+msgstr "Hakuna funguo ya API inayofanya kazi mpaka shamba likubali kando kushiriki alama yake nawe - idhini hufungua tu uwezo wa kupewa ufikiaji huo, haitoi moja kwa moja."
+
+msgid "No approved data partners yet - check back once a lender or insurer has been onboarded."
+msgstr "Hakuna washirika wa data walioidhinishwa bado - rudi tena baada ya mkopeshaji au kampuni ya bima kujiunga."
+
+msgid "No breeding events logged yet."
+msgstr "Hakuna matukio ya uzalishaji yaliyorekodiwa bado."
+
+msgid "No farm has mapped a parcel yet."
+msgstr "Hakuna shamba lililopima kipande bado."
+
+msgid "No health records yet."
+msgstr "Hakuna rekodi za afya bado."
+
+msgid "No learning paths yet."
+msgstr "Hakuna njia za kujifunza bado."
+
+msgid "No lessons yet."
+msgstr "Hakuna masomo bado."
+
+msgid "No orders yet."
+msgstr "Hakuna oda bado."
+
+msgid "No parcels mapped yet - draw one on the map above."
+msgstr "Hakuna vipande vilivyopimwa bado - chora kimoja kwenye ramani hapo juu."
+
+msgid "No scale? Measure the heart girth with a tape and leave the weight field blank to estimate it."
+msgstr "Huna mizani? Pima kifua kwa utepe na uache uga wa uzito wazi ili kukadiria."
+
+msgid "No signal - saved on this device and will sync automatically once you're back online."
+msgstr "Hakuna mtandao - imehifadhiwa kwenye kifaa hiki na itasawazishwa kiotomatiki ukiwa mtandaoni tena."
+
+msgid "No signup, no sales call - click straight into a real, populated farm and explore the herd, crops, finance, wallet and credit-score modules yourself."
+msgstr "Hakuna usajili, hakuna simu ya mauzo - bofya moja kwa moja kwenye shamba halisi lenye data na uchunguze mifugo, mazao, fedha, pochi na moduli za alama ya mkopo wewe mwenyewe."
+
+msgid "No weight records yet."
+msgstr "Hakuna rekodi za uzito bado."
+
+msgid "None"
+msgstr "Hakuna"
+
+msgid "Not currently shared"
+msgstr "Haishirikiwi kwa sasa"
+
+msgid "Not enough milk history yet across the farm to predict this cow's production. Keep logging milk daily - predictions unlock automatically once there's enough data (yours or the herd's)."
+msgstr "Bado hakuna historia ya kutosha ya maziwa shambani ili kutabiri uzalishaji wa ng'ombe huyu. Endelea kurekodi maziwa kila siku - utabiri utafunguka kiotomatiki data ikiwa ya kutosha (yako au ya mifugo)."
+
+msgid "Not enough milk history yet to predict production - keep logging milk records daily; predictions unlock automatically once there's enough data."
+msgstr "Bado hakuna historia ya kutosha ya maziwa kutabiri uzalishaji - endelea kurekodi maziwa kila siku; utabiri utafunguka kiotomatiki data ikiwa ya kutosha."
+
+msgid "Not enough milk history yet to predict this block's production."
+msgstr "Bado hakuna historia ya kutosha ya maziwa kutabiri uzalishaji wa kizuizi hiki."
+
+msgid "Nothing listed for sale right now - check back soon."
+msgstr "Hakuna kilichoorodheshwa kuuzwa kwa sasa - rudi tena hivi karibuni."
+
+msgid "Nothing needs your attention right now."
+msgstr "Hakuna kinachohitaji uangalizi wako kwa sasa."
+
+msgid "One step per line."
+msgstr "Hatua moja kwa kila mstari."
+
+msgid "One tip per line - optional."
+msgstr "Kidokezo kimoja kwa kila mstari - hiari."
+
+msgid "Optional - link the matching advisory catalog entry if this was for a known disease."
+msgstr "Hiari - unganisha kipengele kinacholingana cha katalogi ya ushauri kama hii ilikuwa kwa ugonjwa unaojulikana."
+
+msgid "Optional - link to the matching produce inventory item."
+msgstr "Hiari - unganisha na bidhaa inayolingana ya mazao."
+
+msgid "Or link to an image already hosted elsewhere."
+msgstr "Au unganisha na picha iliyopo tayari mahali pengine."
+
+msgid "Order / Enquire"
+msgstr "Agiza / Uliza"
+
+msgid "Order marked %(status)s."
+msgstr "Oda imewekwa alama %(status)s."
+
+msgid "Orders"
+msgstr "Oda"
+
+msgid "Overall crude protein %"
+msgstr "Protini ghafi jumla %"
+
+msgid "Parcels"
+msgstr "Vipande"
+
+msgid "Pending review"
+msgstr "Inasubiri ukaguzi"
+
+msgid "Per-cow milk forecast with an exact breakdown of what's driving each prediction."
+msgstr "Utabiri wa maziwa kwa kila ng'ombe na uchanganuzi halisi wa kinachosababisha kila utabiri."
+
+msgid "Phone number"
+msgstr "Nambari ya simu"
+
+msgid "Plant:"
+msgstr "Panda:"
+
+msgid "Platform overview"
+msgstr "Muhtasari wa jukwaa"
+
+msgid "Pregnancy check - not in calf"
+msgstr "Ukaguzi wa mimba - hana mimba"
+
+msgid "Pregnancy confirmed"
+msgstr "Mimba imethibitishwa"
+
+msgid "Previous"
+msgstr "Iliyotangulia"
+
+msgid "Produce for sale"
+msgstr "Mazao ya kuuza"
+
+msgid "Product"
+msgstr "Bidhaa"
+
+msgid "Products"
+msgstr "Bidhaa"
+
+msgid "Read-only - it's a shared sandbox farm, so nothing you do there is saved or affects anyone else."
+msgstr "Kusoma tu - ni shamba la majaribio linaloshirikiwa, hivyo chochote unachofanya hapo hakihifadhiwi wala kuathiri mtu mwingine."
+
+msgid "Record the ingredient mix and crude protein % - used by the production analytics/prediction models."
+msgstr "Rekodi mchanganyiko wa viungo na protini ghafi % - hutumiwa na mifumo ya uchanganuzi/utabiri wa uzalishaji."
+
+msgid "Registration no."
+msgstr "Namba ya usajili"
+
+msgid "Repeat every (days, optional)"
+msgstr "Rudia kila (siku, hiari)"
+
+msgid "Repeats"
+msgstr "Hurudia"
+
+msgid "Reproductive event deleted."
+msgstr "Tukio la uzalishaji limefutwa."
+
+msgid "Reproductive event updated."
+msgstr "Tukio la uzalishaji limesasishwa."
+
+msgid "Reproductive status"
+msgstr "Hali ya uzalishaji"
+
+msgid "Save"
+msgstr "Hifadhi"
+
+msgid "Save event →"
+msgstr "Hifadhi tukio →"
+
+msgid "Saved parcels"
+msgstr "Vipande vilivyohifadhiwa"
+
+msgid "See it in action"
+msgstr "Iangalie ikifanya kazi"
+
+msgid "Send"
+msgstr "Tuma"
+
+msgid "Service / Insemination"
+msgstr "Huduma / Uhimilishaji"
+
+msgid "Share my score"
+msgstr "Shiriki alama yangu"
+
+msgid "Sharing enabled with %(partner)s."
+msgstr "Ushirikishaji umewezeshwa na %(partner)s."
+
+msgid "Sharing stopped with %(partner)s."
+msgstr "Ushirikishaji umesitishwa na %(partner)s."
+
+msgid "Short courses to build up your farming know-how, lesson by lesson."
+msgstr "Kozi fupi za kujenga ujuzi wako wa kilimo, somo kwa somo."
+
+msgid "Sire"
+msgstr "Baba"
+
+msgid "Stable id for the detector that produced this row."
+msgstr "Kitambulisho thabiti cha kigunduzi kilichozalisha mstari huu."
+
+msgid "Start your own farm →"
+msgstr "Anzisha shamba lako →"
+
+msgid "Stop sharing"
+msgstr "Simamisha ushirikishaji"
+
+msgid "Storefront"
+msgstr "Duka"
+
+msgid "Submit application"
+msgstr "Wasilisha maombi"
+
+msgid "Survey boundaries with GPS"
+msgstr "Pima mipaka kwa GPS"
+
+msgid "Switch farms or add another one here."
+msgstr "Badilisha mashamba au ongeza jingine hapa."
+
+msgid "Target crude protein %"
+msgstr "Protini ghafi lengwa %"
+
+msgid "Thanks! %(name)s will be in touch with you shortly."
+msgstr "Asante! %(name)s atawasiliana nawe hivi karibuni."
+
+msgid "That address is reserved - try another."
+msgstr "Anwani hiyo imehifadhiwa - jaribu nyingine."
+
+msgid "The agro-ecological zone this recommendation is based on."
+msgstr "Ukanda wa kiikolojia-kilimo ambao pendekezo hili linategemea."
+
+msgid "There's no password to set up. Sign in with the Farm ID and email above, and we'll text - well, email - you a one-time code each time."
+msgstr "Hakuna nenosiri la kusanidi. Ingia kwa Kitambulisho cha Shamba na barua pepe hapo juu, nasi tutakutumia - kwa barua pepe - msimbo wa mara moja kila wakati."
+
+msgid "They'll sign in with this email, your Farm ID, and a one-time code — no password needed."
+msgstr "Wataingia kwa barua pepe hii, Kitambulisho cha Shamba lako, na msimbo wa mara moja — hakuna nenosiri linalohitajika."
+
+msgid "This can't be undone. Here's exactly what happens."
+msgstr "Hili haliwezi kutenguliwa. Hivi ndivyo hasa kitakavyotokea."
+
+msgid "This is a read-only demo - sign up for your own farm to save changes."
+msgstr "Hii ni onyesho la kusoma tu - jisajili kwa shamba lako mwenyewe ili kuhifadhi mabadiliko."
+
+msgid "This key only ever returns a score for a farm that has explicitly agreed to share it with you - a farm that hasn't consented, and a farm that doesn't exist, both look identical (a 404) from your side. Keep this key private; treat it like a password."
+msgstr "Funguo hii hurudisha alama tu kwa shamba lililokubali waziwazi kuishiriki nawe - shamba lisilokubali, na shamba lisilokuwepo, vyote vinaonekana sawa (404) kwa upande wako. Weka funguo hii kwa siri; itendee kama nenosiri."
+
+msgid "This usually clears up on its own shortly after the farm's location is set - check back in a few minutes, or confirm the location in farm settings."
+msgstr "Hii kwa kawaida hujirekebisha yenyewe muda mfupi baada ya eneo la shamba kuwekwa - rudi tena baada ya dakika chache, au thibitisha eneo kwenye mipangilio ya shamba."
+
+msgid "Today's summary"
+msgstr "Muhtasari wa leo"
+
+msgid "Track growth and condition over time - from a scale or a heart-girth tape."
+msgstr "Fuatilia ukuaji na hali kwa muda - kutoka mizani au utepe wa kifua."
+
+msgid "True if the coordinates are a town-level estimate rather than the exact facility location."
+msgstr "Kweli kama viwianishi ni makadirio ya kiwango cha mji badala ya eneo halisi la kituo."
+
+msgid "Upcoming"
+msgstr "Zinazokuja"
+
+msgid "Vaccination"
+msgstr "Chanjo"
+
+msgid "Vaccinations, treatments and checkups for one cow."
+msgstr "Chanjo, matibabu na ukaguzi kwa ng'ombe mmoja."
+
+msgid "Vaccinations, treatments and checkups logged per cow."
+msgstr "Chanjo, matibabu na ukaguzi zilizorekodiwa kwa kila ng'ombe."
+
+msgid "View orders"
+msgstr "Angalia oda"
+
+msgid "Visual estimate"
+msgstr "Makadirio ya kuona"
+
+msgid "Walk or tap out your farm's boundary and fields to measure area and perimeter."
+msgstr "Tembea au gusa kuchora mpaka wa shamba lako na mashamba ili kupima eneo na mzunguko."
+
+msgid "Walk your farm boundary with GPS to measure area and perimeter."
+msgstr "Tembea mpaka wa shamba lako kwa GPS kupima eneo na mzunguko."
+
+msgid "Warning"
+msgstr "Onyo"
+
+msgid "We'll generate a unique Farm ID from your farm's name."
+msgstr "Tutatengeneza Kitambulisho cha Shamba cha kipekee kutoka jina la shamba lako."
+
+msgid "We'll send a 6-digit code to confirm the new address before switching."
+msgstr "Tutatuma msimbo wa tarakimu 6 kuthibitisha anwani mpya kabla ya kubadilisha."
+
+msgid "Website settings saved."
+msgstr "Mipangilio ya tovuti imehifadhiwa."
+
+msgid "Weighbridge/scale"
+msgstr "Daraja la kupima/mizani"
+
+msgid "Weight"
+msgstr "Uzito"
+
+msgid "Weight logged for %(cow)s."
+msgstr "Uzito umerekodiwa kwa %(cow)s."
+
+msgid "Weight record deleted."
+msgstr "Rekodi ya uzito imefutwa."
+
+msgid "Weight record updated."
+msgstr "Rekodi ya uzito imesasishwa."
+
+msgid "Weight records"
+msgstr "Rekodi za uzito"
+
+msgid "What your farm's data is telling you"
+msgstr "Kile data ya shamba lako inakuambia"
+
+msgid "What your farm's own records are telling you - refreshed every time you open this page. The more you log, the more it can tell you."
+msgstr "Kile rekodi za shamba lako mwenyewe zinakuambia - husasishwa kila unapofungua ukurasa huu. Kadri unavyorekodi zaidi, ndivyo inavyoweza kukuambia zaidi."
+
+msgid "What's your email?"
+msgstr "Barua pepe yako ni ipi?"
+
+msgid "Which version of the Terms/Privacy Policy (settings.TERMS_VERSION) was accepted."
+msgstr "Toleo gani la Masharti/Sera ya Faragha (settings.TERMS_VERSION) lilikubaliwa."
+
+msgid "Why this crop suits the zone."
+msgstr "Kwa nini zao hili linafaa ukanda huu."
+
+msgid "You own these farms - they'll be permanently deleted, in full"
+msgstr "Unamiliki mashamba haya - yatafutwa kabisa, kikamilifu"
+
+msgid "You'll be the owner (Farmer) of your farm, with full control."
+msgstr "Utakuwa mmiliki (Mkulima) wa shamba lako, na udhibiti kamili."
+
+msgid "You'll get a new unique Farm ID and become its owner."
+msgstr "Utapata Kitambulisho kipya cha Shamba cha kipekee na kuwa mmiliki wake."
+
+msgid "You're a member of these farms - you'll just lose your own access"
+msgstr "Wewe ni mwanachama wa mashamba haya - utapoteza tu ufikiaji wako mwenyewe"
+
+msgid "You're all set"
+msgstr "Uko tayari"
+
+msgid "You're approved"
+msgstr "Umeidhinishwa"
+
+msgid "You're in! 🐄"
+msgstr "Umeingia! 🐄"
+
+msgid "You're not linked to a farm yet"
+msgstr "Bado hujaunganishwa na shamba"
+
+msgid "You're receiving this because you have an account on FarmIQ."
+msgstr "Unapokea hii kwa sababu una akaunti kwenye FarmIQ."
+
+msgid "You're viewing a live, read-only demo - nothing you change here is saved."
+msgstr "Unatazama onyesho la moja kwa moja la kusoma tu - hakuna unachobadilisha hapa kinachohifadhiwa."
+
+msgid "Your FarmIQ data partner access is approved"
+msgstr "Ufikiaji wako wa mshirika wa data wa FarmIQ umeidhinishwa"
+
+msgid "Your farms"
+msgstr "Mashamba yako"
+
+msgid "Your herd"
+msgstr "Mifugo yako"
+
+msgid "Your name"
+msgstr "Jina lako"
+
+msgid "Your paddocks, herd, feed troughs, storage, crop fields, workers and this month's finances, laid out across the farm."
+msgstr "Mazizi yako, mifugo, malisho, maghala, mashamba ya mazao, wafanyakazi na fedha za mwezi huu, zilizopangwa kote shambani."
+
+msgid "Zoom to my parcels"
+msgstr "Kuza kwa vipande vyangu"
+
+msgid "blocks, herd, crops, inventory, finance, tasks, and every other member's access to it."
+msgstr "vizuizi, mifugo, mazao, bidhaa, fedha, kazi, na ufikiaji wa kila mwanachama mwingine kwake."
+
+msgid "e.g. 90 for quarterly"
+msgstr "mfano 90 kwa kila robo mwaka"
+
+msgid "e.g. East Coast Fever vaccine, booster dose"
+msgstr "mfano chanjo ya East Coast Fever, dozi ya nyongeza"
+
+msgid "e.g. Fresh farm milk"
+msgstr "mfano Maziwa mapya ya shambani"
+
+msgid "e.g. North boundary, Maize field"
+msgstr "mfano Mpaka wa kaskazini, Shamba la mahindi"
+
+msgid "e.g. North field (optional if mapped on GeoMap)"
+msgstr "mfano Shamba la kaskazini (hiari kama limepimwa kwenye GeoMap)"
+
+msgid "e.g. an AI code, for Service/Insemination"
+msgstr "mfano msimbo wa uhimilishaji, kwa Huduma/Uhimilishaji"
+
+msgid "e.g. an AI code, if the sire is not in this herd"
+msgstr "mfano msimbo wa uhimilishaji, kama baba hayupo kwenye mifugo hii"
+
+msgid "e.g. per liter, per kg, per dozen"
+msgstr "mfano kwa lita, kwa kg, kwa dazani"
+
+msgid "ha"
+msgstr "ha"
+
+msgid "health record"
+msgstr "rekodi ya afya"
+
+msgid "parcels"
+msgstr "vipande"
+
+msgid "perimeter"
+msgstr "mzunguko"
+
+msgid "product"
+msgstr "bidhaa"
+
+msgid "reproductive event"
+msgstr "tukio la uzalishaji"
+
+msgid "weight record"
+msgstr "rekodi ya uzito"

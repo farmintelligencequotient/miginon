@@ -3,7 +3,14 @@
 {% block body %}
 <div class="flex min-h-screen flex-col bg-stone-50 dark:bg-stone-950">
     <header class="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-stone-200 bg-white/90 px-4 py-3 backdrop-blur dark:border-stone-800 dark:bg-stone-950/90 lg:px-8">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5">
+            {% if request.resolver_match.view_name != 'farms:dashboard' %}
+            <button type="button" id="app-back-btn" data-fallback="{% url 'farms:dashboard' %}"
+                class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                aria-label="{% trans 'Go back' %}" title="{% trans 'Go back' %}">
+                <ion-icon name="arrow-back-outline" class="text-lg"></ion-icon>
+            </button>
+            {% endif %}
             <a href="{% url 'farms:dashboard' %}" class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl opacity-90 hover:opacity-100" aria-label="{% trans 'Home' %}">
                 <img src="{% static 'images/logo-mark.png' %}" alt="FarmIQ" class="h-9 w-9 rounded-xl">
             </a>
@@ -125,6 +132,16 @@
     {% include "partials/bottom_nav.html" %}
     {% endif %}
 </div>
+<script>
+    (function () {
+        var backBtn = document.getElementById('app-back-btn');
+        if (backBtn) {
+            backBtn.addEventListener('click', function () {
+                window.FarmIQNav ? window.FarmIQNav.back(backBtn.dataset.fallback) : (location.href = backBtn.dataset.fallback);
+            });
+        }
+    })();
+</script>
 {% if active_membership %}
 <script src="{% static 'js/offline-queue.js' %}"></script>
 <script>

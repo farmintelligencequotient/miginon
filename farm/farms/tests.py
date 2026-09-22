@@ -119,6 +119,10 @@ class FullSiteCrawlTests(TestCase):
             with self.subTest(url=url):
                 response = client.get(url)
                 self.assertEqual(response.status_code, 200, f'{url} returned {response.status_code}')
+                # Every form is somewhere a user can get stuck without a way
+                # back (the original bug report) - the header Back button
+                # must be on this page, not just on list/detail pages.
+                self.assertContains(response, 'id="app-back-btn"', msg_prefix=url)
 
     def test_dark_mode_and_kiswahili_render_cleanly(self):
         self.owner.theme_preference = User.ThemePreference.DARK
@@ -129,3 +133,50 @@ class FullSiteCrawlTests(TestCase):
             with self.subTest(url=url):
                 response = client.get(url)
                 self.assertEqual(response.status_code, 200, f'{url} returned {response.status_code}')
+
+
+class BackButtonTests(TestCase):
+    """The header Back button (templates/app_base.html + static/js/nav-history.js)
+    fixes 'stuck on a form with no way back' - see farms/context_processors.py
+    for the sibling recent-modules nav this sits next to."""
+
+    def setUp(self):
+        self.owner = User.objects.create_user(email='back-owner@example.com', first_name='Bo')
+        self.farm = Farm.objects.create(name='Back Farm', owner=self.owner)
+        FarmMembership.objects.create(user=self.owner, farm=self.farm, role=FarmRole.FARMER, status=FarmMembership.Status.ACTIVE)
+        self.client.force_login(self.owner)
+        session = self.client.session
+        session['active_farm_id'] = self.farm.id
+        session.save()
+
+    def test_back_button_hidden_on_the_dashboard(self):
+        response = self.client.get('/farm/')
+        self.assertNotContains(response, 'id="app-back-btn"')
+
+    def test_back_button_shown_on_an_inner_page_with_dashboard_fallback(self):
+        response = self.client.get('/cows/')
+        self.assertContains(response, 'id="app-back-btn"')
+        self.assertContains(response, 'data-fallback="/farm/"')
+
+    def test_back_button_shown_two_levels_deep(self):
+        block = Block.objects.create(farm=self.farm, name='Deep Block', created_by=self.owner)
+        cow = Cow.objects.create(farm=self.farm, block=block, tag_id='D-1', added_by=self.owner)
+        response = self.client.get('/cows/milk/add/')
+        self.assertContains(response, 'id="app-back-btn"')
+        response = self.client.get(f'/cows/{cow.id}/')
+        self.assertContains(response, 'id="app-back-btn"')
+
+    def test_settings_page_also_gets_a_working_back_button(self):
+        """Regression: the button's click handler used to be wired up only
+        inside an {% if active_membership %} block, so it rendered but did
+        nothing on pages reached without one."""
+        response = self.client.get('/accounts/settings/')
+        self.assertContains(response, 'id="app-back-btn"')
+        html = response.content.decode()
+        self.assertLess(html.index('id="app-back-btn"'), html.index("getElementById('app-back-btn')"))
+
+    def test_nav_history_script_is_loaded_on_every_page(self):
+        for url in ('/farm/', '/cows/', '/accounts/settings/'):
+            response = self.client.get(url)
+            self.assertContains(response, 'js/nav-history.js', msg_prefix=url)
+
