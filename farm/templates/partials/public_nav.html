@@ -1,34 +1,99 @@
 {% load i18n static %}
-<header class="relative z-10">
-    <nav class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-        <a href="{% url 'core:landing' %}" class="flex shrink-0 items-center gap-2">
+{% url 'core:landing' as landing_url %}
+<header class="relative z-30" data-public-nav>
+    <nav class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+        <a href="{{ landing_url }}" class="flex shrink-0 items-center gap-2">
             <img src="{% static 'images/logo-mark.png' %}" alt="FarmIQ" class="h-8 w-8 rounded-xl sm:h-9 sm:w-9">
             <span class="text-base font-extrabold tracking-tight text-white sm:text-lg">FarmIQ</span>
         </a>
-        <div class="hidden items-center gap-8 text-sm font-semibold text-white/80 md:flex">
-            <a href="#features" class="transition hover:text-white">{% trans "Features" %}</a>
-            <a href="#how-it-works" class="transition hover:text-white">{% trans "How it works" %}</a>
-            <a href="#roles" class="transition hover:text-white">{% trans "Roles" %}</a>
+        <div class="hidden items-center gap-6 text-sm font-semibold text-white/80 md:flex lg:gap-8">
+            <a href="{{ landing_url }}#features" class="transition hover:text-white">{% trans "Features" %}</a>
+            <a href="{{ landing_url }}#how-it-works" class="transition hover:text-white">{% trans "How it works" %}</a>
+            <a href="{{ landing_url }}#roles" class="transition hover:text-white">{% trans "Roles" %}</a>
             <a href="{% url 'core:demo_login' %}" class="transition hover:text-white">{% trans "Live demo" %}</a>
         </div>
-        <div class="flex shrink-0 items-center gap-1 sm:gap-2">
-            <form method="post" action="{% url 'core:set_theme' %}">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white" aria-label="{% trans 'Toggle dark mode' %}">
-                    <ion-icon name="{% if theme == 'dark' %}sunny-outline{% else %}moon-outline{% endif %}" class="text-base"></ion-icon>
-                </button>
-            </form>
-            <form method="post" action="{% url 'core:set_language' %}">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <input type="hidden" name="language" value="{% if LANGUAGE_CODE == 'sw' %}en{% else %}sw{% endif %}">
-                <button type="submit" class="flex h-9 items-center justify-center rounded-full px-2 text-xs font-bold text-white/80 hover:bg-white/10 hover:text-white" aria-label="{% trans 'Switch language' %}">
-                    {% if LANGUAGE_CODE == 'sw' %}EN{% else %}SW{% endif %}
-                </button>
-            </form>
-            <a href="{% url 'accounts:login_farm' %}" class="rounded-full px-2 py-2 text-xs font-semibold text-white/90 hover:text-white sm:px-4 sm:text-sm">{% trans "Log in" %}</a>
-            <a href="{% url 'accounts:signup_account' %}" class="rounded-full bg-white px-3 py-2 text-xs font-bold text-emerald-800 shadow-soft transition hover:bg-emerald-50 sm:px-5 sm:py-2.5 sm:text-sm">{% trans "Get started free" %}</a>
+        <div class="flex min-w-0 items-center gap-1 sm:gap-2">
+            {# Theme, language and log in move into the menu below md. #}
+            <div class="hidden items-center gap-1 md:flex lg:gap-2">
+                <form method="post" action="{% url 'core:set_theme' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white" aria-label="{% trans 'Toggle dark mode' %}">
+                        <ion-icon name="{% if theme == 'dark' %}sunny-outline{% else %}moon-outline{% endif %}" class="text-base"></ion-icon>
+                    </button>
+                </form>
+                <form method="post" action="{% url 'core:set_language' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <input type="hidden" name="language" value="{% if LANGUAGE_CODE == 'sw' %}en{% else %}sw{% endif %}">
+                    <button type="submit" class="flex h-9 items-center justify-center rounded-full px-2 text-xs font-bold text-white/80 hover:bg-white/10 hover:text-white" aria-label="{% trans 'Switch language' %}">
+                        {% if LANGUAGE_CODE == 'sw' %}EN{% else %}SW{% endif %}
+                    </button>
+                </form>
+                <a href="{% url 'accounts:login_farm' %}" class="rounded-full px-3 py-2 text-sm font-semibold text-white/90 hover:text-white lg:px-4">{% trans "Log in" %}</a>
+            </div>
+            <a href="{% url 'accounts:signup_account' %}" class="whitespace-nowrap rounded-full bg-white px-3.5 py-2 text-xs font-bold text-emerald-800 shadow-soft transition hover:bg-emerald-50 sm:px-5 sm:py-2.5 sm:text-sm">{% trans "Get started free" %}</a>
+            <button type="button" data-nav-toggle aria-expanded="false" aria-controls="public-nav-menu" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white hover:bg-white/10 md:hidden" aria-label="{% trans 'Open menu' %}" data-label-open="{% trans 'Open menu' %}" data-label-close="{% trans 'Close menu' %}">
+                <ion-icon data-nav-icon name="menu-outline" class="text-2xl"></ion-icon>
+            </button>
         </div>
     </nav>
+
+    {# Mobile menu (below md). #}
+    <div id="public-nav-menu" data-nav-menu class="pointer-events-none invisible absolute inset-x-3 top-full -translate-y-2 opacity-0 transition duration-200 ease-out md:hidden">
+        <div class="rounded-2xl border border-white/10 bg-emerald-950/95 p-2 text-white shadow-soft backdrop-blur">
+            <a href="{{ landing_url }}#features" class="block rounded-xl px-4 py-3 text-sm font-semibold text-white/90 hover:bg-white/10">{% trans "Features" %}</a>
+            <a href="{{ landing_url }}#how-it-works" class="block rounded-xl px-4 py-3 text-sm font-semibold text-white/90 hover:bg-white/10">{% trans "How it works" %}</a>
+            <a href="{{ landing_url }}#roles" class="block rounded-xl px-4 py-3 text-sm font-semibold text-white/90 hover:bg-white/10">{% trans "Roles" %}</a>
+            <a href="{% url 'core:demo_login' %}" class="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white/90 hover:bg-white/10">
+                <ion-icon name="play-circle-outline" class="text-base text-amber-400"></ion-icon> {% trans "Live demo" %}
+            </a>
+            <div class="mt-2 flex items-center gap-2 border-t border-white/10 px-2 pt-3 pb-1">
+                <form method="post" action="{% url 'core:set_theme' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="flex h-10 items-center gap-2 rounded-full bg-white/10 px-4 text-xs font-semibold text-white/90 hover:bg-white/20">
+                        <ion-icon name="{% if theme == 'dark' %}sunny-outline{% else %}moon-outline{% endif %}" class="text-base"></ion-icon>
+                        {% if theme == 'dark' %}{% trans "Light mode" %}{% else %}{% trans "Dark mode" %}{% endif %}
+                    </button>
+                </form>
+                <form method="post" action="{% url 'core:set_language' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <input type="hidden" name="language" value="{% if LANGUAGE_CODE == 'sw' %}en{% else %}sw{% endif %}">
+                    <button type="submit" class="flex h-10 items-center gap-2 rounded-full bg-white/10 px-4 text-xs font-semibold text-white/90 hover:bg-white/20">
+                        <ion-icon name="language-outline" class="text-base"></ion-icon>
+                        {% if LANGUAGE_CODE == 'sw' %}English{% else %}Kiswahili{% endif %}
+                    </button>
+                </form>
+                <a href="{% url 'accounts:login_farm' %}" class="ml-auto rounded-full px-4 py-2.5 text-sm font-bold text-white hover:bg-white/10">{% trans "Log in" %}</a>
+            </div>
+        </div>
+    </div>
 </header>
+<script>
+    (function () {
+        var header = document.currentScript.previousElementSibling;
+        var toggle = header.querySelector('[data-nav-toggle]');
+        var menu = header.querySelector('[data-nav-menu]');
+        var icon = header.querySelector('[data-nav-icon]');
+        var SHOWN = ['pointer-events-none', 'invisible', '-translate-y-2', 'opacity-0'];
+
+        function setOpen(open) {
+            SHOWN.forEach(function (c) { menu.classList.toggle(c, !open); });
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            toggle.setAttribute('aria-label', toggle.getAttribute(open ? 'data-label-close' : 'data-label-open'));
+            icon.setAttribute('name', open ? 'close-outline' : 'menu-outline');
+        }
+        function isOpen() { return toggle.getAttribute('aria-expanded') === 'true'; }
+
+        toggle.addEventListener('click', function () { setOpen(!isOpen()); });
+        // Close on a menu link, a tap outside, Escape, or growing past md.
+        menu.addEventListener('click', function (e) { if (e.target.closest('a')) setOpen(false); });
+        document.addEventListener('click', function (e) { if (isOpen() && !header.contains(e.target)) setOpen(false); });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && isOpen()) { setOpen(false); toggle.focus(); }
+        });
+        window.matchMedia('(min-width: 768px)').addEventListener('change', function (e) { if (e.matches) setOpen(false); });
+    })();
+</script>
