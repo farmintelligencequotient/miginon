@@ -66,7 +66,7 @@ def landing(request):
         ('school-outline', _('Farming & dairy advisory'), _('A sourced disease catalog for dairy cattle and crops with symptoms, prevention and treatment, step-by-step guides for silage, milk value addition and planting, and the nearest KALRO center to your farm.')),
         ('water-outline', _('Milk production'), _('Log AM, noon and PM yields per cow and block, with the session set automatically from the time you record - production becomes trackable stock, and a sale updates your finances and inventory together.')),
         ('nutrition-outline', _('Feeding records'), _('Record dairy meal and silage/hay per block or per individual cow, with automatic stock draw-down and a suggested feed composition to get you started.')),
-        ('paw-outline', _('Herd management'), _('Organize cows, heifers, calves and bulls into blocks with tags, breed, gender, calving dates and status - transfer between blocks in a click.')),
+        ('cow', _('Herd management'), _('Organize cows, heifers, calves and bulls into blocks with tags, breed, gender, calving dates and status - transfer between blocks in a click.')),
         ('leaf-outline', _('Crop tracking'), _('Track every crop from planting to harvest - a logged harvest automatically restocks your produce inventory.')),
         ('checkbox-outline', _('Task management'), _('Assign tasks to your team tied to a block, crop or piece of equipment, and track them through to done.')),
         ('cube-outline', _('Inventory & stock'), _('Track feed, veterinary supplies, equipment and produce, with automatic low-stock warnings and per-worker equipment usage.')),

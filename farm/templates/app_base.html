@@ -2,8 +2,8 @@
 {% load i18n static %}
 {% block body %}
 <div class="flex min-h-screen flex-col bg-stone-50 dark:bg-stone-950">
-    <header class="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-stone-200 bg-white/90 px-4 py-3 backdrop-blur dark:border-stone-800 dark:bg-stone-950/90 lg:px-8">
-        <div class="flex items-center gap-1.5">
+    <header class="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-stone-200 bg-white/90 px-3 py-3 sm:gap-4 sm:px-4 backdrop-blur dark:border-stone-800 dark:bg-stone-950/90 lg:px-8">
+        <div class="flex min-w-0 flex-1 items-center gap-1.5">
             {% if request.resolver_match.view_name != 'farms:dashboard' %}
             <button type="button" id="app-back-btn" data-fallback="{% url 'farms:dashboard' %}"
                 class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
@@ -11,17 +11,18 @@
                 <ion-icon name="arrow-back-outline" class="text-lg"></ion-icon>
             </button>
             {% endif %}
-            <a href="{% url 'farms:dashboard' %}" class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl opacity-90 hover:opacity-100" aria-label="{% trans 'Home' %}">
+            {# On inner pages phones get the back button instead of the logo (Home is in the bottom nav). #}
+            <a href="{% url 'farms:dashboard' %}" class="{% if request.resolver_match.view_name != 'farms:dashboard' %}hidden sm:flex{% else %}flex{% endif %} h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl opacity-90 hover:opacity-100" aria-label="{% trans 'Home' %}">
                 <img src="{% static 'images/logo-mark.png' %}" alt="FarmIQ" class="h-9 w-9 rounded-xl">
             </a>
             {% if my_memberships|length > 1 or active_membership.can_add_farms %}
-            <div class="relative" data-tour="farm-switcher">
+            <div class="relative min-w-0" data-tour="farm-switcher">
                 <details class="group">
-                    <summary class="flex cursor-pointer list-none items-center gap-2 rounded-xl border border-stone-200 px-3 py-2 text-sm font-semibold text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-900">
-                        {{ active_farm_obj.name }}
-                        <ion-icon name="chevron-down-outline" class="text-xs text-stone-400 dark:text-stone-500"></ion-icon>
+                    <summary class="flex min-w-0 cursor-pointer list-none items-center gap-1.5 rounded-xl border border-stone-200 px-2.5 py-2 text-sm font-semibold sm:gap-2 sm:px-3 text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-900">
+                        <span class="max-w-[8rem] truncate sm:max-w-[14rem] lg:max-w-none" title="{{ active_farm_obj.name }}">{{ active_farm_obj.name }}</span>
+                        <ion-icon name="chevron-down-outline" class="flex-shrink-0 text-xs text-stone-400 dark:text-stone-500"></ion-icon>
                     </summary>
-                    <div class="absolute left-0 z-30 mt-2 w-64 rounded-xl border border-stone-200 bg-white p-1.5 shadow-soft dark:border-stone-700 dark:bg-stone-900">
+                    <div class="absolute left-0 z-30 mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-stone-200 bg-white p-1.5 shadow-soft dark:border-stone-700 dark:bg-stone-900">
                         {% for m in my_memberships %}
                         <form method="post" action="{% url 'farms:switch_farm' m.farm_id %}">
                             {% csrf_token %}
@@ -41,16 +42,16 @@
                 </details>
             </div>
             {% elif active_farm_obj %}
-            <div>
-                <p class="text-sm font-bold text-stone-900 dark:text-stone-100">{{ active_farm_obj.name }}</p>
-                <p class="text-xs text-stone-400 dark:text-stone-500">{% trans "Farm ID:" %} {{ active_farm_obj.code }}</p>
+            <div class="min-w-0">
+                <p class="truncate text-sm font-bold text-stone-900 dark:text-stone-100">{{ active_farm_obj.name }}</p>
+                <p class="truncate text-xs text-stone-400 dark:text-stone-500">{% trans "Farm ID:" %} {{ active_farm_obj.code }}</p>
             </div>
             {% endif %}
         </div>
 
-        <div class="flex items-center gap-1.5">
+        <div class="flex flex-shrink-0 items-center gap-1 sm:gap-1.5">
             {% if active_membership %}
-            <a href="{% url 'blockchain:wallet' %}" data-tour="fiq-token" class="flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-700 hover:bg-violet-100 dark:bg-violet-950 dark:text-violet-400 dark:hover:bg-violet-900" title="{% trans 'FIQ balance' %}">
+            <a href="{% url 'blockchain:wallet' %}" data-tour="fiq-token" class="flex items-center gap-1 whitespace-nowrap rounded-full bg-violet-50 px-2.5 py-1.5 sm:gap-1.5 sm:px-3 text-xs font-bold text-violet-700 hover:bg-violet-100 dark:bg-violet-950 dark:text-violet-400 dark:hover:bg-violet-900" title="{% trans 'FIQ balance' %}">
                 <ion-icon name="wallet-outline" class="text-sm"></ion-icon> {{ fiq_balance }} <span class="hidden sm:inline">FIQ</span>
             </a>
             <span class="hidden rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 sm:inline">
@@ -59,7 +60,7 @@
             {% endif %}
             {% if active_membership %}
             <button type="button" id="offline-queue-badge-btn" hidden
-                class="relative flex h-9 w-9 items-center justify-center rounded-full text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950"
+                class="relative flex h-9 w-9 items-center justify-center rounded-full text-amber-600 [&[hidden]]:hidden hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950"
                 title="{% trans 'Records waiting to sync - tap to retry now' %}" aria-label="{% trans 'Records waiting to sync' %}">
                 <ion-icon name="cloud-offline-outline" class="text-lg"></ion-icon>
                 <span id="offline-queue-count" class="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white">0</span>
@@ -74,7 +75,8 @@
             </a>
             {% endif %}
 
-            <form method="post" action="{% url 'core:set_theme' %}">
+            {# Theme and language live in the avatar menu on phones. #}
+            <form method="post" action="{% url 'core:set_theme' %}" class="hidden sm:block">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                 <button type="submit" data-tour="theme-toggle" class="flex h-9 w-9 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100" aria-label="{% trans 'Toggle dark mode' %}">
@@ -82,7 +84,7 @@
                 </button>
             </form>
 
-            <form method="post" action="{% url 'core:set_language' %}">
+            <form method="post" action="{% url 'core:set_language' %}" class="hidden sm:block">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                 <input type="hidden" name="language" value="{% if LANGUAGE_CODE == 'sw' %}en{% else %}sw{% endif %}">
@@ -93,16 +95,36 @@
 
             <details class="group relative">
                 <summary class="flex cursor-pointer list-none items-center gap-2">
-                    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-700 text-sm font-bold text-white dark:bg-emerald-600">
+                    <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-emerald-700 text-sm font-bold text-white dark:bg-emerald-600">
                         {{ user.initials }}
                     </span>
                 </summary>
-                <div class="absolute right-0 z-30 mt-2 w-56 rounded-xl border border-stone-200 bg-white p-1.5 shadow-soft dark:border-stone-700 dark:bg-stone-900">
+                <div class="absolute right-0 z-30 mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-xl border border-stone-200 bg-white p-1.5 shadow-soft dark:border-stone-700 dark:bg-stone-900">
                     <div class="px-3 py-2">
-                        <p class="text-sm font-semibold text-stone-800 dark:text-stone-100">{{ user.get_full_name }}</p>
-                        <p class="text-xs text-stone-400 dark:text-stone-500">{{ user.email }}</p>
+                        <p class="truncate text-sm font-semibold text-stone-800 dark:text-stone-100">{{ user.get_full_name }}</p>
+                        <p class="truncate text-xs text-stone-400 dark:text-stone-500">{{ user.email }}</p>
+                        {% if active_membership %}
+                        <span class="mt-1.5 inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 sm:hidden">{{ active_membership.get_role_display }}</span>
+                        {% endif %}
                     </div>
                     <div class="my-1 h-px bg-stone-100 dark:bg-stone-800"></div>
+                    <form method="post" action="{% url 'core:set_theme' %}" class="sm:hidden">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-stone-600 hover:bg-stone-50 dark:text-stone-300 dark:hover:bg-stone-800">
+                            <ion-icon name="{% if theme == 'dark' %}sunny-outline{% else %}moon-outline{% endif %}"></ion-icon>
+                            {% if theme == 'dark' %}{% trans "Light mode" %}{% else %}{% trans "Dark mode" %}{% endif %}
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'core:set_language' %}" class="sm:hidden">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <input type="hidden" name="language" value="{% if LANGUAGE_CODE == 'sw' %}en{% else %}sw{% endif %}">
+                        <button type="submit" class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-stone-600 hover:bg-stone-50 dark:text-stone-300 dark:hover:bg-stone-800">
+                            <ion-icon name="language-outline"></ion-icon>
+                            {% if LANGUAGE_CODE == 'sw' %}English{% else %}Kiswahili{% endif %}
+                        </button>
+                    </form>
                     <a href="{% url 'accounts:settings' %}" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-stone-600 hover:bg-stone-50 dark:text-stone-300 dark:hover:bg-stone-800">
                         <ion-icon name="settings-outline"></ion-icon> {% trans "Settings" %}
                     </a>
