@@ -261,7 +261,10 @@ def _render_site_page(request, site, page):
     if page and page.template == SitePage.Template.PRODUCTS:
         context['products'] = Product.objects.filter(farm=site.farm, is_available=True).select_related('inventory_item')
         context['order_form'] = OrderEnquiryForm()
-    template_name = f'website/public/{page.template}.html' if page else 'website/public/empty.html'
+    # Not "website/public/": Vercel treats any `public` directory as static
+    # assets and leaves it out of the function bundle, so those templates
+    # would be missing in production.
+    template_name = f'website/site_pages/{page.template}.html' if page else 'website/site_pages/empty.html'
     return render(request, template_name, context)
 
 
