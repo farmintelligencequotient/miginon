@@ -8,7 +8,6 @@
  * - Intro timeline: headline words rise in, copy/CTAs/stats follow, and the
  *   dashboard card swings up and fills itself in (tiles, rows, check marks).
  * - Idle loops: floating card, breathing glow, CTA shine, status pulse.
- * - Sections below the hero reveal on scroll (ScrollTrigger).
  *
  * LIVE DEMO SECTION
  * - The module chips work as tabs: each one shows a sample-figure panel.
@@ -17,6 +16,18 @@
  * - Panels swap with a count-up number, growing progress bar and icon pop.
  * - "Live" pill ping, drifting background blobs, pulsing rings and a
  *   magnetic pull on the "Explore the live demo" button.
+ *
+ * REST OF THE PAGE (ScrollTrigger)
+ * - Amber reading-progress bar along the top of the window.
+ * - Section headings rise in out of a blur.
+ * - Features: cards rise in, icons spin in; on hover a cursor spotlight,
+ *   a lift and an icon wiggle.
+ * - How it works: each step's number lights up and its top bar fills in
+ *   order, scrubbed to the scroll position.
+ * - Roles: cards swing open like doors; access-tier dots pop in; a shine
+ *   sweeps the owner card.
+ * - Final CTA: farm icons drift with parallax, magnetic shiny button with a
+ *   nudging arrow. Footer links fade up.
  *
  * All motion is skipped under prefers-reduced-motion or if GSAP fails to load;
  * the page is fully usable without it (the demo chips still switch panels).
@@ -287,35 +298,6 @@
             running = entries[0].isIntersecting;
         }).observe(hero);
     }
-
-    // --- Scroll reveals for the sections below the hero -------------------------
-    if (!window.ScrollTrigger) return;
-
-    all('body > section h2', document).forEach(function (h2) {
-        var group = [h2];
-        if (h2.nextElementSibling && h2.nextElementSibling.tagName === 'P') group.push(h2.nextElementSibling);
-        gsap.from(group, {
-            y: 28, autoAlpha: 0, duration: 0.8, stagger: 0.12, ease: 'power3.out',
-            scrollTrigger: { trigger: h2, start: 'top 88%', once: true }
-        });
-    });
-
-    gsap.set('#features .grid > div, #how-it-works .grid > div, #roles .grid > div', { y: 40, autoAlpha: 0 });
-    window.ScrollTrigger.batch('#features .grid > div, #how-it-works .grid > div, #roles .grid > div', {
-        start: 'top 90%',
-        once: true,
-        onEnter: function (batch) {
-            gsap.to(batch, { y: 0, autoAlpha: 1, duration: 0.7, stagger: 0.1, ease: 'power3.out', overwrite: true });
-        }
-    });
-
-    // Step numbers pop in after their cards land.
-    all('#how-it-works .grid > div > span:first-child', document).forEach(function (num, i) {
-        gsap.from(num, {
-            scale: 0, rotate: -90, duration: 0.6, delay: 0.25 + i * 0.1, ease: 'back.out(2.5)',
-            scrollTrigger: { trigger: num, start: 'top 90%', once: true }
-        });
-    });
 })();
 
 // --- Live demo section ---------------------------------------------------------
@@ -483,5 +465,167 @@
             });
             section.addEventListener('pointerleave', function () { mx(0); my(0); });
         }
+    }
+})();
+
+// --- Rest of the page: scroll-driven sections ---------------------------------------
+(function () {
+    'use strict';
+
+    var gsap = window.gsap;
+    var ST = window.ScrollTrigger;
+    if (!gsap || !ST || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    gsap.registerPlugin(ST);
+
+    function all(sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); }
+    var canHover = window.matchMedia('(hover: hover)').matches;
+
+    function lift(card, extra) {
+        card.addEventListener('pointerenter', function () {
+            gsap.to(card, { y: -6, duration: 0.35, ease: 'power2.out', overwrite: 'auto' });
+            if (extra) extra(true);
+        });
+        card.addEventListener('pointerleave', function () {
+            gsap.to(card, { y: 0, duration: 0.5, ease: 'power3.out', overwrite: 'auto' });
+            if (extra) extra(false);
+        });
+    }
+
+    function magnetize(el, area) {
+        if (!canHover) return;
+        var mx = gsap.quickTo(el, 'x', { duration: 0.5, ease: 'power3.out' });
+        var my = gsap.quickTo(el, 'y', { duration: 0.5, ease: 'power3.out' });
+        area.addEventListener('pointermove', function (e) {
+            var r = el.getBoundingClientRect();
+            var dx = e.clientX - (r.left + r.width / 2);
+            var dy = e.clientY - (r.top + r.height / 2);
+            var near = Math.abs(dx) < r.width / 2 + 60 && Math.abs(dy) < r.height / 2 + 60;
+            mx(near ? dx * 0.25 : 0);
+            my(near ? dy * 0.35 : 0);
+        });
+        area.addEventListener('pointerleave', function () { mx(0); my(0); });
+    }
+
+    function shineLoop(el, delay) {
+        if (!el) return;
+        gsap.timeline({ repeat: -1, repeatDelay: 3.5, delay: delay || 0 })
+            .fromTo(el, { xPercent: 0, autoAlpha: 0 }, { xPercent: 520, autoAlpha: 1, duration: 1, ease: 'power2.inOut' })
+            .set(el, { autoAlpha: 0 });
+    }
+
+    // Cards appear in scroll order, a row at a time.
+    function reveal(cards, from, to, onEnter) {
+        if (!cards.length) return;
+        gsap.set(cards, from);
+        ST.batch(cards, {
+            start: 'top 90%',
+            once: true,
+            onEnter: function (batch) {
+                gsap.to(batch, Object.assign({ duration: 0.8, stagger: 0.1, ease: 'power3.out', overwrite: true }, to));
+                if (onEnter) onEnter(batch);
+            }
+        });
+    }
+
+    // --- Reading progress ------------------------------------------------------
+    var progress = document.querySelector('[data-scroll-progress]');
+    if (progress) gsap.to(progress, { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: 0.3 } });
+
+    // --- Section headings --------------------------------------------------------
+    all('body > section h2').forEach(function (h2) {
+        var group = [h2];
+        if (h2.nextElementSibling && h2.nextElementSibling.tagName === 'P') group.push(h2.nextElementSibling);
+        gsap.from(group, {
+            y: 30, autoAlpha: 0, filter: 'blur(8px)', duration: 0.9, stagger: 0.12, ease: 'power3.out',
+            clearProps: 'filter',
+            scrollTrigger: { trigger: h2, start: 'top 88%', once: true }
+        });
+    });
+
+    // --- Features ------------------------------------------------------------------
+    var features = all('[data-feature]');
+    reveal(features, { autoAlpha: 0, y: 50, scale: 0.96 }, { autoAlpha: 1, y: 0, scale: 1 }, function (batch) {
+        gsap.from(batch.map(function (c) { return c.querySelector('[data-feature-icon]'); }), {
+            scale: 0, rotate: -120, duration: 0.7, stagger: 0.1, delay: 0.2, ease: 'back.out(2.2)'
+        });
+    });
+    if (canHover) {
+        features.forEach(function (card) {
+            var spot = card.querySelector('[data-feature-spot]');
+            var icon = card.querySelector('[data-feature-icon]');
+            card.addEventListener('pointermove', function (e) {
+                var r = card.getBoundingClientRect();
+                card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+                card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+            });
+            lift(card, function (on) {
+                gsap.to(spot, { autoAlpha: on ? 1 : 0, duration: 0.3 });
+                if (on) gsap.to(icon, { keyframes: { rotate: [0, -14, 10, -6, 0] }, scale: 1.12, duration: 0.6, ease: 'power1.out' });
+                else gsap.to(icon, { scale: 1, duration: 0.4 });
+            });
+        });
+    }
+
+    // --- How it works: numbers light up and bars fill as you scroll ----------------
+    var stepsWrap = document.querySelector('[data-steps]');
+    if (stepsWrap) {
+        var nums = all('[data-step-num]', stepsWrap);
+        var bars = all('[data-step-bar]', stepsWrap);
+        reveal(all('[data-step]', stepsWrap), { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0 });
+        gsap.set(bars, { scaleX: 0 });
+        gsap.set(nums, { scale: 0.6, backgroundColor: '#a8a29e' });
+        var steps = gsap.timeline({ scrollTrigger: { trigger: stepsWrap, start: 'top 75%', end: 'bottom 45%', scrub: 0.6 } });
+        nums.forEach(function (num, i) {
+            steps
+                .to(num, { scale: 1, backgroundColor: '#047857', duration: 0.35, ease: 'back.out(3)' })
+                .to(bars[i], { scaleX: 1, duration: 1, ease: 'none' });
+        });
+        if (canHover) all('[data-step]', stepsWrap).forEach(function (card) { lift(card); });
+    }
+
+    // --- Roles ---------------------------------------------------------------------
+    var roles = all('[data-role]');
+    reveal(roles,
+        { autoAlpha: 0, x: -30, rotateY: -55, transformOrigin: 'left center' },
+        { autoAlpha: 1, x: 0, rotateY: 0, duration: 0.9, stagger: 0.14 },
+        function (batch) {
+            batch.forEach(function (card, i) {
+                gsap.from(card.querySelectorAll('[data-role-dot]'), {
+                    scale: 0, duration: 0.35, stagger: 0.08, delay: 0.5 + i * 0.14, ease: 'back.out(3)'
+                });
+            });
+        });
+    if (canHover) roles.forEach(function (card) { lift(card); });
+    shineLoop(document.querySelector('[data-role-shine]'), 1.5);
+
+    // --- Final call to action ------------------------------------------------------
+    var cta = document.querySelector('[data-cta]');
+    if (cta) {
+        all('[data-cta-float]', cta).forEach(function (el, i) {
+            var speed = parseFloat(el.getAttribute('data-speed')) || 40;
+            gsap.fromTo(el, { y: -speed }, {
+                y: speed, ease: 'none',
+                scrollTrigger: { trigger: cta, start: 'top bottom', end: 'bottom top', scrub: true }
+            });
+            gsap.to(el, { rotate: i % 2 ? 14 : -14, duration: 3 + i * 0.7, yoyo: true, repeat: -1, ease: 'sine.inOut' });
+        });
+
+        var magnet = cta.querySelector('[data-cta-magnet]');
+        gsap.from(magnet, {
+            scale: 0.6, autoAlpha: 0, duration: 0.8, ease: 'back.out(2)',
+            scrollTrigger: { trigger: magnet, start: 'top 92%', once: true }
+        });
+        magnetize(magnet, cta);
+        shineLoop(cta.querySelector('[data-cta-shine]'), 1);
+        gsap.to(cta.querySelector('[data-cta-arrow]'), { x: 5, duration: 0.6, yoyo: true, repeat: -1, ease: 'sine.inOut' });
+    }
+
+    // --- Footer --------------------------------------------------------------------
+    var footer = document.querySelector('[data-footer]');
+    if (footer) {
+        gsap.from(all('[data-footer-item]', footer), {
+            y: 12, autoAlpha: 0, duration: 0.5, stagger: 0.06, ease: 'power2.out',
+            scrollTrigger: { trigger: footer, start: 'top 98%', once: true }
+        });
     }
 })();
