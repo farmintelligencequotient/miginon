@@ -79,21 +79,4 @@
         setInterval(function () { if (useCurrent.checked) updatePreview(); }, 30000);
     })();
 </script>
-{% if not record %}
-<script>
-    (function () {
-        var form = document.getElementById('milk-form');
-        var banner = document.getElementById('offline-save-banner');
-        if (!form || !banner || !window.FarmIQOfflineQueue) return;
-        form.addEventListener('submit', function (e) {
-            if (navigator.onLine) return;
-            e.preventDefault();
-            window.FarmIQOfflineQueue.queueFormSubmission(form).then(function () {
-                banner.hidden = false;
-                form.reset();
-            });
-        });
-    })();
-</script>
-{% endif %}
 {% endblock %}

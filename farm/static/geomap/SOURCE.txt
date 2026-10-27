@@ -1,0 +1,9 @@
+kenya-counties.geojson - the 47 county boundaries used by GeoMap's offline map.
+
+Source: geoBoundaries gbOpen KEN ADM1 (boundaryID KEN-ADM1-32016919, build Dec 12 2023),
+originally from the RCMRD GeoPortal. License: Public Domain.
+https://www.geoboundaries.org/
+
+Slimmed for the app: the "simplified" release geometry, coordinates rounded to
+4 decimals (~11 m), properties reduced to `name` plus a `label` point (centroid
+of each county's largest polygon) for the county name tags.

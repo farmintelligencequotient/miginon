@@ -90,7 +90,9 @@ def _track_and_get_recent_modules(request):
     current_app = resolver_match.app_name if resolver_match else None
 
     history = request.session.get(RECENT_MODULES_SESSION_KEY, [])
-    if current_app in BOTTOM_NAV_MODULES:
+    # The service worker's background offline warm-up (core/offline.py) is
+    # not a visit - it must not reshuffle the bottom nav.
+    if current_app in BOTTOM_NAV_MODULES and request.headers.get('X-FarmIQ-Warm') != '1':
         history = [current_app] + [app for app in history if app != current_app]
         history = history[:RECENT_MODULES_HISTORY_LENGTH]
         if history != request.session.get(RECENT_MODULES_SESSION_KEY):

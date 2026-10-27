@@ -10,6 +10,18 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/icons/favicon-16.png' %}">
     <link rel="shortcut icon" href="{% static 'images/icons/favicon.ico' %}">
     {% progressive_web_app_meta %}
+    {# Offline mode - see static/js/offline.js. In <head> so it runs before the submit spinner below. #}
+    <script src="{% static 'js/offline-config.js' %}"></script>
+    <script src="{% static 'js/offline.js' %}"></script>
+    {{ offline_context|json_script:"farmiq-offline-context" }}
+    {% trans "You're offline. Saved pages and data entry still work - greyed-out modules need internet." as s_bar %}
+    {% trans "Saved copy from" as s_copy %}
+    {% trans "This needs an internet connection." as s_needs %}
+    {% trans "No signal - saved on this device. It will sync automatically once you're back online." as s_saved %}
+    {% trans "Couldn't save this on the device - please try again." as s_failed %}
+    {% trans "Back online - syncing your saved records." as s_back %}
+    {% trans "records synced." as s_synced %}
+    <script type="application/json" id="farmiq-offline-strings">{"offlineBar": "{{ s_bar|escapejs }}", "copyFrom": "{{ s_copy|escapejs }}", "needsInternet": "{{ s_needs|escapejs }}", "savedOffline": "{{ s_saved|escapejs }}", "queueFailed": "{{ s_failed|escapejs }}", "backOnline": "{{ s_back|escapejs }}", "synced": "{{ s_synced|escapejs }}"}</script>
     {% if not user.is_authenticated %}
     <script>
       // Anonymous visitors have no saved theme_preference to render server-side -
@@ -86,6 +98,8 @@
         <span class="page-loading-spinner"></span>
     </div>
 
+    {# The farmiq:flash markers let the service worker leave one-off messages out of saved offline copies. #}
+    <!--farmiq:flash-->
     {% if messages %}
     <div class="fixed top-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2 px-4 sm:px-0">
         {% for message in messages %}
@@ -119,6 +133,7 @@
       })();
     </script>
     {% endif %}
+    <!--/farmiq:flash-->
 
     <script>
       // Site-wide: show a full-page loading overlay while a link navigates

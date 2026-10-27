@@ -139,6 +139,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'farms.context_processors.active_farm',
                 'core.context_processors.theme',
+                'core.context_processors.offline',
             ],
         },
     },

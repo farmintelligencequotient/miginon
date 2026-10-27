@@ -291,3 +291,82 @@ class FallbackBackendTests(TestCase):
         with self.assertRaises(RuntimeError):
             self._run(['a', 'b'], {'a': RuntimeError('one'), 'b': RuntimeError('two')})
 
+
+
+class OfflineModeTests(TestCase):
+    """Offline support: static/pwa/serviceworker.js + static/js/offline*.js,
+    fed by core/offline.py and core.context_processors.offline."""
+
+    def setUp(self):
+        from accounts.models import User
+        from farms.models import Block, FarmMembership, FarmRole
+
+        self.owner = User.objects.create_user(email='offline-owner@example.com', first_name='Off')
+        self.farm = Farm.objects.create(name='Offline Farm', owner=self.owner)
+        FarmMembership.objects.create(user=self.owner, farm=self.farm, role=FarmRole.FARMER, status=FarmMembership.Status.ACTIVE)
+        Block.objects.create(farm=self.farm, name='Offline Block', created_by=self.owner)
+
+    def _login(self):
+        self.client.force_login(self.owner)
+        session = self.client.session
+        session['active_farm_id'] = self.farm.id
+        session.save()
+
+    def _offline_context(self, response):
+        import json
+        html = response.content.decode()
+        start = html.index('id="farmiq-offline-context"')
+        start = html.index('>', start) + 1
+        return json.loads(html[start:html.index('</script>', start)])
+
+    def test_signed_in_pages_hand_the_worker_a_context_and_pages_to_warm(self):
+        self._login()
+        response = self.client.get('/farm/')
+        self.assertContains(response, 'js/offline-config.js')
+        self.assertContains(response, 'js/offline.js')
+        ctx = self._offline_context(response)
+        self.assertTrue(ctx['key'].startswith(f'{self.owner.pk}:{self.farm.pk}:'))
+        self.assertIn('/cows/milk/add/', ctx['warm'])
+        self.assertIn('/farm/', ctx['warm'])
+        # opening the notifications list marks everything read - never warmed
+        self.assertNotIn('/notifications/', ctx['warm'])
+        self.assertTrue(any(url.endswith('/home-outline.svg') for url in ctx['assets']))
+
+    def test_anonymous_pages_get_the_anon_context(self):
+        ctx = self._offline_context(self.client.get('/'))
+        self.assertEqual(ctx, {'key': 'anon', 'warm': [], 'assets': []})
+
+    def test_flash_messages_are_marked_so_saved_copies_drop_them(self):
+        self._login()
+        page = self.client.get('/farm/').content.decode()
+        self.assertLess(page.index('<!--farmiq:flash-->'), page.index('<!--/farmiq:flash-->'))
+
+    def test_warm_up_requests_do_not_count_as_module_visits(self):
+        from farms.context_processors import RECENT_MODULES_SESSION_KEY
+
+        self._login()
+        self.client.get('/cows/', headers={'X-FarmIQ-Warm': '1'})
+        self.assertNotIn('cows', self.client.session.get(RECENT_MODULES_SESSION_KEY, []))
+        self.client.get('/cows/')
+        self.assertIn('cows', self.client.session.get(RECENT_MODULES_SESSION_KEY, []))
+
+    def test_service_worker_loads_the_shared_offline_rules(self):
+        body = self.client.get('/serviceworker.js').content.decode()
+        self.assertIn("importScripts('/static/js/offline-config.js')", body)
+        self.assertIn('/static/geomap/kenya-counties.geojson', body)
+
+    def test_offline_page_renders_and_knows_online_only_modules(self):
+        response = self.client.get('/offline/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'js/offline-config.js')
+        self.assertContains(response, 'isOnlineOnly(location.pathname)')
+
+    def test_bundled_kenya_map_has_every_county(self):
+        import json
+        from pathlib import Path
+
+        from django.conf import settings
+
+        data = json.loads((Path(settings.BASE_DIR) / 'static' / 'geomap' / 'kenya-counties.geojson').read_text(encoding='utf-8'))
+        self.assertEqual(len(data['features']), 47)
+        self.assertIn('Nairobi', {f['properties']['name'] for f in data['features']})

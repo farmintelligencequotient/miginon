@@ -67,16 +67,22 @@
         return match ? decodeURIComponent(match[1]) : '';
     }
 
-    function queueFormSubmission(form) {
-        var formData = new FormData(form);
+    function queueFormSubmission(form, submitter) {
+        var formData;
+        try {
+            // The pressed button's name/value too ("Save and add another"...).
+            formData = new FormData(form, submitter || undefined);
+        } catch (e) {
+            formData = new FormData(form);
+        }
         var fields = [];
         formData.forEach(function (value, key) {
             // Includes the hidden csrfmiddlewaretoken input Django's
-            // {% csrf_token %} renders - so the later re-POST (from this
-            // page or the service worker's background sync, neither of
-            // which can read document.cookie the way a normal page can)
-            // already carries a valid token in the body itself.
-            if (typeof value === 'string') fields.push([key, value]);
+            // {% csrf_token %} renders - used as-is by the service worker's
+            // background sync (it can't read document.cookie); the page-side
+            // flush below swaps in the current cookie's token. Files are kept
+            // as Blobs (IndexedDB stores them); an empty file input is skipped.
+            if (typeof value === 'string' || value.size > 0) fields.push([key, value]);
         });
         return addRecord({
             url: form.action || window.location.href,
@@ -93,19 +99,25 @@
     }
 
     function submitOne(record) {
-        var body = new URLSearchParams();
-        record.fields.forEach(function (pair) { body.append(pair[0], pair[1]); });
+        // The token queued with the form goes stale if the person signed in
+        // again meanwhile; the cookie always holds the current one.
+        var csrfToken = getCsrfToken();
+        var hasFile = record.fields.some(function (pair) { return typeof pair[1] !== 'string'; });
+        var body = hasFile ? new FormData() : new URLSearchParams();
+        record.fields.forEach(function (pair) {
+            body.append(pair[0], pair[0] === 'csrfmiddlewaretoken' && csrfToken ? csrfToken : pair[1]);
+        });
         return fetch(record.url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': getCsrfToken() },
-            body: body.toString(),
+            headers: { 'X-CSRFToken': csrfToken },
+            body: body,
             credentials: 'same-origin',
         }).then(function (response) {
             // This app's convention: a successful create/edit redirects (so
             // fetch, which follows redirects, reports redirected=true); a
             // rejected form just re-renders the same page with a 200 - the
             // only reliable signal to tell them apart without a JSON API.
-            if (response.redirected) return removeRecord(record.id);
+            if (response.redirected) return removeRecord(record.id).then(function () { return 'sent'; });
             record.attempts += 1;
             if (record.attempts >= MAX_ATTEMPTS) return removeRecord(record.id);
             return updateRecord(record);
@@ -115,12 +127,29 @@
         });
     }
 
+    var flushing = null;
+
     function flushQueue() {
-        return getAllRecords().then(function (records) {
+        // One flush at a time, or a record could be sent twice.
+        if (flushing) return flushing;
+        var sent = 0;
+        flushing = getAllRecords().then(function (records) {
             return records.reduce(function (chain, record) {
-                return chain.then(function () { return submitOne(record); });
+                return chain.then(function () { return submitOne(record); }).then(function (outcome) {
+                    if (outcome === 'sent') sent += 1;
+                });
             }, Promise.resolve());
-        }).then(updateBadges);
+        }).then(updateBadges).then(function (left) {
+            if (sent) window.dispatchEvent(new CustomEvent('farmiq:synced', { detail: { sent: sent, left: left } }));
+            return left;
+        }).then(function (left) {
+            flushing = null;
+            return left;
+        }, function (error) {
+            flushing = null;
+            throw error;
+        });
+        return flushing;
     }
 
     var badges = [];
@@ -148,6 +177,13 @@
     };
 
     window.addEventListener('online', function () { flushQueue(); });
+    // The service worker queues posts that failed mid-flight and flushes via
+    // Background Sync - keep the badge in step either way.
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', function (event) {
+            if (event.data && event.data.type === 'queue-changed') updateBadges();
+        });
+    }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', flushQueue);
     } else {

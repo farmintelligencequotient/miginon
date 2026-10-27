@@ -1,14 +1,16 @@
-{% load static %}<!DOCTYPE html>
-<html lang="en">
+{% load static i18n %}<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>You're offline - FarmIQ</title>
+    <title>{% trans "You're offline" %} - FarmIQ</title>
     <!--
         This page must render without any network access, so unlike the rest
         of the app it can't pull Tailwind/Ionicons/fonts from a CDN - every
-        style here is inline, and the only external asset is the app icon,
-        which the service worker caches specifically so this page works.
+        style here is inline, and the only other assets (the app icon and
+        offline-config.js) are precached by the service worker. It is served
+        for a page that isn't saved on the device, and for online-only
+        modules (static/js/offline-config.js) while offline.
     -->
     <style>
         * { box-sizing: border-box; }
@@ -62,14 +64,67 @@
             cursor: pointer;
         }
         button:hover { background: #065f46; }
+        #saved-pages { display: none; margin: 0 0 24px; text-align: left; }
+        #saved-pages h2 { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #a8a29e; margin: 0 0 8px; }
+        #saved-pages ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        #saved-pages a { display: block; padding: 9px 12px; border-radius: 12px; background: #ecfdf5; color: #065f46; font-size: 13px; font-weight: 700; text-decoration: none; }
+        #saved-pages a:hover { background: #d1fae5; }
     </style>
 </head>
 <body>
     <div class="card">
         <img class="icon" src="{% static 'images/icons/icon-192x192.png' %}" alt="FarmIQ">
-        <h1>You're offline</h1>
-        <p>FarmIQ needs a connection to load your farm's records. Reconnect and try again - anything you already had open will still be there.</p>
-        <button onclick="window.location.reload()">Try again</button>
+        <h1 id="offline-title">{% trans "You're offline" %}</h1>
+        <p id="offline-message">{% trans "This page hasn't been saved on this device yet. Pages you've opened before, and the everyday records pages, still work offline - and anything you enter is saved and synced once you reconnect." %}</p>
+        <div id="saved-pages">
+            <h2>{% trans "Available offline" %}</h2>
+            <ul id="saved-pages-list"></ul>
+        </div>
+        <button onclick="window.location.reload()">{% trans "Try again" %}</button>
     </div>
+    <script src="{% static 'js/offline-config.js' %}"></script>
+    <script>
+        (function () {
+            var NEEDS_INTERNET_TITLE = '{{ _("This needs internet")|escapejs }}';
+            var NEEDS_INTERNET_TEXT = '{{ _("This part of FarmIQ only works with a live connection (live data or an outside service). Reconnect to use it - the rest of the app keeps working offline.")|escapejs }}';
+            var PAGES = [
+                ['/farm/', '{{ _("Dashboard")|escapejs }}'],
+                ['/cows/', '{{ _("Cows")|escapejs }}'],
+                ['/cows/milk/', '{{ _("Milk")|escapejs }}'],
+                ['/cows/feeding/', '{{ _("Feeding")|escapejs }}'],
+                ['/cows/health/', '{{ _("Health")|escapejs }}'],
+                ['/crops/', '{{ _("Crops")|escapejs }}'],
+                ['/finance/', '{{ _("Finance")|escapejs }}'],
+                ['/inventory/', '{{ _("Inventory")|escapejs }}'],
+                ['/tasks/', '{{ _("Tasks")|escapejs }}'],
+                ['/analysis/', '{{ _("Reports")|escapejs }}'],
+                ['/advisory/', '{{ _("Advisory")|escapejs }}'],
+                ['/farm/blocks/', '{{ _("Blocks")|escapejs }}'],
+                ['/farm/map/', '{{ _("Farm map")|escapejs }}'],
+                ['/geomap/', '{{ _("GeoMap")|escapejs }}'],
+            ];
+            if (window.FarmIQOfflineConfig && window.FarmIQOfflineConfig.isOnlineOnly(location.pathname)) {
+                document.getElementById('offline-title').textContent = NEEDS_INTERNET_TITLE;
+                document.getElementById('offline-message').textContent = NEEDS_INTERNET_TEXT;
+            }
+            if (!window.caches) return;
+            caches.open('farmiq-pages-v1').then(function (cache) {
+                return Promise.all(PAGES.map(function (page) {
+                    return cache.match(page[0], { ignoreVary: true }).then(function (hit) { return hit ? page : null; });
+                }));
+            }).then(function (found) {
+                var list = document.getElementById('saved-pages-list');
+                found.filter(Boolean).forEach(function (page) {
+                    var li = document.createElement('li');
+                    var a = document.createElement('a');
+                    a.href = page[0];
+                    a.textContent = page[1];
+                    li.appendChild(a);
+                    list.appendChild(li);
+                });
+                if (list.children.length) document.getElementById('saved-pages').style.display = 'block';
+            });
+        })();
+    </script>
 </body>
 </html>

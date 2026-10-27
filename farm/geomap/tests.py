@@ -145,6 +145,13 @@ class ParcelPrivacyAndAdminMapTests(TestCase):
         colours = {p.color for p in response.context['parcels']}
         self.assertEqual(len(colours), 2)
 
+    def test_map_falls_back_to_the_bundled_kenya_map_offline(self):
+        self._login_farm(self.farmer, self.farm)
+        page = self.client.get('/geomap/').content.decode()
+        self.assertIn('geomap/kenya-counties.geojson', page)
+        self.assertIn('id="geomap-offline-note"', page)
+        self.assertIn("style: offlineMode ? offlineStyle() : config.styleUrl", page)
+
     def test_map_has_a_fullscreen_control_wrapping_the_whole_shell(self):
         self._login_farm(self.farmer, self.farm)
         page = self.client.get('/geomap/').content.decode()
