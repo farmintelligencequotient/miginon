@@ -1,5 +1,5 @@
 {% extends "app_base.html" %}
-{% load i18n %}
+{% load i18n static %}
 {% block title %}{% trans "Farm Map" %} - FarmIQ{% endblock %}
 
 {% block extra_head %}
@@ -11,6 +11,26 @@
   }
 }
 </script>
+<style>
+    /* Full-screen button: same labelled pill as the GeoMap's, pinned bottom-right
+       (the Legend already owns the top-right corner). */
+    .farm-map-fs { position: absolute; right: .75rem; bottom: .75rem; z-index: 10; }
+    .farm-map-fs > button.geomap-fs-btn {
+        height: 34px; padding: 0 .7rem; display: flex; align-items: center; gap: .4rem;
+        border-radius: 9999px; border: 1px solid #e7e5e4; background: rgba(255, 255, 255, .95);
+        color: #1c1917; font: 700 12px/1 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+        white-space: nowrap; cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, .2);
+    }
+    .farm-map-fs > button.geomap-fs-btn:hover { background: #fff; }
+    .geomap-fs-btn ion-icon { font-size: 18px; color: #146a4a; flex: none; }
+    @media (max-width: 420px) { .geomap-fs-label { display: none; } }
+    /* Fullscreen: the scene + layer toggles + legend fill the screen. */
+    #farm-map:fullscreen, #farm-map.geomap-pseudo-fs {
+        height: 100vh !important; height: 100dvh !important; border-radius: 0 !important; border: 0 !important;
+    }
+    #farm-map.geomap-pseudo-fs { position: fixed; inset: 0; z-index: 9999; width: 100%; }
+    html.geomap-fs-lock, html.geomap-fs-lock body { overflow: hidden; }
+</style>
 {% endblock %}
 
 {% block app_content %}
@@ -113,6 +133,7 @@
 
 {% block extra_scripts %}
 {% if blocks or cows_data or inventory_data or finance_data.income or finance_data.expense or crops_data or workers_data or tasks_data %}
+<script src="{% static 'js/map_fullscreen.js' %}"></script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -761,11 +782,25 @@ renderer.domElement.addEventListener('click', (event) => {
     if (hit) window.location = hit.object.userData.url;
 });
 
-window.addEventListener('resize', () => {
+function resizeScene() {
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
-});
+}
+window.addEventListener('resize', resizeScene);
+
+// ------------------------------------------------------------ fullscreen
+
+// Reuses the GeoMap's fullscreen helper; this adapter gives it the two bits of
+// the MapLibre map API it relies on (resize + addControl).
+FarmIQMapFullscreen(container, {
+    resize: resizeScene,
+    addControl(control) {
+        const el = control.onAdd();
+        el.className = 'farm-map-fs';
+        container.appendChild(el);
+    },
+}, { enter: '{% trans "Full screen" %}', exit: '{% trans "Exit full screen" %}', remember: false });
 
 (function animate() {
     requestAnimationFrame(animate);

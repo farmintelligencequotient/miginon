@@ -28,6 +28,9 @@
         labels = labels || {};
         var enterLabel = labels.enter || 'Full screen';
         var exitLabel = labels.exit || 'Exit full screen';
+        // Pages whose clicks navigate away (the 3D farm map) opt out of
+        // re-entering fullscreen on the next page load.
+        var remember = labels.remember !== false;
         var button = null;
         var pseudo = false;
 
@@ -58,7 +61,7 @@
         }
 
         function enter() {
-            safeStorage('set', '1');
+            if (remember) safeStorage('set', '1');
             if (nativeSupported(shell)) {
                 var p = shell.requestFullscreen();
                 if (p && p.catch) p.catch(function () { setPseudo(true); });
@@ -103,7 +106,7 @@
         map.addControl(control, 'top-right');
 
         // Coming back from a page reload that happened while in fullscreen.
-        if (safeStorage('get') === '1') setPseudo(true);
+        if (remember && safeStorage('get') === '1') setPseudo(true);
 
         return { toggle: toggle, enter: enter, exit: exit, isFullscreen: isFullscreen };
     };

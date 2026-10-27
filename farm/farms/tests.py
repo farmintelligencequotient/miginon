@@ -180,3 +180,24 @@ class BackButtonTests(TestCase):
             response = self.client.get(url)
             self.assertContains(response, 'js/nav-history.js', msg_prefix=url)
 
+
+
+class FarmMapFullscreenTests(TestCase):
+    """The 3D farm map reuses the GeoMap's fullscreen helper (static/js/map_fullscreen.js)."""
+
+    def setUp(self):
+        self.owner = User.objects.create_user(email='fs-owner@example.com', first_name='Fs')
+        self.farm = Farm.objects.create(name='Fs Farm', owner=self.owner)
+        FarmMembership.objects.create(user=self.owner, farm=self.farm, role=FarmRole.FARMER, status=FarmMembership.Status.ACTIVE)
+        Block.objects.create(farm=self.farm, name='Fs Block', created_by=self.owner)
+        self.client.force_login(self.owner)
+        session = self.client.session
+        session['active_farm_id'] = self.farm.id
+        session.save()
+
+    def test_3d_map_has_a_fullscreen_control_wrapping_the_scene(self):
+        page = self.client.get('/farm/map/').content.decode()
+        self.assertIn('js/map_fullscreen.js', page)
+        self.assertIn('FarmIQMapFullscreen(container', page)
+        # clicking a 3D object navigates away, so fullscreen must not be re-entered on the next page
+        self.assertIn('remember: false', page)
