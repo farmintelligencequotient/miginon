@@ -1,10 +1,11 @@
 import calendar
 from datetime import date
 
-from django.db.models import Q, Sum
+from django.db.models import Count, Q, Sum
 from django.utils import timezone
 
 from cows.models import Cow, FeedingRecord, MilkRecord, Session
+from cows.services import cows_not_milked
 from crops.models import CropActivity
 from finance.models import Transaction
 from inventory.models import InventoryItem, StockMovement
@@ -98,6 +99,21 @@ def build_report(farm, start, end, period_label):
         milk_qs.values('date').annotate(**session_sums, liters=Sum('liters')).order_by('date')
     )
     session_totals = milk_qs.aggregate(**session_sums)
+    session_cows = milk_qs.aggregate(
+        am=Count('cow', distinct=True, filter=Q(session=Session.AM)),
+        noon=Count('cow', distinct=True, filter=Q(session=Session.NOON)),
+        pm=Count('cow', distinct=True, filter=Q(session=Session.PM)),
+    )
+    milked_cow_ids = set(milk_qs.values_list('cow_id', flat=True))
+    # Animals on the farm now with no milk logged anywhere in the period.
+    milk_not_milked = [
+        {
+            'tag_id': cow.tag_id, 'name': cow.name, 'block': cow.block.name,
+            'note': cow.note or 'No milk recorded',
+            'expected': bool(cow.note),
+        }
+        for cow in cows_not_milked(farm, milked_cow_ids)
+    ]
     # str() the labels eagerly - same openpyxl/lazy-string reason as the
     # finance labels below.
     milk_by_session = [
@@ -105,6 +121,7 @@ def build_report(farm, start, end, period_label):
             'key': key,
             'session': str(session.label),
             'liters': session_totals[key] or 0,
+            'cows': session_cows[key] or 0,
             'share': round(float(session_totals[key] or 0) / float(milk_total) * 100, 1) if milk_total else 0,
         }
         for key, session in (('am', Session.AM), ('noon', Session.NOON), ('pm', Session.PM))
@@ -188,6 +205,8 @@ def build_report(farm, start, end, period_label):
         'milk': {
             'total_liters': milk_total,
             'avg_per_cow': avg_per_cow,
+            'cows_milked': len(milked_cow_ids),
+            'not_milked': milk_not_milked,
             'by_session': milk_by_session,
             'by_block': milk_by_block,
             'by_cow': milk_by_cow,

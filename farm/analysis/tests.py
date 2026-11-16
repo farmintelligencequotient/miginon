@@ -117,6 +117,27 @@ class ReportMilkSessionTests(TestCase):
         self.assertIn('Morning', html)
         self.assertIn('15L', html)
 
+    def test_report_lists_cows_milked_and_not_milked(self):
+        from cows.models import Cow
+        from farms.models import Block
+        block = Block.objects.get(farm=self.farm, name='Block A')
+        Cow.objects.create(farm=self.farm, block=block, tag_id='S-3', added_by=self.user)
+        Cow.objects.create(farm=self.farm, block=block, tag_id='S-4', status=Cow.Status.DRY, added_by=self.user)
+        Cow.objects.create(farm=self.farm, block=block, tag_id='S-5', category=Cow.Category.CALF, added_by=self.user)
+        Cow.objects.create(farm=self.farm, block=block, tag_id='S-6', status=Cow.Status.SOLD, added_by=self.user)
+        report = build_report(self.farm, date(2026, 8, 1), date(2026, 8, 31), 'August 2026')
+        self.assertEqual(report['milk']['cows_milked'], 2)
+        self.assertEqual(
+            {row['tag_id']: row['note'] for row in report['milk']['not_milked']},
+            {'S-3': 'No milk recorded', 'S-4': 'Dry', 'S-5': 'Calf'},
+        )
+        self.assertEqual({row['key']: row['cows'] for row in report['milk']['by_session']}, {'am': 2, 'noon': 1, 'pm': 1})
+        csv_text = export_csv(report).content.decode('utf-8')
+        self.assertIn('Not milked in this period', csv_text)
+        self.assertIn('S-4,,Block A,Dry', csv_text)
+        self.assertEqual(export_xlsx(report).status_code, 200)
+        self.assertTrue(build_pdf_bytes(report).startswith(b'%PDF'))
+
     def test_an_empty_period_still_exports(self):
         report = build_report(self.farm, date(2025, 1, 1), date(2025, 1, 31), 'January 2025')
         self.assertEqual([float(r['liters']) for r in report['milk']['by_session']], [0.0, 0.0, 0.0])

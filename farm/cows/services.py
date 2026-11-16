@@ -50,6 +50,29 @@ def milk_session_totals(farm, date):
     }
 
 
+def cows_not_milked(farm, milked_cow_ids):
+    """Every animal still on the farm that isn't in milked_cow_ids - dry
+    cows, heifers, calves and bulls included; only sold and deceased animals
+    are left out. Each comes back with a .note saying why it's expected
+    (Dry / Heifer / Calf / Bull), blank for an ordinary active cow - the one
+    case that needs chasing. Shared by the milk records page and the farm
+    reports so both always list the same animals."""
+    from .models import Cow
+
+    cows = list(
+        Cow.objects.filter(farm=farm, status__in=[Cow.Status.ACTIVE, Cow.Status.DRY])
+        .exclude(pk__in=list(milked_cow_ids)).select_related('block').order_by('block__name', 'tag_id')
+    )
+    for cow in cows:
+        if cow.status == Cow.Status.DRY:
+            cow.note = str(cow.get_status_display())
+        elif cow.category != Cow.Category.COW:
+            cow.note = str(cow.get_category_display())
+        else:
+            cow.note = ''
+    return cows
+
+
 def milk_cow_breakdown(farm, date):
     """Which cows were milked on one day and how much each gave per session
     (the "Cows milked" table on the milk records page), plus every other
@@ -76,18 +99,7 @@ def milk_cow_breakdown(farm, date):
         row['total'] += record.liters
     milked = list(rows.values())
 
-    not_milked = list(
-        Cow.objects.filter(farm=farm, status__in=[Cow.Status.ACTIVE, Cow.Status.DRY])
-        .exclude(pk__in=rows.keys()).select_related('block').order_by('block__name', 'tag_id')
-    )
-    for cow in not_milked:
-        # Blank for an ordinary active cow - the one case that needs chasing.
-        if cow.status == Cow.Status.DRY:
-            cow.note = cow.get_status_display()
-        elif cow.category != Cow.Category.COW:
-            cow.note = cow.get_category_display()
-        else:
-            cow.note = ''
+    not_milked = cows_not_milked(farm, rows.keys())
     return {
         'milked': milked,
         'not_milked': not_milked,
