@@ -2,8 +2,6 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 from core.formhelpers import TailwindFormMixin, UniqueNamePerFarmMixin
-from farms.models import FarmMembership
-
 from .models import InventoryItem, StockMovement
 
 
@@ -23,12 +21,51 @@ class InventoryItemForm(UniqueNamePerFarmMixin, TailwindFormMixin, forms.ModelFo
             del self.fields['current_stock']
 
 
-class StockMovementForm(TailwindFormMixin, forms.ModelForm):
-    # One "Used by" dropdown covering both kinds of user: an animal group
-    # (Calves) or a staff member. It is a plain ChoiceField, deliberately not
-    # in Meta.fields - save() below splits the answer into the model's
-    # used_by_group / used_by columns.
+class CalfChoiceField(forms.ModelMultipleChoiceField):
+    def label_from_instance(self, obj):
+        return f'{obj.tag_id} \u00b7 {obj.name}' if obj.name else obj.tag_id
+
+
+class CalfPickerMixin:
+    """Adds the optional "Which calves?" tick-list to a form. The list is
+    only relevant for one answer of another field (calves_trigger_field ==
+    calves_trigger_value): templates/inventory/_calf_picker_script.html hides
+    it otherwise, and clean() drops any ticks that came with a different
+    answer so a stale selection is never saved."""
+
+    calves_trigger_field = ''
+    calves_trigger_value = ''
+
+    def _setup_calf_picker(self, farm):
+        from cows.models import Cow
+
+        self.fields['calves'] = CalfChoiceField(
+            queryset=Cow.objects.none(), required=False, widget=forms.CheckboxSelectMultiple,
+            label=_('Which calves? (optional)'),
+            help_text=_('Tick the calves it went to, or leave them all unticked for the calves in general.'),
+        )
+        if farm is not None:
+            self.fields['calves'].queryset = farm.cows.filter(
+                category=Cow.Category.CALF, status=Cow.Status.ACTIVE,
+            ).order_by('tag_id')
+        self.fields[self.calves_trigger_field].widget.attrs['data-calves-trigger'] = self.calves_trigger_value
+        self.order_fields(self.field_order)
+
+    def picked_calves(self):
+        if self.cleaned_data.get(self.calves_trigger_field) != self.calves_trigger_value:
+            return []
+        return list(self.cleaned_data.get('calves') or [])
+
+
+class StockMovementForm(CalfPickerMixin, TailwindFormMixin, forms.ModelForm):
+    # Who the stock went to, in general terms - Calves, Staff or Home (see
+    # StockMovement.UsedByGroup). A plain ChoiceField, deliberately not in
+    # Meta.fields: save() below writes it to the model's used_by_group, and
+    # the view saves the ticked calves once the movement has an id.
     used_by = forms.ChoiceField(required=False, label=_('Used by (optional)'), widget=forms.Select)
+
+    calves_trigger_field = 'used_by'
+    calves_trigger_value = StockMovement.UsedByGroup.CALVES.value
 
     class Meta:
         model = StockMovement
@@ -38,61 +75,48 @@ class StockMovementForm(TailwindFormMixin, forms.ModelForm):
             'note': forms.TextInput(attrs={'placeholder': _('Optional')}),
         }
 
-    field_order = ['item', 'date', 'movement_type', 'quantity', 'used_by', 'note']
+    field_order = ['item', 'date', 'movement_type', 'quantity', 'used_by', 'calves', 'note']
 
     def __init__(self, *args, farm=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self._members = {}
         if farm is not None:
             self.fields['item'].queryset = farm.inventory_items.all()
-            members = farm.memberships.filter(status=FarmMembership.Status.ACTIVE).select_related('user')
-            self._members = {str(m.pk): m for m in members}
-        staff = [
-            (key, f'{m.user.get_full_name() or m.user.email} ({m.get_role_display()})')
-            for key, m in self._members.items()
-        ]
-        choices = [('', '---------')]
-        choices.append((_('Animals'), [(value, label) for value, label in StockMovement.UsedByGroup.choices]))
-        if staff:
-            choices.append((_('Staff'), staff))
-        self.fields['used_by'].choices = choices
-        if self.instance.pk:
-            self.fields['used_by'].initial = self.instance.used_by_group or (
-                str(self.instance.used_by_id) if self.instance.used_by_id else ''
-            )
+        self.fields['used_by'].choices = [('', '---------')] + list(StockMovement.UsedByGroup.choices)
+        self._setup_calf_picker(farm)
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        choice = self.cleaned_data.get('used_by') or ''
-        if choice in StockMovement.UsedByGroup.values:
-            instance.used_by_group, instance.used_by = choice, None
-        else:
-            instance.used_by_group, instance.used_by = '', self._members.get(choice)
+        instance.used_by_group = self.cleaned_data.get('used_by') or ''
+        instance.used_by = None
         if commit:
             instance.save()
+            instance.used_by_calves.set(self.picked_calves())
         return instance
 
 
-class MilkUsageForm(TailwindFormMixin, forms.Form):
+class MilkUsageForm(CalfPickerMixin, TailwindFormMixin, forms.Form):
     PURPOSE_CHOICES = [
         ('calf', _('Calf feeding')),
         ('staff', _('Staff consumption')),
+        ('home', _('Home consumption')),
         ('other', _('Other internal use')),
     ]
+    # Which StockMovement.UsedByGroup each purpose is recorded under.
+    PURPOSE_GROUPS = {
+        'calf': StockMovement.UsedByGroup.CALVES,
+        'staff': StockMovement.UsedByGroup.STAFF,
+        'home': StockMovement.UsedByGroup.HOME,
+    }
+
+    calves_trigger_field = 'purpose'
+    calves_trigger_value = 'calf'
+    field_order = ['date', 'liters', 'purpose', 'calves', 'note']
 
     date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
     liters = forms.DecimalField(max_digits=7, decimal_places=2, min_value=0.01, label=_('Liters used'))
     purpose = forms.ChoiceField(choices=PURPOSE_CHOICES)
-    used_by = forms.ModelChoiceField(
-        queryset=FarmMembership.objects.none(), required=False, label=_('Staff member (if applicable)')
-    )
-    note = forms.CharField(
-        required=False, widget=forms.TextInput(attrs={'placeholder': _('Optional, e.g. which calves')})
-    )
+    note = forms.CharField(required=False, widget=forms.TextInput(attrs={'placeholder': _('Optional')}))
 
     def __init__(self, *args, farm=None, **kwargs):
         super().__init__(*args, **kwargs)
-        if farm is not None:
-            self.fields['used_by'].queryset = farm.memberships.filter(
-                status=FarmMembership.Status.ACTIVE
-            ).select_related('user')
+        self._setup_calf_picker(farm)

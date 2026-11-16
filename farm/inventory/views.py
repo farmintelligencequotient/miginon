@@ -41,7 +41,7 @@ def item_create(request):
 @any_member_required
 def item_detail(request, item_id):
     item = get_object_or_404(InventoryItem, id=item_id, farm=request.farm)
-    movements = item.movements.select_related('used_by__user').all()[:30]
+    movements = item.movements.select_related('used_by__user').prefetch_related('used_by_calves').all()[:30]
     composition = FeedComposition.objects.filter(item=item).first()
     return render(request, 'inventory/item_detail.html', {
         'item': item, 'movements': movements, 'composition': composition,
@@ -124,7 +124,7 @@ def item_delete(request, item_id):
 
 @any_member_required
 def movement_list(request):
-    movements = StockMovement.objects.filter(farm=request.farm).select_related('item', 'used_by__user')[:60]
+    movements = StockMovement.objects.filter(farm=request.farm).select_related('item', 'used_by__user').prefetch_related('used_by_calves')[:60]
     return render(request, 'inventory/movement_list.html', {'movements': movements})
 
 
@@ -140,6 +140,7 @@ def movement_create(request):
         movement.farm = request.farm
         movement.recorded_by = request.user
         movement.save()
+        movement.used_by_calves.set(form.picked_calves())
         was_low_stock = movement.item.is_low_stock
         apply_movement(movement)
         notify(
@@ -173,7 +174,6 @@ def milk_usage_create(request):
     if request.method == 'POST' and form.is_valid():
         liters = form.cleaned_data['liters']
         date = form.cleaned_data['date']
-        used_by = form.cleaned_data['used_by']
         note_detail = form.cleaned_data['note']
         purpose_label = dict(MilkUsageForm.PURPOSE_CHOICES)[form.cleaned_data['purpose']]
         description = f'{purpose_label} - {liters}L' + (f' ({note_detail})' if note_detail else '')
@@ -181,11 +181,12 @@ def milk_usage_create(request):
         milk_item = InventoryItem.objects.filter(farm=request.farm, name='Milk').first()
         stock_before = milk_item.current_stock if milk_item else 0
 
-        # "Calf feeding" shows up as used by Calves, same as a stock movement would.
-        used_by_group = StockMovement.UsedByGroup.CALVES if form.cleaned_data['purpose'] == 'calf' else ''
+        # Each purpose is recorded under the matching "Used by" group, so milk
+        # usage and ordinary stock movements read the same in the lists.
         record_milk_internal_use(
             request.farm, liters, date, request.user, note=description,
-            used_by=None if used_by_group else used_by, used_by_group=used_by_group,
+            used_by_group=MilkUsageForm.PURPOSE_GROUPS.get(form.cleaned_data['purpose'], ''),
+            calves=form.picked_calves(),
         )
         notify(request.farm, request.user, Notification.Verb.CREATED, 'milk usage', description)
         messages.success(request, _('%(description)s recorded.') % {'description': description})

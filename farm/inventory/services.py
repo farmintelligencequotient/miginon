@@ -76,7 +76,8 @@ def record_milk_sale(farm, liters, date, user):
     return movement
 
 
-def record_milk_internal_use(farm, liters, date, user, note='Internal use', used_by=None, used_by_group=''):
+def record_milk_internal_use(farm, liters, date, user, note='Internal use', used_by=None, used_by_group='',
+                             calves=()):
     """Draw down the farm's Milk inventory item for usage that isn't a sale
     - calves being fed milk, staff consumption, spoilage, etc. (see
     inventory.views.milk_usage_create). Unlike record_milk_sale, this never
@@ -88,6 +89,8 @@ def record_milk_internal_use(farm, liters, date, user, note='Internal use', used
         farm=farm, item=item, date=date, movement_type=StockMovement.MovementType.USAGE,
         quantity=liters, note=note, used_by=used_by, used_by_group=used_by_group, recorded_by=user,
     )
+    if calves:
+        movement.used_by_calves.set(calves)
     apply_movement(movement)
     return movement
 

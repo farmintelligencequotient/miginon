@@ -130,29 +130,106 @@ class InventoryPermissionTests(TestCase):
         self.assertContains(self.client.get('/inventory/movements/'), 'Calves')
         self.assertContains(self.client.get(f'/inventory/{self.item.id}/'), 'Calves')
 
-    def test_a_movement_can_still_be_recorded_as_used_by_a_staff_member(self):
-        self._login(self.worker)
-        member = FarmMembership.objects.get(user=self.worker, farm=self.farm)
-        self.assertEqual(self._use(str(member.pk)).status_code, 302)
-        movement = StockMovement.objects.get(farm=self.farm, movement_type=StockMovement.MovementType.USAGE)
-        self.assertEqual(movement.used_by, member)
-        self.assertEqual(movement.used_by_group, '')
+    def _make_calf(self, tag_id, farm=None, **extra):
+        from cows.models import Cow
+        from farms.models import Block
+        farm = farm or self.farm
+        block, _created = Block.objects.get_or_create(farm=farm, name='Calf pen')
+        return Cow.objects.create(farm=farm, block=block, tag_id=tag_id, category=Cow.Category.CALF, **extra)
 
-    def test_used_by_rejects_someone_from_another_farm(self):
+    def test_a_movement_can_be_recorded_as_used_by_staff_or_home(self):
+        self._login(self.worker)
+        for group, label in (('staff', 'Staff'), ('home', 'Home')):
+            self.assertEqual(self._use(group).status_code, 302)
+            movement = StockMovement.objects.filter(farm=self.farm).order_by('-id').first()
+            self.assertEqual(movement.used_by_group, group)
+            self.assertIsNone(movement.used_by)
+            self.assertEqual(movement.used_by_display, label)
+
+    def test_individual_calves_can_be_picked(self):
+        calf_a, calf_b = self._make_calf('K-1'), self._make_calf('K-2')
+        self._make_calf('K-3')
+        self._login(self.worker)
+        response = self.client.post('/inventory/movements/add/', {
+            'item': self.item.id, 'date': '2026-01-05', 'movement_type': StockMovement.MovementType.USAGE,
+            'quantity': '4.00', 'used_by': 'calves', 'calves': [calf_a.id, calf_b.id], 'note': '',
+        })
+        self.assertEqual(response.status_code, 302)
+        movement = StockMovement.objects.get(farm=self.farm, movement_type=StockMovement.MovementType.USAGE)
+        self.assertEqual(set(movement.used_by_calves.all()), {calf_a, calf_b})
+        self.assertEqual(movement.used_by_display, 'Calves: K-1, K-2')
+        self.assertContains(self.client.get('/inventory/movements/'), 'Calves: K-1, K-2')
+
+    def test_ticked_calves_are_ignored_when_not_used_by_calves(self):
+        calf = self._make_calf('K-4')
+        self._login(self.worker)
+        self.client.post('/inventory/movements/add/', {
+            'item': self.item.id, 'date': '2026-01-05', 'movement_type': StockMovement.MovementType.USAGE,
+            'quantity': '4.00', 'used_by': 'home', 'calves': [calf.id], 'note': '',
+        })
+        movement = StockMovement.objects.get(farm=self.farm, movement_type=StockMovement.MovementType.USAGE)
+        self.assertEqual(movement.used_by_calves.count(), 0)
+        self.assertEqual(movement.used_by_display, 'Home')
+
+    def test_calves_from_another_farm_or_older_animals_cannot_be_picked(self):
+        from cows.models import Cow
         other_owner = User.objects.create_user(email='other@example.com', first_name='Oz')
         other_farm = Farm.objects.create(name='Other Farm', owner=other_owner)
-        outsider = FarmMembership.objects.create(user=other_owner, farm=other_farm, role=FarmRole.FARMER)
+        foreign_calf = self._make_calf('X-1', farm=other_farm)
+        grown = self._make_calf('K-5')
+        Cow.objects.filter(pk=grown.pk).update(category=Cow.Category.COW)
         self._login(self.worker)
-        response = self._use(str(outsider.pk))
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.context['form']['used_by'].errors)
+        for bad in (foreign_calf.id, grown.id):
+            response = self.client.post('/inventory/movements/add/', {
+                'item': self.item.id, 'date': '2026-01-05', 'movement_type': StockMovement.MovementType.USAGE,
+                'quantity': '4.00', 'used_by': 'calves', 'calves': [bad], 'note': '',
+            })
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.context['form']['calves'].errors)
         self.assertFalse(StockMovement.objects.filter(farm=self.farm).exists())
 
-    def test_movement_form_offers_calves_and_staff(self):
+    def test_used_by_rejects_anything_that_is_not_a_group(self):
+        member = FarmMembership.objects.get(user=self.worker, farm=self.farm)
+        self._login(self.worker)
+        response = self._use(str(member.pk))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['form']['used_by'].errors)
+
+    def test_movement_form_offers_calves_staff_and_home_but_no_staff_names(self):
+        self._make_calf('K-6', name='Daisy')
         self._login(self.worker)
         html = self.client.get('/inventory/movements/add/').content.decode()
-        self.assertIn('<option value="calves">Calves</option>', html)
-        self.assertIn('Wes', html)
+        for value, label in (('calves', 'Calves'), ('staff', 'Staff'), ('home', 'Home')):
+            self.assertIn(f'<option value="{value}">{label}</option>', html)
+        self.assertNotIn('Wes', html.split('id="field-used_by"')[1].split('id="field-note"')[0])
+        self.assertIn('K-6', html)
+        self.assertIn('Daisy', html)
+
+    def test_an_old_entry_naming_a_staff_member_still_shows_the_name(self):
+        member = FarmMembership.objects.get(user=self.worker, farm=self.farm)
+        movement = StockMovement.objects.create(
+            farm=self.farm, item=self.item, date='2026-01-05', movement_type=StockMovement.MovementType.USAGE,
+            quantity=Decimal('1.00'), used_by=member,
+        )
+        self.assertEqual(movement.used_by_display, 'Wes')
+
+    def test_milk_usage_for_calves_records_the_calves(self):
+        calf = self._make_calf('K-7')
+        self._login(self.farmer)
+        response = self.client.post('/inventory/milk-usage/', {
+            'date': '2026-01-05', 'liters': '3', 'purpose': 'calf', 'calves': [calf.id], 'note': '',
+        })
+        self.assertEqual(response.status_code, 302)
+        movement = StockMovement.objects.get(farm=self.farm, item__name='Milk')
+        self.assertEqual(movement.used_by_display, 'Calves: K-7')
+
+    def test_milk_usage_for_home(self):
+        self._login(self.farmer)
+        self.client.post('/inventory/milk-usage/', {
+            'date': '2026-01-05', 'liters': '2', 'purpose': 'home', 'note': '',
+        })
+        movement = StockMovement.objects.get(farm=self.farm, item__name='Milk')
+        self.assertEqual(movement.used_by_display, 'Home')
 
     def test_worker_cannot_delete_a_movement(self):
         movement = StockMovement.objects.create(

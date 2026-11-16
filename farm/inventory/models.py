@@ -55,6 +55,8 @@ class StockMovement(models.Model):
 
     class UsedByGroup(models.TextChoices):
         CALVES = 'calves', _('Calves')
+        STAFF = 'staff', _('Staff')
+        HOME = 'home', _('Home')
 
     farm = models.ForeignKey('farms.Farm', on_delete=models.CASCADE, related_name='stock_movements')
     item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='movements')
@@ -84,7 +86,12 @@ class StockMovement(models.Model):
     # previous code keeps working after the migration has been applied.
     used_by_group = models.CharField(
         max_length=10, choices=UsedByGroup.choices, blank=True, db_default='',
-        help_text=_('Set instead of used_by when the stock went to animals rather than a person, e.g. calves.')
+        help_text=_('Who the stock went to, in general terms: the calves, the staff or the home.')
+    )
+    used_by_calves = models.ManyToManyField(
+        'cows.Cow', blank=True, related_name='stock_usage',
+        help_text=_('The individual calves, when used_by_group is Calves and they were picked out. '
+                    'Empty means the calves in general.')
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -96,8 +103,14 @@ class StockMovement(models.Model):
 
     @property
     def used_by_display(self):
-        """Who or what used this, for lists: the animal group if one was
-        picked, otherwise the staff member's name, otherwise ''."""
+        """Who used this, for lists: "Calves: C-01, C-02" when individual
+        calves were picked, otherwise the group (Calves / Staff / Home).
+        Older entries that named one staff member still show that name."""
+        if self.used_by_group == self.UsedByGroup.CALVES:
+            # .all() so a prefetch_related('used_by_calves') on the list is used.
+            tags = sorted(calf.tag_id for calf in self.used_by_calves.all())
+            if tags:
+                return f'{self.get_used_by_group_display()}: {", ".join(tags)}'
         if self.used_by_group:
             return self.get_used_by_group_display()
         if self.used_by_id:

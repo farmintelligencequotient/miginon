@@ -1,11 +1,30 @@
-{% if form.non_field_errors %}
+{% load i18n %}{% if form.non_field_errors %}
 <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
     {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
 </div>
 {% endif %}
 {% for field in form %}
-<div class="mb-4">
-    {% if field.field.widget.input_type == 'checkbox' %}
+<div class="mb-4" id="field-{{ field.html_name }}">
+    {% if field.field.widget.allow_multiple_selected and field.field.widget.input_type == 'checkbox' %}
+    {# A tick-list (CheckboxSelectMultiple), drawn as the same chips as the feeding form's cow picker. #}
+    <fieldset>
+        <legend class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+            {{ field.label }}{% if field.field.required %} *{% endif %}
+        </legend>
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {% for option in field %}
+            <label class="flex cursor-pointer items-center gap-2 rounded-xl border-2 border-stone-200 bg-white px-3 py-2 text-sm font-medium text-stone-600 transition has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50 has-[:checked]:text-emerald-900 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:has-[:checked]:border-emerald-500 dark:has-[:checked]:bg-emerald-950 dark:has-[:checked]:text-emerald-100">
+                <input type="checkbox" name="{{ field.html_name }}" value="{{ option.data.value }}"
+                    class="h-4 w-4 shrink-0 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+                    {% if option.data.selected %}checked{% endif %}>
+                <span>{{ option.choice_label }}</span>
+            </label>
+            {% empty %}
+            <p class="col-span-full text-sm text-stone-400 dark:text-stone-500">{% trans "Nothing to pick from yet." %}</p>
+            {% endfor %}
+        </div>
+    </fieldset>
+    {% elif field.field.widget.input_type == 'checkbox' %}
     <label for="{{ field.id_for_label }}" class="flex cursor-pointer items-start gap-3 rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-semibold text-stone-700 transition has-[:checked]:border-emerald-300 has-[:checked]:bg-emerald-50 has-[:checked]:text-emerald-900 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:has-[:checked]:border-emerald-700 dark:has-[:checked]:bg-emerald-950 dark:has-[:checked]:text-emerald-100">
         {{ field }}
         <span aria-hidden="true" class="relative mt-0.5 h-6 w-11 shrink-0 rounded-full bg-stone-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:bg-emerald-600 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-500 peer-focus-visible:ring-offset-2 dark:bg-stone-600 dark:peer-checked:bg-emerald-500"></span>

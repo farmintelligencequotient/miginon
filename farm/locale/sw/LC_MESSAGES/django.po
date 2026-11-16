@@ -4259,3 +4259,18 @@ msgstr "Wanyama"
 
 msgid "Staff"
 msgstr "Wafanyakazi"
+
+msgid "Which calves? (optional)"
+msgstr "Ndama wapi? (si lazima)"
+
+msgid "Tick the calves it went to, or leave them all unticked for the calves in general."
+msgstr "Chagua ndama waliopewa, au waache wote bila kuchaguliwa kwa ndama kwa ujumla."
+
+msgid "Home consumption"
+msgstr "Matumizi ya nyumbani"
+
+msgid "Nothing to pick from yet."
+msgstr "Hakuna cha kuchagua bado."
+
+msgid "For milk that left the farm without being sold - calves, staff, home, spoilage. Draws down your Milk inventory the same way a sale would, but doesn't touch your finances, so production and sales figures stay honest."
+msgstr "Kwa maziwa yaliyotoka shambani bila kuuzwa - ndama, wafanyakazi, nyumbani, uharibifu. Hupunguza bidhaa yako ya Maziwa kama vile mauzo yangefanya, lakini haiathiri fedha zako, hivyo takwimu za uzalishaji na mauzo zinabaki sahihi."

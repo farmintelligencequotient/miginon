@@ -1,0 +1,19 @@
+{# Shows the "Which calves?" tick-list only while the field it depends on says calves - see inventory.forms.CalfPickerMixin. #}
+<script>
+    (function () {
+        var trigger = document.querySelector('[data-calves-trigger]');
+        var row = document.getElementById('field-calves');
+        if (!trigger || !row) return;
+        function sync() {
+            try {
+                row.hidden = trigger.value !== trigger.getAttribute('data-calves-trigger');
+            } catch (err) {
+                row.hidden = false;  // never leave the list unreachable
+            }
+        }
+        trigger.addEventListener('change', sync);
+        var form = trigger.form;
+        if (form) form.addEventListener('reset', function () { setTimeout(sync, 0); });
+        sync();
+    })();
+</script>
