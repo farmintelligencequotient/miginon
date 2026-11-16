@@ -181,7 +181,12 @@ def milk_usage_create(request):
         milk_item = InventoryItem.objects.filter(farm=request.farm, name='Milk').first()
         stock_before = milk_item.current_stock if milk_item else 0
 
-        record_milk_internal_use(request.farm, liters, date, request.user, note=description, used_by=used_by)
+        # "Calf feeding" shows up as used by Calves, same as a stock movement would.
+        used_by_group = StockMovement.UsedByGroup.CALVES if form.cleaned_data['purpose'] == 'calf' else ''
+        record_milk_internal_use(
+            request.farm, liters, date, request.user, note=description,
+            used_by=None if used_by_group else used_by, used_by_group=used_by_group,
+        )
         notify(request.farm, request.user, Notification.Verb.CREATED, 'milk usage', description)
         messages.success(request, _('%(description)s recorded.') % {'description': description})
         if stock_before - liters < 0:

@@ -42,7 +42,7 @@
                         </span>
                     </td>
                     <td class="px-6 py-3 text-stone-600 dark:text-stone-300">{{ m.quantity }} {{ m.item.get_unit_display }}</td>
-                    <td class="px-6 py-3 text-stone-500 dark:text-stone-400">{{ m.used_by.user.get_short_name|default:"—" }}</td>
+                    <td class="px-6 py-3 text-stone-500 dark:text-stone-400">{{ m.used_by_display|default:"—" }}</td>
                     <td class="px-6 py-3 text-stone-500 dark:text-stone-400">{{ m.note|default:"—" }}</td>
                     {% if active_membership.can_edit_or_delete %}
                     <td class="px-6 py-3 text-right">

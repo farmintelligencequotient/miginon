@@ -4250,3 +4250,12 @@ msgstr "ekari"
 
 msgid "\"%(name)s\" saved - %(acres)s acres (%(area)s hectares)."
 msgstr "\"%(name)s\" imehifadhiwa - ekari %(acres)s (hekta %(area)s)."
+
+msgid "Calves"
+msgstr "Ndama"
+
+msgid "Animals"
+msgstr "Wanyama"
+
+msgid "Staff"
+msgstr "Wafanyakazi"

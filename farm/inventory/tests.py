@@ -114,6 +114,46 @@ class InventoryPermissionTests(TestCase):
         self.item.refresh_from_db()
         self.assertEqual(self.item.current_stock, Decimal('60.00'))
 
+    def _use(self, used_by):
+        return self.client.post('/inventory/movements/add/', {
+            'item': self.item.id, 'date': '2026-01-05', 'movement_type': StockMovement.MovementType.USAGE,
+            'quantity': '4.00', 'used_by': used_by, 'note': '',
+        })
+
+    def test_a_movement_can_be_recorded_as_used_by_calves(self):
+        self._login(self.worker)
+        self.assertEqual(self._use('calves').status_code, 302)
+        movement = StockMovement.objects.get(farm=self.farm, movement_type=StockMovement.MovementType.USAGE)
+        self.assertEqual(movement.used_by_group, 'calves')
+        self.assertIsNone(movement.used_by)
+        self.assertEqual(movement.used_by_display, 'Calves')
+        self.assertContains(self.client.get('/inventory/movements/'), 'Calves')
+        self.assertContains(self.client.get(f'/inventory/{self.item.id}/'), 'Calves')
+
+    def test_a_movement_can_still_be_recorded_as_used_by_a_staff_member(self):
+        self._login(self.worker)
+        member = FarmMembership.objects.get(user=self.worker, farm=self.farm)
+        self.assertEqual(self._use(str(member.pk)).status_code, 302)
+        movement = StockMovement.objects.get(farm=self.farm, movement_type=StockMovement.MovementType.USAGE)
+        self.assertEqual(movement.used_by, member)
+        self.assertEqual(movement.used_by_group, '')
+
+    def test_used_by_rejects_someone_from_another_farm(self):
+        other_owner = User.objects.create_user(email='other@example.com', first_name='Oz')
+        other_farm = Farm.objects.create(name='Other Farm', owner=other_owner)
+        outsider = FarmMembership.objects.create(user=other_owner, farm=other_farm, role=FarmRole.FARMER)
+        self._login(self.worker)
+        response = self._use(str(outsider.pk))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['form']['used_by'].errors)
+        self.assertFalse(StockMovement.objects.filter(farm=self.farm).exists())
+
+    def test_movement_form_offers_calves_and_staff(self):
+        self._login(self.worker)
+        html = self.client.get('/inventory/movements/add/').content.decode()
+        self.assertIn('<option value="calves">Calves</option>', html)
+        self.assertIn('Wes', html)
+
     def test_worker_cannot_delete_a_movement(self):
         movement = StockMovement.objects.create(
             farm=self.farm, item=self.item, date='2026-01-05',

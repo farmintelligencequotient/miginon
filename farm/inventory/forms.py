@@ -24,22 +24,53 @@ class InventoryItemForm(UniqueNamePerFarmMixin, TailwindFormMixin, forms.ModelFo
 
 
 class StockMovementForm(TailwindFormMixin, forms.ModelForm):
+    # One "Used by" dropdown covering both kinds of user: an animal group
+    # (Calves) or a staff member. It is a plain ChoiceField, deliberately not
+    # in Meta.fields - save() below splits the answer into the model's
+    # used_by_group / used_by columns.
+    used_by = forms.ChoiceField(required=False, label=_('Used by (optional)'), widget=forms.Select)
+
     class Meta:
         model = StockMovement
-        fields = ['item', 'date', 'movement_type', 'quantity', 'used_by', 'note']
+        fields = ['item', 'date', 'movement_type', 'quantity', 'note']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
             'note': forms.TextInput(attrs={'placeholder': _('Optional')}),
         }
-        labels = {'used_by': _('Used by (optional)')}
+
+    field_order = ['item', 'date', 'movement_type', 'quantity', 'used_by', 'note']
 
     def __init__(self, *args, farm=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self._members = {}
         if farm is not None:
             self.fields['item'].queryset = farm.inventory_items.all()
-            self.fields['used_by'].queryset = farm.memberships.filter(
-                status=FarmMembership.Status.ACTIVE
-            ).select_related('user')
+            members = farm.memberships.filter(status=FarmMembership.Status.ACTIVE).select_related('user')
+            self._members = {str(m.pk): m for m in members}
+        staff = [
+            (key, f'{m.user.get_full_name() or m.user.email} ({m.get_role_display()})')
+            for key, m in self._members.items()
+        ]
+        choices = [('', '---------')]
+        choices.append((_('Animals'), [(value, label) for value, label in StockMovement.UsedByGroup.choices]))
+        if staff:
+            choices.append((_('Staff'), staff))
+        self.fields['used_by'].choices = choices
+        if self.instance.pk:
+            self.fields['used_by'].initial = self.instance.used_by_group or (
+                str(self.instance.used_by_id) if self.instance.used_by_id else ''
+            )
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        choice = self.cleaned_data.get('used_by') or ''
+        if choice in StockMovement.UsedByGroup.values:
+            instance.used_by_group, instance.used_by = choice, None
+        else:
+            instance.used_by_group, instance.used_by = '', self._members.get(choice)
+        if commit:
+            instance.save()
+        return instance
 
 
 class MilkUsageForm(TailwindFormMixin, forms.Form):

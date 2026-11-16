@@ -53,6 +53,9 @@ class StockMovement(models.Model):
         USAGE = 'out', _('Usage (out)')
         ADJUSTMENT = 'adjust', _('Correction')
 
+    class UsedByGroup(models.TextChoices):
+        CALVES = 'calves', _('Calves')
+
     farm = models.ForeignKey('farms.Farm', on_delete=models.CASCADE, related_name='stock_movements')
     item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='movements')
     date = models.DateField()
@@ -76,6 +79,10 @@ class StockMovement(models.Model):
         help_text=_('Who used/consumed this (most relevant for equipment) - separate from '
                     'recorded_by, who logged the entry.')
     )
+    used_by_group = models.CharField(
+        max_length=10, choices=UsedByGroup.choices, blank=True,
+        help_text=_('Set instead of used_by when the stock went to animals rather than a person, e.g. calves.')
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -83,6 +90,16 @@ class StockMovement(models.Model):
 
     def __str__(self):
         return f'{self.item.name} - {self.get_movement_type_display()} - {self.quantity}'
+
+    @property
+    def used_by_display(self):
+        """Who or what used this, for lists: the animal group if one was
+        picked, otherwise the staff member's name, otherwise ''."""
+        if self.used_by_group:
+            return self.get_used_by_group_display()
+        if self.used_by_id:
+            return self.used_by.user.get_short_name()
+        return ''
 
 
 class FeedComposition(models.Model):
