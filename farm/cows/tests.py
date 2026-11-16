@@ -295,6 +295,46 @@ class MilkRecordViewTests(CowsTestCase):
         self.assertEqual(by_key['PM']['liters'], Decimal('6.00'))
         self.assertFalse(by_key['NOON']['logged'])
 
+    def test_milk_page_lists_which_cows_were_milked_with_totals(self):
+        from django.utils import timezone
+        today = timezone.localdate().isoformat()
+        cow_a, cow_b = self._make_cow(tag_id='C-301'), self._make_cow(tag_id='C-302')
+        idle = self._make_cow(tag_id='C-303')
+        self._login(self.worker)
+        self._log(cow_a, today, '06:00', '8.5')
+        self._log(cow_a, today, '17:00', '6')
+        self._log(cow_b, today, '06:10', '7')
+        response = self.client.get('/cows/milk/')
+        breakdown = response.context['cow_breakdown']
+        rows = {row['cow'].tag_id: row for row in breakdown['milked']}
+        self.assertEqual(set(rows), {'C-301', 'C-302'})
+        self.assertEqual(rows['C-301']['sessions'], [Decimal('8.50'), None, Decimal('6.00')])
+        self.assertEqual(rows['C-301']['total'], Decimal('14.50'))
+        self.assertEqual(breakdown['session_totals'], [Decimal('15.50'), Decimal('0'), Decimal('6.00')])
+        self.assertEqual(breakdown['total'], Decimal('21.50'))
+        self.assertEqual([cow.pk for cow in breakdown['not_milked']], [idle.pk])
+        totals = response.context['totals']
+        self.assertEqual(totals['cows_milked'], 2)
+        self.assertEqual({row['key']: row['cows'] for row in totals['sessions']}, {'AM': 2, 'NOON': 0, 'PM': 1})
+        self.assertContains(response, 'Cows milked')
+        self.assertContains(response, 'C-303')
+
+    def test_milk_page_with_nothing_milked(self):
+        self._make_cow(tag_id='C-304')
+        self._login(self.worker)
+        response = self.client.get('/cows/milk/')
+        self.assertContains(response, 'No cows were milked on this day.')
+        self.assertEqual(response.context['cow_breakdown']['total'], Decimal('0'))
+
+    def test_milk_page_renders_in_swahili(self):
+        from django.utils import timezone
+        cow = self._make_cow(tag_id='C-305')
+        self._login(self.worker)
+        self._log(cow, timezone.localdate().isoformat(), '06:00', '8')
+        self.client.cookies['django_language'] = 'sw'
+        self.assertEqual(self.client.get('/cows/milk/').status_code, 200)
+        self.assertEqual(self.client.get('/farm/').status_code, 200)
+
     def test_worker_cannot_delete_a_milk_record(self):
         cow = self._make_cow(tag_id='C-100')
         self._login(self.farmer)

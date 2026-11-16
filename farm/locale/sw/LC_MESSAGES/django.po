@@ -4225,3 +4225,22 @@ msgstr "Imeshindikana kuandaa ripoti. Angalia mtandao wako kisha ujaribu tena."
 
 msgid "Your session has expired. Sign in again, then export the report."
 msgstr "Muda wako wa kuingia umeisha. Ingia tena, kisha uhamishe ripoti."
+
+msgid "Cows milked"
+msgstr "Ng'ombe waliokamuliwa"
+
+msgid "No cows were milked on this day."
+msgstr "Hakuna ng'ombe aliyekamuliwa siku hii."
+
+msgid "Not milked"
+msgstr "Hawajakamuliwa"
+
+msgid "%(n)s cow"
+msgid_plural "%(n)s cows"
+msgstr[0] "ng'ombe %(n)s"
+msgstr[1] "ng'ombe %(n)s"
+
+msgid "%(n)s cow milked"
+msgid_plural "%(n)s cows milked"
+msgstr[0] "ng'ombe %(n)s amekamuliwa"
+msgstr[1] "ng'ombe %(n)s wamekamuliwa"

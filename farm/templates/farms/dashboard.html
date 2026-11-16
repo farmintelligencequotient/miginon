@@ -161,6 +161,10 @@ module actually does.
                     <dd class="font-bold {% if s.logged %}text-stone-800 dark:text-stone-200{% else %}text-stone-300 dark:text-stone-600{% endif %}">{% if s.logged %}{{ s.liters|floatformat:"-2" }}L{% else %}&ndash;{% endif %}</dd>
                 </div>
                 {% endfor %}
+                <div class="mt-1 flex items-baseline justify-between gap-2 border-t border-stone-100 pt-1 text-xs dark:border-stone-800">
+                    <dt class="text-stone-500 dark:text-stone-400">{% trans "Cows milked" %}</dt>
+                    <dd class="font-bold text-stone-800 dark:text-stone-200">{{ milk_totals.cows_milked }}</dd>
+                </div>
             </dl>
         </div>
     </a>

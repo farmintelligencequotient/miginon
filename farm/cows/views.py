@@ -30,7 +30,7 @@ from .models import (
     Cow, CowHealthRecord, CowTransfer, CowWeightRecord, FeedingRecord, FeedingRecordCow, MilkRecord,
     ReproductiveEvent, Session,
 )
-from .services import milk_session_totals
+from .services import milk_cow_breakdown, milk_session_totals
 
 logger = logging.getLogger(__name__)
 
@@ -315,6 +315,7 @@ def milk_list(request):
     return render(request, 'cows/milk_list.html', {
         'records': records,
         'totals': milk_session_totals(request.farm, summary_date),
+        'cow_breakdown': milk_cow_breakdown(request.farm, summary_date),
         'totals_is_today': summary_date == today,
         'previous_date': summary_date - timedelta(days=1),
         'next_date': summary_date + timedelta(days=1) if summary_date < today else None,
