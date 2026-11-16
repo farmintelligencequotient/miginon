@@ -20,7 +20,7 @@ from inventory.models import InventoryItem
 from notifications.models import Notification
 from notifications.services import notify
 from tasks.models import Task
-from weather.services import get_forecast_summary
+from weather.services import get_forecast_summary, sun_times
 
 from .forms import BlockForm, FarmForm, FarmSettingsForm, WorkerInviteForm, WorkerRoleForm
 from .kenya_data import COUNTY_TOWNS
@@ -605,7 +605,19 @@ def farm_map(request):
             ],
         }
 
+    # ...and its daylight follows the farm's own clock: the scene is dark at
+    # night, warm at sunrise and sunset. Sent as the local time right now
+    # (the browser keeps it ticking from there) plus today's sun times.
+    now_local = timezone.localtime()
+    sunrise, sunset = sun_times(farm.latitude, farm.longitude, now_local)
+    scene_time = {
+        'hour': round(now_local.hour + now_local.minute / 60 + now_local.second / 3600, 4),
+        'sunrise': sunrise,
+        'sunset': sunset,
+    }
+
     return render(request, 'farms/farm_map.html', {
+        'scene_time': scene_time,
         'weather_data': weather_data,
         'blocks': blocks,
         'blocks_data': blocks_data,

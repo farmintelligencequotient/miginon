@@ -244,6 +244,34 @@ class FarmMapFullscreenTests(TestCase):
         for code in list(_CODE_TABLE) + [None, 12345]:
             self.assertIn(scene_kind(code), looks)
 
+    def test_3d_map_gets_the_farms_local_time_and_sun_times(self):
+        from datetime import datetime
+        from unittest.mock import patch
+        from zoneinfo import ZoneInfo
+        fixed = datetime(2026, 11, 17, 21, 30, tzinfo=ZoneInfo('Africa/Nairobi'))
+        with patch('farms.views.get_forecast_summary', return_value=None),                 patch('farms.views.timezone.localtime', return_value=fixed):
+            response = self.client.get('/farm/map/')
+        scene_time = response.context['scene_time']
+        self.assertEqual(scene_time['hour'], 21.5)
+        self.assertEqual((scene_time['sunrise'], scene_time['sunset']), (6.5, 18.75))  # farm has no coordinates
+        self.assertIn('id="scene-time"', response.content.decode())
+
+    def test_sun_times_are_sensible(self):
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        from weather.services import sun_times
+        nairobi = datetime(2026, 6, 21, 12, tzinfo=ZoneInfo('Africa/Nairobi'))
+        sunrise, sunset = sun_times(-1.286, 36.817, nairobi)
+        self.assertAlmostEqual(sunrise, 6.55, delta=0.2)
+        self.assertAlmostEqual(sunset, 18.6, delta=0.2)
+        london = datetime(2026, 6, 21, 12, tzinfo=ZoneInfo('Europe/London'))
+        sunrise, sunset = sun_times(51.5, -0.12, london)
+        self.assertAlmostEqual(sunrise, 4.72, delta=0.2)
+        self.assertAlmostEqual(sunset, 21.35, delta=0.2)
+        self.assertEqual(sun_times(None, None, nairobi), (6.5, 18.75))
+        self.assertEqual(sun_times(89.0, 0, datetime(2026, 12, 21, 12, tzinfo=ZoneInfo('UTC'))), (12.0, 12.0))
+        self.assertEqual(sun_times('not-a-number', 0, nairobi), (6.5, 18.75))
+
     def test_3d_map_has_a_fullscreen_control_wrapping_the_scene(self):
         page = self.client.get('/farm/map/').content.decode()
         self.assertIn('js/map_fullscreen.js', page)

@@ -1,3 +1,4 @@
+import math
 import logging
 from datetime import date as date_cls
 
@@ -158,3 +159,40 @@ def get_forecast_summary(farm, force=False):
         'advisory': advisory_text,
         'fetched_at': fetched_at,
     }
+
+
+# Used when a farm has no coordinates: near the equator (Kenya) sunrise and
+# sunset barely move through the year.
+DEFAULT_SUN_TIMES = (6.5, 18.75)
+
+
+def sun_times(latitude, longitude, when):
+    """(sunrise, sunset) as decimal hours on the local clock of `when` (an
+    aware datetime), for the 3D farm view's time of day. A standard
+    declination + equation-of-time approximation - good to a few minutes,
+    which is plenty for lighting a scene. Falls back to DEFAULT_SUN_TIMES
+    without coordinates, and to "sun up all day / down all day" inside the
+    polar circles."""
+    if latitude is None or longitude is None:
+        return DEFAULT_SUN_TIMES
+    try:
+        lat, lng = math.radians(float(latitude)), float(longitude)
+        day = when.timetuple().tm_yday
+        offset_hours = when.utcoffset().total_seconds() / 3600 if when.utcoffset() is not None else 0
+        declination = math.radians(23.44) * math.sin(2 * math.pi * (284 + day) / 365)
+        b = 2 * math.pi * (day - 81) / 364
+        equation_of_time = 9.87 * math.sin(2 * b) - 7.53 * math.cos(b) - 1.5 * math.sin(b)  # minutes
+        solar_noon = 12 + (offset_hours * 15 - lng) / 15 - equation_of_time / 60
+        # -0.833 deg: the sun's upper edge on the horizon, allowing for refraction.
+        cos_hour_angle = (
+            (math.sin(math.radians(-0.833)) - math.sin(lat) * math.sin(declination))
+            / (math.cos(lat) * math.cos(declination))
+        )
+        if cos_hour_angle >= 1:
+            return (12.0, 12.0)   # polar night
+        if cos_hour_angle <= -1:
+            return (0.0, 24.0)    # midnight sun
+        half_day = math.degrees(math.acos(cos_hour_angle)) / 15
+        return (round(solar_noon - half_day, 3), round(solar_noon + half_day, 3))
+    except (TypeError, ValueError, ZeroDivisionError, AttributeError):
+        return DEFAULT_SUN_TIMES

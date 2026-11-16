@@ -141,6 +141,7 @@
 {{ workers_data|json_script:"workers-data" }}
 {{ tasks_data|json_script:"tasks-data" }}
 {{ weather_data|json_script:"weather-data" }}
+{{ scene_time|json_script:"scene-time" }}
 <p class="mt-2 text-xs text-stone-400 dark:text-stone-500" id="feeding-url" data-url="{{ feeding_url }}">
     {% trans "Trough fill shows how much has been fed to that paddock today. Low-stock inventory is tinted red." %}
 </p>
@@ -164,6 +165,7 @@ const cropsData = JSON.parse(document.getElementById('crops-data').textContent);
 const workersData = JSON.parse(document.getElementById('workers-data').textContent);
 const tasksData = JSON.parse(document.getElementById('tasks-data').textContent);
 const weatherData = JSON.parse(document.getElementById('weather-data').textContent);
+const sceneTime = JSON.parse(document.getElementById('scene-time').textContent);
 const feedingUrl = document.getElementById('feeding-url').dataset.url;
 
 const container = document.getElementById('farm-map');
@@ -828,7 +830,13 @@ FarmIQMapFullscreen(container, {
 // forecast (weatherData, built in farms.views.farm_map from the same cached
 // forecast the Weather page shows). Each forecast "scene" kind from
 // weather.services.scene_kind maps to one look below. With no forecast the
-// scene simply keeps the fair-weather defaults set up at the top.
+// scene simply keeps the fair-weather look.
+//
+// On top of that, the daylight follows the farm's own clock (sceneTime, from
+// the same view): the sun rises in the east, arcs overhead and sets in the
+// west, twilight is warm, and at night the scene is dark and moonlit with
+// stars when the sky is clear. A weather look decides how strong and what
+// colour things are; the time of day then scales and tints that.
 
 const WEATHER_LOOKS = {
     //            sky       ambient  sun     sunColor  haze  clouds cloudColor rain  flash  sunDisc
@@ -851,8 +859,24 @@ const sunDisc = new THREE.Mesh(
     new THREE.SphereGeometry(Math.max(1.2, totalSpan * 0.035), 16, 12),
     new THREE.MeshBasicMaterial({ color: 0xffe9a8, fog: false })
 );
-sunDisc.position.copy(sun.position).normalize().multiplyScalar(totalSpan * 1.1);
 scene.add(sunDisc);
+
+// Stars: a fixed dome of points, faded in at night under a clear-ish sky.
+const starPositions = new Float32Array(500 * 3);
+for (let i = 0; i < 500; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(Math.random() * 0.95 + 0.05);  // upper hemisphere only
+    const r = totalSpan * 1.9;
+    starPositions.set([r * Math.sin(phi) * Math.cos(theta), r * Math.cos(phi), r * Math.sin(phi) * Math.sin(theta)], i * 3);
+}
+const starGeometry = new THREE.BufferGeometry();
+starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+const stars = new THREE.Points(
+    starGeometry,
+    new THREE.PointsMaterial({ color: 0xffffff, size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0, fog: false })
+);
+stars.visible = false;
+scene.add(stars);
 
 const cloudGroup = new THREE.Group();
 scene.add(cloudGroup);
@@ -908,25 +932,112 @@ let look = WEATHER_LOOKS.clear;
 let rainSpeed = 0;
 let flashLeft = 0;
 let nextFlash = 3;
+let baseAmbient = 0.8;   // ambient light for the current look + time, before any lightning flash
+
+// ---- time of day
+
+const loadedAt = Date.now();
+// null = follow the farm's clock; a number = a fixed hour (forecast-day previews use midday).
+let fixedHour = null;
+
+function currentHour() {
+    if (fixedHour !== null) return fixedHour;
+    const elapsedHours = (Date.now() - loadedAt) / 3600000;
+    return (((sceneTime && sceneTime.hour) || 12) + elapsedHours) % 24;
+}
+
+const TWILIGHT = 0.75;   // hours over which daylight fades in/out around sunrise and sunset
+function smooth(t) { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); }
+
+// daylight: 0 at night, 1 in full day. glow: 0..1, peaking right at sunrise/sunset.
+// arc: 0..1 across the sky for whichever of the sun (day) or moon (night) is up.
+function sunState(hour) {
+    const rise = sceneTime ? sceneTime.sunrise : 6.5;
+    const set = sceneTime ? sceneTime.sunset : 18.75;
+    const daylight = Math.min(smooth((hour - (rise - TWILIGHT / 2)) / TWILIGHT), smooth(((set + TWILIGHT / 2) - hour) / TWILIGHT));
+    const nearest = Math.min(Math.abs(hour - rise), Math.abs(hour - set));
+    const glow = 1 - smooth(nearest / 1.1);
+    const isDay = hour >= rise && hour <= set;
+    let arc;
+    if (isDay) {
+        arc = (hour - rise) / Math.max(0.01, set - rise);
+    } else {
+        const nightLength = Math.max(0.01, 24 - (set - rise));
+        arc = ((hour - set + 24) % 24) / nightLength;
+    }
+    return { daylight, glow, isDay, arc };
+}
+
+const NIGHT_SKY = new THREE.Color(0x0b1226);
+const NIGHT_CLOUD = new THREE.Color(0x232a38);
+const TWILIGHT_SKY = new THREE.Color(0xf0a05a);
+const MOONLIGHT = new THREE.Color(0x9db4e0);
+const SUN_DISC_DAY = new THREE.Color(0xffe9a8);
+const SUN_DISC_LOW = new THREE.Color(0xff9d4d);
+const MOON_DISC = new THREE.Color(0xe8eef7);
+const tmpColor = new THREE.Color();
+
+// Blend the current weather look with the current time of day and push the result to the scene.
+function applyLighting() {
+    const state = sunState(currentHour());
+    const day = state.daylight;
+
+    // The sun (or moon) travels east -> overhead -> west.
+    const angle = state.arc * Math.PI;
+    const reach = totalSpan * 1.1;
+    const dir = new THREE.Vector3(Math.cos(angle), Math.max(0.08, Math.sin(angle)), 0.35).normalize();
+    sun.position.copy(dir).multiplyScalar(30);
+    sunDisc.position.copy(dir).multiplyScalar(reach);
+
+    // Sky: night blue -> the look's own sky, with a warm band at sunrise/sunset
+    // that is strongest under clear skies and barely there under heavy cloud.
+    tmpColor.setHex(look.sky);
+    const sky = NIGHT_SKY.clone().lerp(tmpColor, day);
+    sky.lerp(TWILIGHT_SKY, state.glow * 0.5 * Math.min(1, look.sun + 0.15));
+    scene.background.copy(sky);
+    scene.fog.color.copy(sky);
+
+    baseAmbient = look.ambient * (0.26 + 0.74 * day);
+    ambient.intensity = baseAmbient;
+
+    if (state.isDay) {
+        tmpColor.setHex(look.sunColor);
+        sun.color.copy(tmpColor).lerp(SUN_DISC_LOW, state.glow * 0.6);
+        sun.intensity = look.sun * Math.max(day, 0.15);
+        sunDisc.material.color.copy(SUN_DISC_DAY).lerp(SUN_DISC_LOW, state.glow);
+    } else {
+        sun.color.copy(MOONLIGHT);
+        sun.intensity = look.disc ? 0.22 : 0.1;
+        sunDisc.material.color.copy(MOON_DISC);
+    }
+    sunDisc.visible = look.disc;
+
+    tmpColor.setHex(look.cloud);
+    cloudMaterial.color.copy(NIGHT_CLOUD).lerp(tmpColor, day);
+
+    // Stars only when it is dark and the sky is open enough to see them.
+    const starlight = look.disc ? Math.max(0, 1 - day * 1.6) : 0;
+    stars.visible = starlight > 0.02;
+    stars.material.opacity = starlight * (look === WEATHER_LOOKS.clear ? 0.95 : 0.6);
+
+    rain.material.opacity = 0.25 + 0.3 * day;
+}
 
 function applyWeather(kind) {
     look = WEATHER_LOOKS[kind] || WEATHER_LOOKS.clear;
-    scene.background.setHex(look.sky);
-    scene.fog.color.setHex(look.sky);
     scene.fog.near = totalSpan * 0.9 * look.haze;
     scene.fog.far = totalSpan * 2.4 * look.haze;
-    ambient.intensity = look.ambient;
-    sun.intensity = look.sun;
-    sun.color.setHex(look.sunColor);
-    sunDisc.visible = look.disc;
-    cloudMaterial.color.setHex(look.cloud);
     setClouds(look.clouds);
     rain.visible = look.rain > 0;
     rainGeometry.setDrawRange(0, look.rain * 2);
     rainSpeed = look.rain >= 1800 ? 26 : (look.rain >= 900 ? 20 : 12);
     flashLeft = 0;
     nextFlash = 2 + Math.random() * 4;
+    applyLighting();
 }
+
+// The clock moves on while the page is open: re-light the scene every half minute.
+setInterval(() => { try { applyLighting(); } catch (error) { /* keep the last lighting */ } }, 30000);
 
 function updateWeather(dt) {
     if (reduceMotion) return;  // the look still applies; just nothing moves or flashes
@@ -947,7 +1058,7 @@ function updateWeather(dt) {
     if (look.flash) {
         if (flashLeft > 0) {
             flashLeft -= dt;
-            ambient.intensity = flashLeft > 0 ? look.ambient + 1.1 : look.ambient;
+            ambient.intensity = flashLeft > 0 ? baseAmbient + 1.1 : baseAmbient;
         } else {
             nextFlash -= dt;
             if (nextFlash <= 0) { flashLeft = 0.12; nextFlash = 4 + Math.random() * 7; }
@@ -959,6 +1070,8 @@ function updateWeather(dt) {
 function showWeather(index) {
     const entry = index < 0 ? weatherData.now : weatherData.days[index];
     if (!entry) return;
+    // "Now" runs on the farm's live clock; a forecast day is previewed at midday.
+    fixedHour = index < 0 ? null : 12.5;
     applyWeather(entry.scene);
     const text = document.getElementById('map-weather-text');
     const icon = document.getElementById('map-weather-icon');
