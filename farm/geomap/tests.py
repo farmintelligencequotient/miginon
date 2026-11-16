@@ -63,6 +63,17 @@ class ParcelMapViewTests(TestCase):
         self.assertEqual(parcel.name, 'North boundary')
         self.assertEqual(parcel.created_by, self.farmer)
         self.assertAlmostEqual(float(parcel.area_sqm), 10000, delta=200)
+        self.assertAlmostEqual(float(parcel.area_acres), 2.47, delta=0.06)
+
+    def test_saved_parcel_cards_show_acres(self):
+        LandParcel.objects.create(
+            farm=self.farm, name='Home field', coordinates=_SQUARE_100M,
+            area_sqm=10000, perimeter_m=400, created_by=self.farmer,
+        )
+        self._login(self.farmer)
+        response = self.client.get('/geomap/')
+        self.assertContains(response, '2.47 acres')
+        self.assertContains(response, '1.00 ha')
 
     def test_worker_cannot_save_a_parcel(self):
         self._login(self.worker)

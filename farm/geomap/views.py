@@ -12,7 +12,7 @@ from notifications.services import notify
 
 from .colors import farm_color, farm_parcel_color, parcel_color
 from .forms import LandParcelForm
-from .models import LandParcel
+from .models import SQM_PER_ACRE, LandParcel
 
 
 def _tomtom_style_url():
@@ -76,6 +76,7 @@ def admin_map(request):
             'id': farm.id, 'name': farm.name, 'owner': farm.owner.get_full_name() or farm.owner.email,
             'color': farm_color(index), 'parcel_count': stats['n'],
             'total_ha': float((stats['sqm'] or 0) / 10000),
+            'total_acres': float((stats['sqm'] or 0) / SQM_PER_ACRE),
         })
 
     parcel_counter = {}
@@ -85,7 +86,7 @@ def admin_map(request):
         parcel_counter[p.farm_id] = n + 1
         parcels_data.append({
             'id': p.id, 'farm_id': p.farm_id, 'farm': p.farm.name, 'name': p.name,
-            'coordinates': p.coordinates, 'area_ha': float(p.area_ha),
+            'coordinates': p.coordinates, 'area_ha': float(p.area_ha), 'area_acres': float(p.area_acres),
             'block': p.block.name if p.block_id else '',
             'by': (p.created_by.get_full_name() or p.created_by.email) if p.created_by_id else '',
             'on': p.created_at.strftime('%d %b %Y'),
@@ -107,8 +108,8 @@ def parcel_create(request):
         parcel.created_by = request.user
         parcel.save()
         notify(request.farm, request.user, Notification.Verb.CREATED, 'land parcel', parcel.name)
-        messages.success(request, _('"%(name)s" saved - %(area)s hectares.') % {
-            'name': parcel.name, 'area': parcel.area_ha,
+        messages.success(request, _('"%(name)s" saved - %(acres)s acres (%(area)s hectares).') % {
+            'name': parcel.name, 'acres': round(parcel.area_acres, 2), 'area': round(parcel.area_ha, 2),
         })
     else:
         errors = ' '.join(e for field_errors in form.errors.values() for e in field_errors)

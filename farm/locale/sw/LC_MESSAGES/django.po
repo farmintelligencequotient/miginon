@@ -4244,3 +4244,9 @@ msgid "%(n)s cow milked"
 msgid_plural "%(n)s cows milked"
 msgstr[0] "ng'ombe %(n)s amekamuliwa"
 msgstr[1] "ng'ombe %(n)s wamekamuliwa"
+
+msgid "acres"
+msgstr "ekari"
+
+msgid "\"%(name)s\" saved - %(acres)s acres (%(area)s hectares)."
+msgstr "\"%(name)s\" imehifadhiwa - ekari %(acres)s (hekta %(area)s)."

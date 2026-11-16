@@ -163,8 +163,8 @@
             {% endif %}
             <div class="mt-3 flex gap-4 text-sm">
                 <div>
-                    <p class="font-extrabold text-emerald-700 dark:text-emerald-400">{{ parcel.area_ha|floatformat:2 }} {% trans "ha" %}</p>
-                    <p class="text-xs text-stone-400 dark:text-stone-500">{{ parcel.area_sqm|floatformat:0 }} m&sup2;</p>
+                    <p class="font-extrabold text-emerald-700 dark:text-emerald-400">{{ parcel.area_acres|floatformat:2 }} {% trans "acres" %}</p>
+                    <p class="text-xs text-stone-500 dark:text-stone-400">{{ parcel.area_ha|floatformat:2 }} {% trans "ha" %} &middot; {{ parcel.area_sqm|floatformat:0 }} m&sup2;</p>
                 </div>
                 <div>
                     <p class="font-extrabold text-stone-700 dark:text-stone-300">{{ parcel.perimeter_m|floatformat:0 }} m</p>

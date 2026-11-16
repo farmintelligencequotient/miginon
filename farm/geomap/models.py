@@ -1,5 +1,12 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.db import models
+
+
+# International acre - the same factor the map's own unit toggle uses
+# (templates/geomap/map.html, AREA_UNITS).
+SQM_PER_ACRE = Decimal('4046.8564224')
 
 
 class LandParcel(models.Model):
@@ -33,3 +40,9 @@ class LandParcel(models.Model):
     @property
     def area_ha(self):
         return self.area_sqm / 10000
+
+    @property
+    def area_acres(self):
+        # Decimal(str(...)): on a parcel that was just built from the form and
+        # not reloaded, area_sqm is still the float the geodesy service returned.
+        return Decimal(str(self.area_sqm)) / SQM_PER_ACRE

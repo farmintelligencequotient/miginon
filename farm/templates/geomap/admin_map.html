@@ -88,7 +88,7 @@
                 <td class="px-6 py-3 font-semibold text-stone-800">{{ g.name }}</td>
                 <td class="px-6 py-3 text-stone-500">{{ g.owner }}</td>
                 <td class="px-6 py-3 text-stone-600">{{ g.parcel_count }}</td>
-                <td class="px-6 py-3 text-stone-600">{{ g.total_ha|floatformat:2 }} {% trans "ha" %}</td>
+                <td class="px-6 py-3 text-stone-600">{{ g.total_acres|floatformat:2 }} {% trans "acres" %} <span class="text-stone-400">&middot; {{ g.total_ha|floatformat:2 }} {% trans "ha" %}</span></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -123,7 +123,7 @@
     var features = parcels.map(function (p) {
         return {
             type: 'Feature',
-            properties: { id: p.id, farm_id: p.farm_id, farm: p.farm, name: p.name, color: p.color, area_ha: p.area_ha, block: p.block, by: p.by, on: p.on },
+            properties: { id: p.id, farm_id: p.farm_id, farm: p.farm, name: p.name, color: p.color, area_ha: p.area_ha, area_acres: p.area_acres, block: p.block, by: p.by, on: p.on },
             geometry: { type: 'Polygon', coordinates: [closedRing(p.coordinates)] },
         };
     });
@@ -158,7 +158,8 @@
                 var p = e.features[0].properties;
                 var html = '<p class="font-bold text-stone-900">' + esc(p.name) + '</p>' +
                     '<p class="mt-0.5 text-xs font-semibold text-stone-600">' + esc(p.farm) + '</p>' +
-                    '<p class="mt-1 text-xs text-stone-500">' + Number(p.area_ha).toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' ha' +
+                    '<p class="mt-1 text-xs text-stone-500">' + Number(p.area_acres).toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' ac &middot; ' +
+                    Number(p.area_ha).toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' ha' +
                     (p.block ? ' &middot; ' + esc(p.block) : '') + '</p>' +
                     '<p class="mt-0.5 text-xs text-stone-400">' + esc(p.by) + ' &middot; ' + esc(p.on) + '</p>';
                 new maplibregl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
