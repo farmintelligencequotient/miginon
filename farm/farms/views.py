@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _l
 from accounts.models import User
 from core.email import send_styled_email_safely
 from cows.models import Cow, FeedingRecord, MilkRecord
+from cows.services import milk_session_totals
 from creditscore.models import CreditScoreSnapshot
 from crops.models import Crop
 from finance.models import Transaction
@@ -119,6 +120,7 @@ def dashboard(request):
         }
 
     low_stock_count = len([item for item in InventoryItem.objects.filter(farm=farm) if item.is_low_stock])
+    milk_totals = milk_session_totals(farm, today)
 
     context = {
         'membership': membership,
@@ -127,7 +129,8 @@ def dashboard(request):
         'weather_summary': weather_summary,
         'quick_actions': [action for action in QUICK_ACTIONS if action['permission'](membership)],
         'cow_count': Cow.objects.filter(farm=farm, status=Cow.Status.ACTIVE).count(),
-        'milk_today': MilkRecord.objects.filter(farm=farm, date=today).aggregate(total=Sum('liters'))['total'] or 0,
+        'milk_today': milk_totals['total'],
+        'milk_totals': milk_totals,
         'low_stock_count': low_stock_count,
         'my_open_task_count': Task.objects.filter(
             farm=farm, assigned_to=membership

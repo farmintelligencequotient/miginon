@@ -6,7 +6,7 @@ from django.core.exceptions import BadRequest, PermissionDenied, SuspiciousOpera
 from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.utils.http import urlencode
+from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from django.urls import Resolver404, resolve
 from django.utils.translation import gettext as _
 
@@ -102,9 +102,12 @@ class ExceptionSafetyNetMiddleware:
     logs) and answered with FarmIQ's own "something went wrong" page - or a
     JSON error for fetch/API callers - instead of a bare server error.
 
-    Deliberately answers with a real 500 rather than a redirect: the offline
-    queue (static/js/offline-queue.js) treats a redirected response as "the
-    record was saved" and would drop a queued record that actually failed.
+    A form the person submitted themselves (a browser navigation) is sent
+    back to the page it came from with an error message, so they stay in the
+    app and can simply try again. Everything else gets a real 500, never a
+    redirect: the offline queue (static/js/offline-queue.js) replays saved
+    forms with fetch() and treats a redirected response as "the record was
+    saved", so redirecting it would drop a queued record that actually failed.
 
     Left alone on purpose: Http404/PermissionDenied/bad-request errors
     (Django already turns those into 404/403/400 responses), and everything
@@ -128,5 +131,34 @@ class ExceptionSafetyNetMiddleware:
             user if user is not None and user.is_authenticated else 'anonymous',
             exc_info=(type(exception), exception, exception.__traceback__),
         )
+        if self._is_form_navigation(request):
+            try:
+                messages.error(request, _(
+                    'Something went wrong on our side and that may not have been saved. '
+                    'Please check, then try again.'
+                ))
+                return redirect(self._back_target(request))
+            except Exception:
+                logger.exception('Could not bounce a failed form submission back')
         from .views import server_error_response
         return server_error_response(request)
+
+    @staticmethod
+    def _is_form_navigation(request):
+        # Browsers mark a real form submission "navigate"; fetch()/XHR (the
+        # offline queue included, which also sends X-CSRFToken) never do.
+        # Browsers too old to send the header just get the 500 page.
+        return (
+            request.method == 'POST'
+            and request.headers.get('Sec-Fetch-Mode') == 'navigate'
+            and 'X-CSRFToken' not in request.headers
+        )
+
+    @staticmethod
+    def _back_target(request):
+        referer = request.META.get('HTTP_REFERER', '')
+        if referer and url_has_allowed_host_and_scheme(
+            referer, allowed_hosts={request.get_host()}, require_https=request.is_secure(),
+        ):
+            return referer
+        return request.path

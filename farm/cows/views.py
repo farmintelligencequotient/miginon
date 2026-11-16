@@ -1,4 +1,5 @@
 import logging
+from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
@@ -29,6 +30,7 @@ from .models import (
     Cow, CowHealthRecord, CowTransfer, CowWeightRecord, FeedingRecord, FeedingRecordCow, MilkRecord,
     ReproductiveEvent, Session,
 )
+from .services import milk_session_totals
 
 logger = logging.getLogger(__name__)
 
@@ -300,8 +302,24 @@ def feeding_delete(request, record_id):
 
 @any_member_required
 def milk_list(request):
+    today = timezone.localdate()
+    # ?date=YYYY-MM-DD picks the day the totals strip summarises; anything
+    # missing, malformed or in the future falls back to today.
+    try:
+        summary_date = date.fromisoformat(request.GET.get('date', ''))
+    except ValueError:
+        summary_date = today
+    if summary_date > today:
+        summary_date = today
     records = MilkRecord.objects.filter(farm=request.farm).select_related('cow', 'block')[:60]
-    return render(request, 'cows/milk_list.html', {'records': records})
+    return render(request, 'cows/milk_list.html', {
+        'records': records,
+        'totals': milk_session_totals(request.farm, summary_date),
+        'totals_is_today': summary_date == today,
+        'previous_date': summary_date - timedelta(days=1),
+        'next_date': summary_date + timedelta(days=1) if summary_date < today else None,
+        'today': today,
+    })
 
 
 @record_production_required

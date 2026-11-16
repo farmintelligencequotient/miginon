@@ -241,6 +241,60 @@ class MilkRecordViewTests(CowsTestCase):
         })
         self.assertEqual(MilkRecord.objects.get(farm=self.farm, cow=cow).liters, Decimal('15.00'))
 
+    def _log(self, cow, day, time, liters):
+        return self.client.post('/cows/milk/add/', {
+            'cow': cow.id, 'date': day, 'liters': liters, 'recorded_time': time,
+        })
+
+    def test_milk_page_shows_session_totals_for_today(self):
+        from django.utils import timezone
+        today = timezone.localdate().isoformat()
+        cow_a, cow_b = self._make_cow(tag_id='C-201'), self._make_cow(tag_id='C-202')
+        self._login(self.worker)
+        self._log(cow_a, today, '06:00', '8.5')
+        self._log(cow_b, today, '06:10', '7')
+        self._log(cow_a, today, '12:30', '5')
+        self._log(cow_a, '2026-01-05', '18:00', '9')  # another day - not counted
+        totals = self.client.get('/cows/milk/').context['totals']
+        by_key = {row['key']: row for row in totals['sessions']}
+        self.assertEqual(by_key['AM']['liters'], Decimal('15.50'))
+        self.assertEqual(by_key['NOON']['liters'], Decimal('5.00'))
+        self.assertFalse(by_key['PM']['logged'])
+        self.assertEqual(totals['total'], Decimal('20.50'))
+        self.assertEqual(totals['logged_count'], 2)
+
+    def test_milk_page_totals_can_be_shown_for_another_day(self):
+        cow = self._make_cow(tag_id='C-203')
+        self._login(self.worker)
+        self._log(cow, '2026-01-05', '18:00', '9')
+        response = self.client.get('/cows/milk/?date=2026-01-05')
+        self.assertEqual(response.context['totals']['total'], Decimal('9.00'))
+        self.assertFalse(response.context['totals_is_today'])
+
+    def test_milk_page_ignores_a_bad_or_future_date(self):
+        from django.utils import timezone
+        self._make_cow(tag_id='C-204')
+        self._login(self.worker)
+        for value in ('not-a-date', '2999-01-01', ''):
+            response = self.client.get('/cows/milk/', {'date': value})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.context['totals']['date'], timezone.localdate())
+
+    def test_dashboard_milk_tile_shows_session_totals(self):
+        from django.utils import timezone
+        today = timezone.localdate().isoformat()
+        cow = self._make_cow(tag_id='C-205')
+        self._login(self.worker)
+        self._log(cow, today, '06:00', '8.5')
+        self._log(cow, today, '17:00', '6')
+        response = self.client.get('/farm/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['milk_today'], Decimal('14.50'))
+        by_key = {row['key']: row for row in response.context['milk_totals']['sessions']}
+        self.assertEqual(by_key['AM']['liters'], Decimal('8.50'))
+        self.assertEqual(by_key['PM']['liters'], Decimal('6.00'))
+        self.assertFalse(by_key['NOON']['logged'])
+
     def test_worker_cannot_delete_a_milk_record(self):
         cow = self._make_cow(tag_id='C-100')
         self._login(self.farmer)

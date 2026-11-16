@@ -418,11 +418,31 @@ class ExceptionSafetyNetTests(TestCase):
         self.assertContains(response, 'Something went wrong', status_code=500)
         self.assertIn('RuntimeError', logs.output[0])
 
-    def test_a_failed_post_is_never_answered_with_a_redirect(self):
+    def test_a_failed_offline_queue_post_is_never_answered_with_a_redirect(self):
         # The offline queue reads a redirect as "saved" - see offline-queue.js.
         with self.assertLogs('core.middleware', level='ERROR'):
-            response = self.client.post('/boom/', {'a': 'b'})
+            response = self.client.post(
+                '/boom/', {'a': 'b'}, HTTP_SEC_FETCH_MODE='cors', HTTP_X_CSRFTOKEN='abc',
+            )
         self.assertEqual(response.status_code, 500)
+        with self.assertLogs('core.middleware', level='ERROR'):
+            self.assertEqual(self.client.post('/boom/', {'a': 'b'}).status_code, 500)
+
+    def test_a_failed_form_submission_goes_back_to_the_form_with_a_message(self):
+        with self.assertLogs('core.middleware', level='ERROR'):
+            response = self.client.post(
+                '/boom/', {'a': 'b'}, HTTP_SEC_FETCH_MODE='navigate', HTTP_REFERER='http://testserver/cows/milk/add/',
+            )
+        self.assertRedirects(response, 'http://testserver/cows/milk/add/', fetch_redirect_response=False)
+        from django.contrib.messages import get_messages
+        self.assertEqual(len(list(get_messages(response.wsgi_request))), 1)
+
+    def test_a_failed_form_submission_never_bounces_to_another_site(self):
+        with self.assertLogs('core.middleware', level='ERROR'):
+            response = self.client.post(
+                '/boom/', {'a': 'b'}, HTTP_SEC_FETCH_MODE='navigate', HTTP_REFERER='https://evil.example/x',
+            )
+        self.assertRedirects(response, '/boom/', fetch_redirect_response=False)
 
     def test_json_callers_get_a_json_error(self):
         with self.assertLogs('core.middleware', level='ERROR'):

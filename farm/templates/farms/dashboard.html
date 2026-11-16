@@ -150,11 +150,18 @@ module actually does.
             <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
                 <ion-icon name="water-outline" class="text-xl"></ion-icon>
             </span>
-            <span class="text-sm font-extrabold text-stone-900 dark:text-stone-100">{% blocktrans with liters=milk_today %}{{ liters }}L{% endblocktrans %}</span>
+            <span class="text-sm font-extrabold text-stone-900 dark:text-stone-100">{% blocktrans with liters=milk_today|floatformat:"-2" %}{{ liters }}L{% endblocktrans %}</span>
         </div>
         <div>
-            <p class="text-sm font-bold text-stone-900 dark:text-stone-100">{% trans "Milk" %}</p>
-            <p class="mt-0.5 text-xs text-stone-400 dark:text-stone-500">{% trans "Log AM, noon & PM sessions" %}</p>
+            <p class="text-sm font-bold text-stone-900 dark:text-stone-100">{% trans "Milk" %} <span class="font-medium text-stone-400 dark:text-stone-500">&middot; {% trans "today" %}</span></p>
+            <dl class="mt-1.5 space-y-0.5">
+                {% for s in milk_totals.sessions %}
+                <div class="flex items-baseline justify-between gap-2 text-xs">
+                    <dt class="text-stone-500 dark:text-stone-400">{{ s.label }}</dt>
+                    <dd class="font-bold {% if s.logged %}text-stone-800 dark:text-stone-200{% else %}text-stone-300 dark:text-stone-600{% endif %}">{% if s.logged %}{{ s.liters|floatformat:"-2" }}L{% else %}&ndash;{% endif %}</dd>
+                </div>
+                {% endfor %}
+            </dl>
         </div>
     </a>
 

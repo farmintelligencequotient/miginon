@@ -4174,3 +4174,39 @@ msgstr "Ukurasa haujapatikana"
 
 msgid "That page does not exist, or it has been moved or deleted."
 msgstr "Ukurasa huo haupo, au umehamishwa au kufutwa."
+
+msgid "Something went wrong on our side and that may not have been saved. Please check, then try again."
+msgstr "Hitilafu imetokea upande wetu na huenda hilo halijahifadhiwa. Tafadhali angalia, kisha jaribu tena."
+
+msgid "Today's milk"
+msgstr "Maziwa ya leo"
+
+msgid "Milk on"
+msgstr "Maziwa ya tarehe"
+
+msgid "%(done)s of 3 sessions logged"
+msgstr "Vipindi %(done)s kati ya 3 vimerekodiwa"
+
+msgid "Previous day"
+msgstr "Siku iliyopita"
+
+msgid "Next day"
+msgstr "Siku inayofuata"
+
+msgid "Show totals for date"
+msgstr "Onyesha jumla za tarehe"
+
+msgid "Show"
+msgstr "Onyesha"
+
+msgid "Not logged yet"
+msgstr "Bado haijarekodiwa"
+
+msgid "Total"
+msgstr "Jumla"
+
+msgid "Recent records"
+msgstr "Rekodi za hivi karibuni"
+
+msgid "today"
+msgstr "leo"
