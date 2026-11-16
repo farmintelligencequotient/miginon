@@ -6,7 +6,7 @@
     <h1 class="text-xl font-extrabold text-stone-900 dark:text-stone-100">{% if record %}{% trans "Edit milk record" %}{% else %}{% trans "Log a milk record" %}{% endif %}</h1>
     <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">{% trans "One entry per cow, per session, per day." %}</p>
 
-    <div id="offline-save-banner" hidden class="mb-4 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
+    <div id="offline-save-banner" hidden class="mb-4 flex [&[hidden]]:hidden items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
         <ion-icon name="cloud-offline-outline" class="text-base"></ion-icon>
         {% trans "No signal - saved on this device and will sync automatically once you're back online." %}
     </div>
