@@ -48,6 +48,23 @@
 {% if blocks or cows_data or inventory_data or finance_data.income or finance_data.expense or crops_data or workers_data or tasks_data %}
 <div id="farm-map" class="relative h-[75vh] w-full overflow-hidden rounded-2xl border border-stone-200 bg-stone-100 dark:border-stone-800 dark:bg-stone-800">
     <div id="map-tooltip" class="pointer-events-none absolute z-10 hidden rounded-lg bg-stone-900/90 px-3 py-1.5 text-xs font-semibold text-white shadow-lg"></div>
+    {% if weather_data %}
+    {# The scene's weather follows the forecast: "Now" by default, or tap a day to preview it. #}
+    <div id="map-weather" class="absolute bottom-3 left-3 z-10 max-w-[calc(100%-9.5rem)] rounded-2xl border border-stone-200 bg-white/95 p-2 text-xs shadow-soft backdrop-blur dark:border-stone-800 dark:bg-stone-900/95">
+        <p id="map-weather-summary" class="flex items-center gap-1.5 px-1 pb-1.5 font-bold text-stone-800 dark:text-stone-100" aria-live="polite">
+            <ion-icon id="map-weather-icon" name="{{ weather_data.now.icon }}" class="shrink-0 text-base text-sky-600 dark:text-sky-400"></ion-icon>
+            <span id="map-weather-text" class="truncate"></span>
+        </p>
+        <div class="flex gap-1 overflow-x-auto" role="group" aria-label="{% trans 'Weather shown in the 3D view' %}">
+            <button type="button" data-weather-index="-1" aria-pressed="true"
+                class="map-weather-btn shrink-0 rounded-full border border-stone-200 px-2.5 py-1 font-bold text-stone-600 aria-pressed:border-emerald-600 aria-pressed:bg-emerald-600 aria-pressed:text-white dark:border-stone-700 dark:text-stone-300">{% trans "Now" %}</button>
+            {% for day in weather_data.days %}
+            <button type="button" data-weather-index="{{ forloop.counter0 }}" aria-pressed="false" title="{{ day.date }} - {{ day.condition }}"
+                class="map-weather-btn shrink-0 rounded-full border border-stone-200 px-2.5 py-1 font-bold text-stone-600 aria-pressed:border-emerald-600 aria-pressed:bg-emerald-600 aria-pressed:text-white dark:border-stone-700 dark:text-stone-300">{{ day.label }}</button>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
     <div class="absolute left-3 top-3 z-10 flex flex-col gap-1.5 rounded-2xl border border-stone-200 bg-white/95 p-3 text-xs font-bold text-stone-700 shadow-soft backdrop-blur dark:border-stone-800 dark:bg-stone-900/95 dark:text-stone-200">
         <p class="mb-0.5 text-[10px] font-bold uppercase tracking-wide text-stone-400 dark:text-stone-500">{% trans "Layers" %}</p>
         <label class="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-1.5 py-1 transition has-[:checked]:bg-emerald-50 dark:has-[:checked]:bg-emerald-950"><span>{% trans "Cows" %}</span><input type="checkbox" data-layer="cows" checked class="peer sr-only"><span aria-hidden="true" class="relative h-5 w-9 shrink-0 rounded-full bg-stone-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:bg-emerald-600 peer-checked:after:translate-x-4 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-500 dark:bg-stone-600 dark:peer-checked:bg-emerald-500"></span></label>
@@ -123,6 +140,7 @@
 {{ crops_data|json_script:"crops-data" }}
 {{ workers_data|json_script:"workers-data" }}
 {{ tasks_data|json_script:"tasks-data" }}
+{{ weather_data|json_script:"weather-data" }}
 <p class="mt-2 text-xs text-stone-400 dark:text-stone-500" id="feeding-url" data-url="{{ feeding_url }}">
     {% trans "Trough fill shows how much has been fed to that paddock today. Low-stock inventory is tinted red." %}
 </p>
@@ -145,6 +163,7 @@ const financeData = JSON.parse(document.getElementById('finance-data').textConte
 const cropsData = JSON.parse(document.getElementById('crops-data').textContent);
 const workersData = JSON.parse(document.getElementById('workers-data').textContent);
 const tasksData = JSON.parse(document.getElementById('tasks-data').textContent);
+const weatherData = JSON.parse(document.getElementById('weather-data').textContent);
 const feedingUrl = document.getElementById('feeding-url').dataset.url;
 
 const container = document.getElementById('farm-map');
@@ -213,7 +232,8 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 container.appendChild(renderer.domElement);
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+scene.add(ambient);
 const sun = new THREE.DirectionalLight(0xfff4d6, 0.9);
 sun.position.set(14, 24, 12);
 scene.add(sun);
@@ -802,8 +822,181 @@ FarmIQMapFullscreen(container, {
     },
 }, { enter: '{% trans "Full screen" %}', exit: '{% trans "Exit full screen" %}', remember: false });
 
+// --------------------------------------------------------------- weather
+//
+// The sky, light, haze, clouds, rain and lightning follow the farm's weather
+// forecast (weatherData, built in farms.views.farm_map from the same cached
+// forecast the Weather page shows). Each forecast "scene" kind from
+// weather.services.scene_kind maps to one look below. With no forecast the
+// scene simply keeps the fair-weather defaults set up at the top.
+
+const WEATHER_LOOKS = {
+    //            sky       ambient  sun     sunColor  haze  clouds cloudColor rain  flash  sunDisc
+    clear:      { sky: 0xbfe3f7, ambient: 0.80, sun: 0.90, sunColor: 0xfff4d6, haze: 1.00, clouds: 2,  cloud: 0xffffff, rain: 0,    flash: false, disc: true },
+    partly:     { sky: 0xb4d8ee, ambient: 0.74, sun: 0.70, sunColor: 0xfff1d0, haze: 0.95, clouds: 7,  cloud: 0xf6f7f8, rain: 0,    flash: false, disc: true },
+    overcast:   { sky: 0xb9c2c8, ambient: 0.66, sun: 0.30, sunColor: 0xe6eaee, haze: 0.80, clouds: 14, cloud: 0xc9ced3, rain: 0,    flash: false, disc: false },
+    fog:        { sky: 0xcfd4d6, ambient: 0.70, sun: 0.18, sunColor: 0xe6eaee, haze: 0.30, clouds: 4,  cloud: 0xd5d9db, rain: 0,    flash: false, disc: false },
+    drizzle:    { sky: 0xaab5bc, ambient: 0.62, sun: 0.26, sunColor: 0xdfe5ea, haze: 0.70, clouds: 13, cloud: 0xb3bac0, rain: 350,  flash: false, disc: false },
+    rain:       { sky: 0x97a3ab, ambient: 0.56, sun: 0.20, sunColor: 0xd5dde3, haze: 0.60, clouds: 16, cloud: 0x9aa3aa, rain: 900,  flash: false, disc: false },
+    heavy_rain: { sky: 0x7f8b93, ambient: 0.50, sun: 0.14, sunColor: 0xcbd4db, haze: 0.48, clouds: 18, cloud: 0x7f8990, rain: 1800, flash: false, disc: false },
+    storm:      { sky: 0x5f6a73, ambient: 0.44, sun: 0.10, sunColor: 0xc3ccd4, haze: 0.45, clouds: 20, cloud: 0x59636b, rain: 1800, flash: true,  disc: false },
+};
+
+const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const skyHeight = Math.max(14, totalSpan * 0.42);
+const skySpan = totalSpan * 1.25;
+
+// A glowing disc where the directional light comes from - hidden when the sky is closed in.
+const sunDisc = new THREE.Mesh(
+    new THREE.SphereGeometry(Math.max(1.2, totalSpan * 0.035), 16, 12),
+    new THREE.MeshBasicMaterial({ color: 0xffe9a8, fog: false })
+);
+sunDisc.position.copy(sun.position).normalize().multiplyScalar(totalSpan * 1.1);
+scene.add(sunDisc);
+
+const cloudGroup = new THREE.Group();
+scene.add(cloudGroup);
+const cloudMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.92 });
+const puffGeometry = new THREE.SphereGeometry(1, 10, 8);
+
+function buildCloud() {
+    const cloud = new THREE.Group();
+    const puffs = 4 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < puffs; i++) {
+        const puff = new THREE.Mesh(puffGeometry, cloudMaterial);
+        const size = 1.3 + Math.random() * 1.5;
+        puff.scale.set(size * 1.5, size * 0.6, size);
+        puff.position.set((i - puffs / 2) * 1.5 + Math.random(), Math.random() * 0.5, (Math.random() - 0.5) * 1.6);
+        cloud.add(puff);
+    }
+    cloud.position.set(
+        (Math.random() - 0.5) * skySpan,
+        skyHeight + Math.random() * skyHeight * 0.35,
+        (Math.random() - 0.5) * skySpan
+    );
+    cloud.userData.speed = 0.25 + Math.random() * 0.35;
+    return cloud;
+}
+
+function setClouds(count) {
+    while (cloudGroup.children.length > count) cloudGroup.remove(cloudGroup.children[cloudGroup.children.length - 1]);
+    while (cloudGroup.children.length < count) cloudGroup.add(buildCloud());
+}
+
+// Rain: one LineSegments object, each drop a short slanted streak that falls and wraps.
+const MAX_DROPS = 1800;
+const rainPositions = new Float32Array(MAX_DROPS * 6);
+const rainGeometry = new THREE.BufferGeometry();
+rainGeometry.setAttribute('position', new THREE.BufferAttribute(rainPositions, 3));
+const rain = new THREE.LineSegments(
+    rainGeometry,
+    new THREE.LineBasicMaterial({ color: 0xdfeaf2, transparent: true, opacity: 0.55 })
+);
+rain.frustumCulled = false;
+rain.visible = false;
+scene.add(rain);
+const rainSpan = totalSpan * 0.9;
+const STREAK = 0.55, SLANT = 0.12;
+
+function placeDrop(i, y) {
+    const x = (Math.random() - 0.5) * rainSpan, z = (Math.random() - 0.5) * rainSpan;
+    rainPositions.set([x, y, z, x + SLANT, y - STREAK, z], i * 6);
+}
+for (let i = 0; i < MAX_DROPS; i++) placeDrop(i, Math.random() * skyHeight);
+
+let look = WEATHER_LOOKS.clear;
+let rainSpeed = 0;
+let flashLeft = 0;
+let nextFlash = 3;
+
+function applyWeather(kind) {
+    look = WEATHER_LOOKS[kind] || WEATHER_LOOKS.clear;
+    scene.background.setHex(look.sky);
+    scene.fog.color.setHex(look.sky);
+    scene.fog.near = totalSpan * 0.9 * look.haze;
+    scene.fog.far = totalSpan * 2.4 * look.haze;
+    ambient.intensity = look.ambient;
+    sun.intensity = look.sun;
+    sun.color.setHex(look.sunColor);
+    sunDisc.visible = look.disc;
+    cloudMaterial.color.setHex(look.cloud);
+    setClouds(look.clouds);
+    rain.visible = look.rain > 0;
+    rainGeometry.setDrawRange(0, look.rain * 2);
+    rainSpeed = look.rain >= 1800 ? 26 : (look.rain >= 900 ? 20 : 12);
+    flashLeft = 0;
+    nextFlash = 2 + Math.random() * 4;
+}
+
+function updateWeather(dt) {
+    if (reduceMotion) return;  // the look still applies; just nothing moves or flashes
+    cloudGroup.children.forEach((cloud) => {
+        cloud.position.x += cloud.userData.speed * dt;
+        if (cloud.position.x > skySpan / 2) cloud.position.x = -skySpan / 2;
+    });
+    if (rain.visible) {
+        const fall = rainSpeed * dt;
+        for (let i = 0; i < look.rain; i++) {
+            const o = i * 6;
+            rainPositions[o + 1] -= fall;
+            rainPositions[o + 4] -= fall;
+            if (rainPositions[o + 4] < 0) placeDrop(i, skyHeight);
+        }
+        rainGeometry.attributes.position.needsUpdate = true;
+    }
+    if (look.flash) {
+        if (flashLeft > 0) {
+            flashLeft -= dt;
+            ambient.intensity = flashLeft > 0 ? look.ambient + 1.1 : look.ambient;
+        } else {
+            nextFlash -= dt;
+            if (nextFlash <= 0) { flashLeft = 0.12; nextFlash = 4 + Math.random() * 7; }
+        }
+    }
+}
+
+// "Now" by default; the day buttons preview that day's forecast in the scene.
+function showWeather(index) {
+    const entry = index < 0 ? weatherData.now : weatherData.days[index];
+    if (!entry) return;
+    applyWeather(entry.scene);
+    const text = document.getElementById('map-weather-text');
+    const icon = document.getElementById('map-weather-icon');
+    if (icon) icon.setAttribute('name', entry.icon);
+    if (text) {
+        if (index < 0) {
+            text.textContent = entry.condition + (entry.temp !== null ? ' \u00b7 ' + entry.temp + '\u00b0C' : '');
+        } else {
+            let line = entry.date + ' \u00b7 ' + entry.condition;
+            if (entry.high !== null && entry.low !== null) line += ' \u00b7 ' + entry.high + '\u00b0/' + entry.low + '\u00b0';
+            if (entry.rain !== null && entry.rain !== undefined) line += ' \u00b7 ' + entry.rain + '% {% trans "rain" %}';
+            text.textContent = line;
+        }
+    }
+    document.querySelectorAll('.map-weather-btn').forEach((btn) => {
+        btn.setAttribute('aria-pressed', String(Number(btn.dataset.weatherIndex) === index));
+    });
+}
+
+try {
+    if (weatherData && weatherData.now) {
+        document.querySelectorAll('.map-weather-btn').forEach((btn) => {
+            btn.addEventListener('click', () => showWeather(Number(btn.dataset.weatherIndex)));
+        });
+        showWeather(-1);
+    } else {
+        applyWeather('clear');
+    }
+} catch (error) {
+    // Weather is decoration - a problem here must never take the farm view down.
+    console.error('Farm map: could not apply the weather', error);
+}
+
+const clock = new THREE.Clock();
 (function animate() {
     requestAnimationFrame(animate);
+    const dt = Math.min(clock.getDelta(), 0.1);
+    try { updateWeather(dt); } catch (error) { /* keep rendering the farm */ }
     controls.update();
     renderer.render(scene, camera);
 })();

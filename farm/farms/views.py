@@ -4,6 +4,7 @@ from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 
@@ -579,7 +580,33 @@ def farm_map(request):
         for t in open_tasks
     ]
 
+    # The scene's sky, light, clouds and rain follow the farm's forecast (the
+    # same cached data the Weather page shows). None when the farm has no
+    # coordinates or the forecast can't be had - the scene then stays on its
+    # plain fair-weather look.
+    weather_data = None
+    forecast = get_forecast_summary(farm)
+    if forecast:
+        def _temp(value):
+            return round(value) if value is not None else None
+
+        weather_data = {
+            'now': {
+                'scene': forecast['current_scene'], 'icon': forecast['current_icon'],
+                'condition': str(forecast['current_condition']), 'temp': _temp(forecast['current_temp']),
+            },
+            'days': [
+                {
+                    'scene': day['scene'], 'icon': day['icon'], 'condition': str(day['condition']),
+                    'label': date_format(day['date'], 'D'), 'date': date_format(day['date'], 'D j M'),
+                    'high': _temp(day['high']), 'low': _temp(day['low']), 'rain': day['rain_probability'],
+                }
+                for day in forecast['days']
+            ],
+        }
+
     return render(request, 'farms/farm_map.html', {
+        'weather_data': weather_data,
         'blocks': blocks,
         'blocks_data': blocks_data,
         'cows_data': cows_data,

@@ -4274,3 +4274,12 @@ msgstr "Hakuna cha kuchagua bado."
 
 msgid "For milk that left the farm without being sold - calves, staff, home, spoilage. Draws down your Milk inventory the same way a sale would, but doesn't touch your finances, so production and sales figures stay honest."
 msgstr "Kwa maziwa yaliyotoka shambani bila kuuzwa - ndama, wafanyakazi, nyumbani, uharibifu. Hupunguza bidhaa yako ya Maziwa kama vile mauzo yangefanya, lakini haiathiri fedha zako, hivyo takwimu za uzalishaji na mauzo zinabaki sahihi."
+
+msgid "Weather shown in the 3D view"
+msgstr "Hali ya hewa inayoonyeshwa kwenye mwonekano wa 3D"
+
+msgid "Now"
+msgstr "Sasa"
+
+msgid "rain"
+msgstr "mvua"

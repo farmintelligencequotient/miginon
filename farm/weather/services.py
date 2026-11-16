@@ -39,6 +39,26 @@ _CODE_TABLE = {
 _DEFAULT_CONDITION = ('cloud-outline', _('Overcast'))
 
 
+# The same WMO codes, collapsed further into the few distinct looks the 3D
+# farm view can draw (templates/farms/farm_map.html, WEATHER_LOOKS).
+_SCENE_KINDS = {
+    0: 'clear', 1: 'clear',
+    2: 'partly',
+    3: 'overcast',
+    45: 'fog', 48: 'fog',
+    51: 'drizzle', 53: 'drizzle', 55: 'drizzle',
+    61: 'rain', 63: 'rain', 80: 'rain', 81: 'rain',
+    65: 'heavy_rain', 82: 'heavy_rain',
+    95: 'storm', 96: 'storm', 99: 'storm',
+}
+
+
+def scene_kind(code):
+    """WMO weather code -> the 3D farm view's weather look. Unknown codes
+    get 'overcast', matching describe_code()'s default."""
+    return _SCENE_KINDS.get(code, 'overcast')
+
+
 def describe_code(code):
     """WMO weather code -> (ionicon name, translated condition text)."""
     return _CODE_TABLE.get(code, _DEFAULT_CONDITION)
@@ -121,6 +141,7 @@ def get_forecast_summary(farm, force=False):
             'date': date_cls.fromisoformat(iso_date),
             'icon': icon,
             'condition': condition,
+            'scene': scene_kind(codes[i] if i < len(codes) else None),
             'high': highs[i] if i < len(highs) else None,
             'low': lows[i] if i < len(lows) else None,
             'rain_probability': rain_probs[i] if i < len(rain_probs) else None,
@@ -132,6 +153,7 @@ def get_forecast_summary(farm, force=False):
         'current_temp': current.get('temperature_2m'),
         'current_icon': current_icon,
         'current_condition': current_condition,
+        'current_scene': scene_kind(current.get('weather_code')),
         'days': days,
         'advisory': advisory_text,
         'fetched_at': fetched_at,

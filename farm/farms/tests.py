@@ -203,6 +203,47 @@ class FarmMapFullscreenTests(TestCase):
         session['active_farm_id'] = self.farm.id
         session.save()
 
+    def test_3d_map_weather_follows_the_forecast(self):
+        from datetime import date
+        from unittest.mock import patch
+        forecast = {
+            'current_temp': 21.6, 'current_icon': 'rainy-outline', 'current_condition': 'Rain',
+            'current_scene': 'rain', 'advisory': '', 'fetched_at': None,
+            'days': [
+                {'date': date(2026, 11, 17), 'icon': 'thunderstorm-outline', 'condition': 'Thunderstorm',
+                 'scene': 'storm', 'high': 24.2, 'low': 13.8, 'rain_probability': 90},
+                {'date': date(2026, 11, 18), 'icon': 'sunny-outline', 'condition': 'Clear sky',
+                 'scene': 'clear', 'high': 27, 'low': 14, 'rain_probability': 5},
+            ],
+        }
+        with patch('farms.views.get_forecast_summary', return_value=forecast):
+            response = self.client.get('/farm/map/')
+        weather = response.context['weather_data']
+        self.assertEqual(weather['now'], {'scene': 'rain', 'icon': 'rainy-outline', 'condition': 'Rain', 'temp': 22})
+        self.assertEqual([day['scene'] for day in weather['days']], ['storm', 'clear'])
+        self.assertEqual(weather['days'][0]['label'], 'Tue')
+        page = response.content.decode()
+        self.assertIn('id="map-weather"', page)
+        self.assertIn('WEATHER_LOOKS', page)
+        self.assertEqual(page.count('class="map-weather-btn'), 3)  # Now + 2 days
+
+    def test_3d_map_still_loads_without_a_forecast(self):
+        from unittest.mock import patch
+        with patch('farms.views.get_forecast_summary', return_value=None):
+            response = self.client.get('/farm/map/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context['weather_data'])
+        self.assertNotIn('id="map-weather"', response.content.decode())
+
+    def test_every_forecast_code_maps_to_a_look_the_scene_can_draw(self):
+        import re
+        from weather.services import _CODE_TABLE, scene_kind
+        page = self.client.get('/farm/map/').content.decode()
+        looks = set(re.findall(r"^    (\w+):\s+\{ sky:", page, flags=re.M))
+        self.assertTrue(looks)
+        for code in list(_CODE_TABLE) + [None, 12345]:
+            self.assertIn(scene_kind(code), looks)
+
     def test_3d_map_has_a_fullscreen_control_wrapping_the_scene(self):
         page = self.client.get('/farm/map/').content.decode()
         self.assertIn('js/map_fullscreen.js', page)
