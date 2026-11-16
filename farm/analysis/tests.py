@@ -53,3 +53,73 @@ class ReportWeatherTests(TestCase):
         self.assertEqual(export_csv(report).status_code, 200)
         self.assertEqual(export_xlsx(report).status_code, 200)
         self.assertTrue(build_pdf_bytes(report).startswith(b'%PDF'))
+
+
+class ReportMilkSessionTests(TestCase):
+    """Every milk breakdown in the report carries its morning/noon/evening split."""
+
+    def setUp(self):
+        from datetime import time
+        from decimal import Decimal
+        from cows.models import Cow, MilkRecord, Session
+        from farms.models import Block
+        self.user = User.objects.create_user(email='sessions@example.com', first_name='Ses')
+        self.farm = Farm.objects.create(name='Session Farm', owner=self.user)
+        block = Block.objects.create(farm=self.farm, name='Block A', created_by=self.user)
+        cow_a = Cow.objects.create(farm=self.farm, block=block, tag_id='S-1', added_by=self.user)
+        cow_b = Cow.objects.create(farm=self.farm, block=block, tag_id='S-2', added_by=self.user)
+        rows = [
+            (cow_a, date(2026, 8, 1), Session.AM, '8.00'),
+            (cow_a, date(2026, 8, 1), Session.PM, '6.00'),
+            (cow_b, date(2026, 8, 1), Session.AM, '7.00'),
+            (cow_a, date(2026, 8, 2), Session.NOON, '4.00'),
+            (cow_a, date(2026, 9, 1), Session.AM, '9.00'),  # outside the period
+        ]
+        for cow, day, session, liters in rows:
+            MilkRecord.objects.create(
+                farm=self.farm, cow=cow, block=block, date=day, session=session,
+                recorded_time=time(6, 0), liters=Decimal(liters),
+            )
+        self.report = build_report(self.farm, date(2026, 8, 1), date(2026, 8, 31), 'August 2026')
+
+    def test_by_session_totals(self):
+        by_key = {row['key']: row for row in self.report['milk']['by_session']}
+        self.assertEqual(float(by_key['am']['liters']), 15.0)
+        self.assertEqual(float(by_key['noon']['liters']), 4.0)
+        self.assertEqual(float(by_key['pm']['liters']), 6.0)
+        self.assertEqual(by_key['am']['share'], 60.0)
+        self.assertEqual(float(self.report['milk']['total_liters']), 25.0)
+
+    def test_daily_and_cow_rows_carry_sessions(self):
+        first_day = self.report['milk']['daily'][0]
+        self.assertEqual((float(first_day['am']), float(first_day['noon']), float(first_day['pm'])), (15.0, 0.0, 6.0))
+        cow_a = next(r for r in self.report['milk']['by_cow'] if r['cow__tag_id'] == 'S-1')
+        self.assertEqual((float(cow_a['am']), float(cow_a['noon']), float(cow_a['pm'])), (8.0, 4.0, 6.0))
+        self.assertEqual(float(cow_a['liters']), 18.0)
+
+    def test_every_export_format_includes_the_sessions(self):
+        import io
+        from openpyxl import load_workbook
+        csv_text = export_csv(self.report).content.decode('utf-8')
+        self.assertIn('By session', csv_text)
+        self.assertIn('Morning (L),Noon (L),Evening (L),Total (L)', csv_text)
+        sheet = load_workbook(io.BytesIO(export_xlsx(self.report).content))['Milk']
+        cells = [cell for row in sheet.iter_rows(values_only=True) for cell in row]
+        self.assertIn('By session', cells)
+        self.assertIn('Evening (L)', cells)
+        self.assertTrue(build_pdf_bytes(self.report).startswith(b'%PDF'))
+
+    def test_email_summary_lists_the_sessions(self):
+        from django.template.loader import render_to_string
+        html = render_to_string('emails/farm_report.html', {
+            'report': self.report, 'farm': self.farm, 'analysis_url': 'https://example.com/',
+        })
+        self.assertIn('Morning', html)
+        self.assertIn('15L', html)
+
+    def test_an_empty_period_still_exports(self):
+        report = build_report(self.farm, date(2025, 1, 1), date(2025, 1, 31), 'January 2025')
+        self.assertEqual([float(r['liters']) for r in report['milk']['by_session']], [0.0, 0.0, 0.0])
+        self.assertEqual(export_csv(report).status_code, 200)
+        self.assertEqual(export_xlsx(report).status_code, 200)
+        self.assertTrue(build_pdf_bytes(report).startswith(b'%PDF'))

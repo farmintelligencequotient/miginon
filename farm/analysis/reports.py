@@ -4,7 +4,7 @@ from datetime import date
 from django.db.models import Q, Sum
 from django.utils import timezone
 
-from cows.models import Cow, FeedingRecord, MilkRecord
+from cows.models import Cow, FeedingRecord, MilkRecord, Session
 from crops.models import CropActivity
 from finance.models import Transaction
 from inventory.models import InventoryItem, StockMovement
@@ -70,15 +70,45 @@ def build_report(farm, start, end, period_label):
     active_cows = farm.cows.filter(status=Cow.Status.ACTIVE).count()
     avg_per_cow = (milk_total / active_cows) if active_cows else 0
 
-    milk_by_block = list(
-        milk_qs.values('block__name').annotate(liters=Sum('liters')).order_by('-liters')
+    # Every milk breakdown also carries its morning / noon / evening split
+    # (keys 'am', 'noon', 'pm', always present - 0 when nothing was logged
+    # for that session), next to the overall 'liters'.
+    session_sums = {
+        'am': Sum('liters', filter=Q(session=Session.AM)),
+        'noon': Sum('liters', filter=Q(session=Session.NOON)),
+        'pm': Sum('liters', filter=Q(session=Session.PM)),
+    }
+
+    def with_sessions(rows):
+        rows = list(rows)
+        for row in rows:
+            for key in session_sums:
+                row[key] = row[key] or 0
+        return rows
+
+    milk_by_block = with_sessions(
+        milk_qs.values('block__name').annotate(**session_sums, liters=Sum('liters')).order_by('-liters')
     )
-    milk_by_cow = list(
+    milk_by_cow = with_sessions(
         milk_qs.values('cow__tag_id', 'cow__name', 'cow__block__name')
-        .annotate(liters=Sum('liters'))
+        .annotate(**session_sums, liters=Sum('liters'))
         .order_by('-liters')
     )
-    milk_daily = list(milk_qs.values('date').annotate(liters=Sum('liters')).order_by('date'))
+    milk_daily = with_sessions(
+        milk_qs.values('date').annotate(**session_sums, liters=Sum('liters')).order_by('date')
+    )
+    session_totals = milk_qs.aggregate(**session_sums)
+    # str() the labels eagerly - same openpyxl/lazy-string reason as the
+    # finance labels below.
+    milk_by_session = [
+        {
+            'key': key,
+            'session': str(session.label),
+            'liters': session_totals[key] or 0,
+            'share': round(float(session_totals[key] or 0) / float(milk_total) * 100, 1) if milk_total else 0,
+        }
+        for key, session in (('am', Session.AM), ('noon', Session.NOON), ('pm', Session.PM))
+    ]
 
     feed_qs = FeedingRecord.objects.filter(farm=farm, date__gte=start, date__lte=end)
     feed_totals = feed_qs.aggregate(meal=Sum('dairy_meal_kg'), silage=Sum('silage_hay_kg'))
@@ -158,6 +188,7 @@ def build_report(farm, start, end, period_label):
         'milk': {
             'total_liters': milk_total,
             'avg_per_cow': avg_per_cow,
+            'by_session': milk_by_session,
             'by_block': milk_by_block,
             'by_cow': milk_by_cow,
             'daily': milk_daily,

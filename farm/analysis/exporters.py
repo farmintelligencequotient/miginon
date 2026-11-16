@@ -12,6 +12,15 @@ def _filename(report, ext):
 
 # --------------------------------------------------------------------- CSV
 
+# The milk tables in all three formats end with the same four columns.
+MILK_SESSION_HEADERS = ['Morning (L)', 'Noon (L)', 'Evening (L)', 'Total (L)']
+
+
+def _milk_session_cells(row, convert=None):
+    cells = [row['am'], row['noon'], row['pm'], row['liters']]
+    return [convert(value) for value in cells] if convert else cells
+
+
 def export_csv(report):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{_filename(report, "csv")}"'
@@ -38,20 +47,27 @@ def export_csv(report):
     writer.writerow(['Total liters', report['milk']['total_liters']])
     writer.writerow(['Avg liters per active cow', round(float(report['milk']['avg_per_cow']), 2)])
     writer.writerow([])
+    writer.writerow(['By session'])
+    writer.writerow(['Session', 'Liters', '% of total'])
+    for row in report['milk']['by_session']:
+        writer.writerow([row['session'], row['liters'], row['share']])
+    writer.writerow([])
     writer.writerow(['By block'])
-    writer.writerow(['Block', 'Liters'])
+    writer.writerow(['Block'] + MILK_SESSION_HEADERS)
     for row in report['milk']['by_block']:
-        writer.writerow([row['block__name'], row['liters']])
+        writer.writerow([row['block__name']] + _milk_session_cells(row))
     writer.writerow([])
     writer.writerow(['By cow'])
-    writer.writerow(['Tag', 'Name', 'Block', 'Liters'])
+    writer.writerow(['Tag', 'Name', 'Block'] + MILK_SESSION_HEADERS)
     for row in report['milk']['by_cow']:
-        writer.writerow([row['cow__tag_id'], row['cow__name'] or '', row['cow__block__name'], row['liters']])
+        writer.writerow(
+            [row['cow__tag_id'], row['cow__name'] or '', row['cow__block__name']] + _milk_session_cells(row)
+        )
     writer.writerow([])
     writer.writerow(['Daily totals'])
-    writer.writerow(['Date', 'Liters'])
+    writer.writerow(['Date'] + MILK_SESSION_HEADERS)
     for row in report['milk']['daily']:
-        writer.writerow([row['date'], row['liters']])
+        writer.writerow([row['date']] + _milk_session_cells(row))
     writer.writerow([])
 
     writer.writerow(['FEEDING'])
@@ -186,6 +202,8 @@ def export_xlsx(report):
     ws.append(['Metric', 'Value'])
     style_header(ws, ws.max_row, 2)
     ws.append(['Total milk (L)', float(report['milk']['total_liters'])])
+    for row in report['milk']['by_session']:
+        ws.append([f'  {row["session"]} milk (L)', float(row['liters'])])
     ws.append(['Avg milk per active cow (L)', round(float(report['milk']['avg_per_cow']), 2)])
     ws.append(['Total dairy meal (kg)', float(report['feeding']['total_dairy_meal_kg'])])
     ws.append(['Total silage/hay (kg)', float(report['feeding']['total_silage_hay_kg'])])
@@ -199,13 +217,15 @@ def export_xlsx(report):
     autosize(ws)
 
     ws = wb.create_sheet('Milk')
-    section_table(ws, 'By block', ['Block', 'Liters'],
-                  [[r['block__name'], float(r['liters'])] for r in report['milk']['by_block']])
-    section_table(ws, 'By cow', ['Tag', 'Name', 'Block', 'Liters'],
-                  [[r['cow__tag_id'], r['cow__name'] or '', r['cow__block__name'], float(r['liters'])]
+    section_table(ws, 'By session', ['Session', 'Liters', '% of total'],
+                  [[r['session'], float(r['liters']), r['share']] for r in report['milk']['by_session']])
+    section_table(ws, 'By block', ['Block'] + MILK_SESSION_HEADERS,
+                  [[r['block__name']] + _milk_session_cells(r, float) for r in report['milk']['by_block']])
+    section_table(ws, 'By cow', ['Tag', 'Name', 'Block'] + MILK_SESSION_HEADERS,
+                  [[r['cow__tag_id'], r['cow__name'] or '', r['cow__block__name']] + _milk_session_cells(r, float)
                    for r in report['milk']['by_cow']])
-    section_table(ws, 'Daily totals', ['Date', 'Liters'],
-                  [[r['date'].strftime('%Y-%m-%d'), float(r['liters'])] for r in report['milk']['daily']])
+    section_table(ws, 'Daily totals', ['Date'] + MILK_SESSION_HEADERS,
+                  [[r['date'].strftime('%Y-%m-%d')] + _milk_session_cells(r, float) for r in report['milk']['daily']])
     autosize(ws)
 
     ws = wb.create_sheet('Feeding')
@@ -332,10 +352,15 @@ def build_pdf_bytes(report):
         f'Total: {report["milk"]["total_liters"]} L &nbsp;&nbsp; '
         f'Avg/active cow: {round(float(report["milk"]["avg_per_cow"]), 2)} L', normal
     ))
-    add_table(['Block', 'Liters'], [[r['block__name'], r['liters']] for r in report['milk']['by_block']])
-    add_table(['Tag', 'Name', 'Block', 'Liters'],
-              [[r['cow__tag_id'], r['cow__name'], r['cow__block__name'], r['liters']] for r in report['milk']['by_cow']])
-    add_table(['Date', 'Liters'], [[r['date'], r['liters']] for r in report['milk']['daily']])
+    add_table(['Session', 'Liters', '% of total'],
+              [[r['session'], r['liters'], f'{r["share"]}%'] for r in report['milk']['by_session']])
+    add_table(['Block'] + MILK_SESSION_HEADERS,
+              [[r['block__name']] + _milk_session_cells(r) for r in report['milk']['by_block']])
+    add_table(['Tag', 'Name', 'Block'] + MILK_SESSION_HEADERS,
+              [[r['cow__tag_id'], r['cow__name'], r['cow__block__name']] + _milk_session_cells(r)
+               for r in report['milk']['by_cow']])
+    add_table(['Date'] + MILK_SESSION_HEADERS,
+              [[r['date']] + _milk_session_cells(r) for r in report['milk']['daily']])
 
     elements.append(Paragraph('Feeding', section_style))
     elements.append(Paragraph(
