@@ -1,5 +1,9 @@
+import logging
+
 from django.conf import settings
 from django.contrib import messages
+from django.core.exceptions import BadRequest, PermissionDenied, SuspiciousOperation
+from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.http import urlencode
@@ -7,6 +11,8 @@ from django.urls import Resolver404, resolve
 from django.utils.translation import gettext as _
 
 from .demo import is_demo_user
+
+logger = logging.getLogger(__name__)
 
 # The only views the demo account may still POST to: establishing a
 # DIFFERENT identity (login/signup/logout) has to keep working while
@@ -88,3 +94,39 @@ class TermsAcceptanceMiddleware:
                     target += '?' + urlencode({'next': request.get_full_path()})
                 return redirect(target)
         return self.get_response(request)
+
+
+class ExceptionSafetyNetMiddleware:
+    """The last line of defence for the whole app: any exception a view lets
+    escape is logged with its traceback (so it's diagnosable in the server
+    logs) and answered with FarmIQ's own "something went wrong" page - or a
+    JSON error for fetch/API callers - instead of a bare server error.
+
+    Deliberately answers with a real 500 rather than a redirect: the offline
+    queue (static/js/offline-queue.js) treats a redirected response as "the
+    record was saved" and would drop a queued record that actually failed.
+
+    Left alone on purpose: Http404/PermissionDenied/bad-request errors
+    (Django already turns those into 404/403/400 responses), and everything
+    while DEBUG is on, so the developer still gets Django's debug page."""
+
+    _HANDLED_BY_DJANGO = (Http404, PermissionDenied, SuspiciousOperation, BadRequest)
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        return self.get_response(request)
+
+    def process_exception(self, request, exception):
+        if settings.DEBUG or isinstance(exception, self._HANDLED_BY_DJANGO):
+            return None
+        user = getattr(request, 'user', None)
+        logger.error(
+            'Unhandled %s on %s %s (user=%s)',
+            type(exception).__name__, request.method, request.get_full_path(),
+            user if user is not None and user.is_authenticated else 'anonymous',
+            exc_info=(type(exception), exception, exception.__traceback__),
+        )
+        from .views import server_error_response
+        return server_error_response(request)

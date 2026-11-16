@@ -29,5 +29,11 @@ urlpatterns = [
     path('', include('website.public_urls')),
 ]
 
+# Errors raised outside a view (middleware, template rendering of a lazy
+# response) never reach core.middleware.ExceptionSafetyNetMiddleware -
+# these catch the rest with the same pages.
+handler500 = 'core.views.server_error'
+handler404 = 'core.views.page_not_found'
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

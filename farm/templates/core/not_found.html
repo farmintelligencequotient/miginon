@@ -1,0 +1,14 @@
+{% extends "accounts/_auth_base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Page not found" %} - FarmIQ{% endblock %}
+{% block icon %}<ion-icon name="compass-outline"></ion-icon>{% endblock %}
+{% block heading %}{% trans "Page not found" %}{% endblock %}
+{% block subheading %}
+    {% blocktrans %}That page does not exist, or it has been moved or deleted.{% endblocktrans %}
+{% endblock %}
+{% block form_content %}
+<a href="{% if user.is_authenticated %}{% url 'farms:dashboard' %}{% else %}{% url 'core:landing' %}{% endif %}"
+    class="flex w-full items-center justify-center rounded-xl bg-emerald-700 px-4 py-3 text-sm font-bold text-white shadow-soft transition hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500">
+    {% if user.is_authenticated %}{% trans "Back to dashboard" %}{% else %}{% trans "Back to home" %}{% endif %}
+</a>
+{% endblock %}

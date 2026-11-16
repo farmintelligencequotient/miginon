@@ -4141,3 +4141,36 @@ msgstr "tukio la uzalishaji"
 
 msgid "weight record"
 msgstr "rekodi ya uzito"
+
+msgid "Liters cannot be negative."
+msgstr "Lita haziwezi kuwa hasi."
+
+msgid "%(cow)s already has a %(session)s milk record for this date. Edit that record instead."
+msgstr "%(cow)s tayari ana rekodi ya maziwa ya %(session)s kwa tarehe hii. Hariri rekodi hiyo badala yake."
+
+msgid "Something went wrong while saving this record. Nothing was saved - please try again."
+msgstr "Hitilafu imetokea wakati wa kuhifadhi rekodi hii. Hakuna kilichohifadhiwa - tafadhali jaribu tena."
+
+msgid "Something went wrong while saving this record. Nothing was changed - please try again."
+msgstr "Hitilafu imetokea wakati wa kuhifadhi rekodi hii. Hakuna kilichobadilishwa - tafadhali jaribu tena."
+
+msgid "Liters cannot be more than %(max)s per milking session."
+msgstr "Lita haziwezi kuzidi %(max)s kwa kila kipindi cha kukamua."
+
+msgid "\"%(name)s\" already exists on this farm. Pick a different name."
+msgstr "\"%(name)s\" tayari ipo kwenye shamba hili. Chagua jina tofauti."
+
+msgid "Something went wrong"
+msgstr "Hitilafu imetokea"
+
+msgid "That one is on us, not you. The problem has been recorded. If you were saving something, please check whether it went through before entering it again."
+msgstr "Kosa hili ni letu, si lako. Tatizo limerekodiwa. Kama ulikuwa unahifadhi kitu, tafadhali angalia kama kimehifadhiwa kabla ya kukiingiza tena."
+
+msgid "Try again"
+msgstr "Jaribu tena"
+
+msgid "Page not found"
+msgstr "Ukurasa haujapatikana"
+
+msgid "That page does not exist, or it has been moved or deleted."
+msgstr "Ukurasa huo haupo, au umehamishwa au kufutwa."

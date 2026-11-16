@@ -117,9 +117,25 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.DemoModeMiddleware',
     'core.middleware.TermsAcceptanceMiddleware',
+    'core.middleware.ExceptionSafetyNetMiddleware',
 ]
 
 ROOT_URLCONF = 'farm.urls'
+
+# Send every logger's warnings and errors to the console (Vercel's function
+# logs in production). Without this, an unhandled error while DEBUG is off
+# is only emailed to ADMINS - i.e. effectively invisible.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'plain': {'format': '%(levelname)s %(name)s: %(message)s'},
+    },
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'plain'},
+    },
+    'root': {'handlers': ['console'], 'level': 'WARNING'},
+}
 
 # Custom handler for CSRF failures (stale/expired tokens, mainly) - logs the
 # request for diagnosis and bounces the user onward gracefully instead of

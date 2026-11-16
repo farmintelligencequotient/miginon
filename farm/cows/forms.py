@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django import forms
 from django.utils import timezone
 from django.utils.translation import gettext, gettext_lazy as _
@@ -115,6 +117,10 @@ class FeedingRecordForm(TailwindFormMixin, forms.ModelForm):
         return cleaned
 
 
+# The most one cow can be logged as giving in a single milking session.
+MAX_LITERS_PER_SESSION = Decimal('15')
+
+
 class MilkRecordForm(TailwindFormMixin, forms.ModelForm):
     cow = CowChoiceField(queryset=Cow.objects.none())
     use_current_time = forms.BooleanField(
@@ -135,6 +141,9 @@ class MilkRecordForm(TailwindFormMixin, forms.ModelForm):
         fields = ['cow', 'date', 'liters']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
+            'liters': forms.NumberInput(attrs={
+                'placeholder': '0', 'min': '0', 'max': str(MAX_LITERS_PER_SESSION), 'step': '0.01', 'inputmode': 'decimal',
+            }),
         }
 
     field_order = ['cow', 'date', 'use_current_time', 'recorded_time', 'liters']
@@ -145,9 +154,24 @@ class MilkRecordForm(TailwindFormMixin, forms.ModelForm):
             self.fields['cow'].queryset = (
                 farm.cows.filter(status=Cow.Status.ACTIVE).select_related('block').order_by('block__name', 'tag_id')
             )
+        if not self.instance.pk:
+            # The model default (0) would otherwise prefill the box with a
+            # real "0" the user has to delete first - show it as a
+            # placeholder instead and make them type the actual amount.
+            self.fields['liters'].initial = None
         if self.instance.pk and self.instance.recorded_time:
             self.fields['use_current_time'].initial = False
             self.fields['recorded_time'].initial = self.instance.recorded_time
+
+    def clean_liters(self):
+        liters = self.cleaned_data['liters']
+        if liters < 0:
+            raise forms.ValidationError(gettext('Liters cannot be negative.'))
+        if liters > MAX_LITERS_PER_SESSION:
+            raise forms.ValidationError(
+                gettext('Liters cannot be more than %(max)s per milking session.') % {'max': MAX_LITERS_PER_SESSION}
+            )
+        return liters
 
     def clean(self):
         cleaned = super().clean()
@@ -155,7 +179,26 @@ class MilkRecordForm(TailwindFormMixin, forms.ModelForm):
             cleaned['recorded_time'] = timezone.localtime().time().replace(microsecond=0)
         elif not cleaned.get('recorded_time'):
             self.add_error('recorded_time', gettext('Enter a time, or check "Use current farm time".'))
+
+        # 'session' isn't a form field, so ModelForm's own unique_together
+        # check for ('cow', 'date', 'session') never runs - without this a
+        # second record for the same cow/day/session would surface as a raw
+        # IntegrityError at save() instead of a clean form error.
+        cow, date, recorded_time = cleaned.get('cow'), cleaned.get('date'), cleaned.get('recorded_time')
+        if cow and date and recorded_time:
+            session = session_for_time(recorded_time)
+            existing = MilkRecord.objects.filter(cow=cow, date=date, session=session)
+            if self.instance.pk:
+                existing = existing.exclude(pk=self.instance.pk)
+            if existing.exists():
+                self.add_error(None, self.duplicate_error(cow, session))
         return cleaned
+
+    @staticmethod
+    def duplicate_error(cow, session):
+        return gettext(
+            '%(cow)s already has a %(session)s milk record for this date. Edit that record instead.'
+        ) % {'cow': cow.tag_id, 'session': session.label}
 
     def save(self, commit=True):
         instance = super().save(commit=False)

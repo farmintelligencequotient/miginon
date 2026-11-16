@@ -1,11 +1,16 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth import login as django_login
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import get_language, gettext_lazy as _
 
 from accounts.models import User
 
 from .demo import get_or_create_demo_farm
+
+logger = logging.getLogger(__name__)
 
 THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365  # 1 year
 
@@ -120,3 +125,47 @@ def terms(request):
 
 def privacy(request):
     return render(request, _legal_template('privacy'), {'terms_version': settings.TERMS_VERSION})
+
+
+def _wants_json(request):
+    accept = request.headers.get('Accept', '')
+    return (
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        or request.content_type == 'application/json'
+        or ('application/json' in accept and 'text/html' not in accept)
+    )
+
+
+def _error_page(request, template_name, status, plain_text):
+    try:
+        return render(request, template_name, status=status)
+    except Exception:
+        # Whatever broke the request may well break the styled page too (the
+        # database being unreachable, say) - never fail while reporting a failure.
+        logger.exception('Could not render %s', template_name)
+        return HttpResponse(
+            '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+            '<title>FarmIQ</title><body style="font-family:system-ui,sans-serif;padding:2rem;text-align:center">'
+            f'<h1>FarmIQ</h1><p>{plain_text}</p><p><a href="/">FarmIQ</a></p></body>',
+            status=status,
+        )
+
+
+def server_error_response(request):
+    """The app's one "something went wrong" answer - used for unhandled view
+    errors (core.middleware.ExceptionSafetyNetMiddleware) and as handler500."""
+    if _wants_json(request):
+        return JsonResponse({'ok': False, 'error': 'Something went wrong on our side. Please try again.'}, status=500)
+    return _error_page(
+        request, 'core/server_error.html', 500, 'Something went wrong on our side. Please try again.',
+    )
+
+
+def server_error(request):
+    return server_error_response(request)
+
+
+def page_not_found(request, exception):
+    if _wants_json(request):
+        return JsonResponse({'ok': False, 'error': 'Not found.'}, status=404)
+    return _error_page(request, 'core/not_found.html', 404, 'That page could not be found.')

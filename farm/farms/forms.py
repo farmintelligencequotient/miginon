@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import gettext, gettext_lazy as _
 
-from core.formhelpers import SELECT_CLASSES, TailwindFormMixin
+from core.formhelpers import SELECT_CLASSES, TailwindFormMixin, UniqueNamePerFarmMixin
 
 from .kenya_data import ALL_TOWN_CHOICES, COUNTY_TOWNS, KENYA_COUNTY_CHOICES
 from .models import Block, Farm, FarmRole
@@ -91,7 +91,7 @@ class FarmSettingsForm(TailwindFormMixin, forms.ModelForm):
         return cleaned
 
 
-class BlockForm(TailwindFormMixin, forms.ModelForm):
+class BlockForm(UniqueNamePerFarmMixin, TailwindFormMixin, forms.ModelForm):
     class Meta:
         model = Block
         fields = ['name', 'description']

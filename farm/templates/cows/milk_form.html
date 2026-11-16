@@ -26,6 +26,24 @@
         var timeInput = document.getElementById('id_recorded_time');
         var preview = document.getElementById('milk-session-preview');
         if (!useCurrent || !timeInput || !preview) return;
+        var form = document.getElementById('milk-form');
+        // The whole field block (label + input + errors) from partials/form_fields.html.
+        var timeRow = timeInput.closest('.mb-4') || timeInput;
+
+        // If anything below throws, fall back to a plain, fully usable form:
+        // the time field visible and enabled, so a record can still be logged.
+        function failSafe(err) {
+            if (window.console && console.error) console.error('Milk form:', err);
+            timeRow.hidden = false;
+            timeInput.disabled = false;
+            preview.textContent = '';
+        }
+
+        function guarded(fn) {
+            return function () {
+                try { return fn.apply(this, arguments); } catch (err) { failSafe(err); }
+            };
+        }
 
         var sessionLabels = {
             AM: '{% trans "Morning" %}',
@@ -58,11 +76,18 @@
                 preview.textContent = '';
                 return;
             }
+            if (isNaN(hh) || isNaN(mm)) {
+                preview.textContent = '';
+                return;
+            }
             var session = sessionForTime(hh, mm);
             preview.textContent = '{% trans "Session:" %} ' + sessionLabels[session];
         }
 
         function syncTimeInputState() {
+            // Using the current time: the time field is irrelevant, so hide it
+            // (and disable it so a stale value is never submitted).
+            timeRow.hidden = useCurrent.checked;
             timeInput.disabled = useCurrent.checked;
             if (!useCurrent.checked && !timeInput.value) {
                 var now = currentHHMM();
@@ -71,12 +96,18 @@
             updatePreview();
         }
 
-        useCurrent.addEventListener('change', syncTimeInputState);
-        timeInput.addEventListener('input', updatePreview);
-        syncTimeInputState();
+        var sync = guarded(syncTimeInputState);
+        var refreshPreview = guarded(updatePreview);
+
+        useCurrent.addEventListener('change', sync);
+        timeInput.addEventListener('input', refreshPreview);
+        // A reset (e.g. after an offline save, see static/js/offline.js) puts the
+        // checkbox back without firing "change" - re-sync once it has applied.
+        if (form) form.addEventListener('reset', function () { setTimeout(sync, 0); });
+        sync();
 
         // Keep the "current time" preview fresh if the page is left open.
-        setInterval(function () { if (useCurrent.checked) updatePreview(); }, 30000);
+        setInterval(function () { if (useCurrent.checked) refreshPreview(); }, 30000);
     })();
 </script>
 {% endblock %}

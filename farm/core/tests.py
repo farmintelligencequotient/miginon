@@ -370,3 +370,92 @@ class OfflineModeTests(TestCase):
         data = json.loads((Path(settings.BASE_DIR) / 'static' / 'geomap' / 'kenya-counties.geojson').read_text(encoding='utf-8'))
         self.assertEqual(len(data['features']), 47)
         self.assertIn('Nairobi', {f['properties']['name'] for f in data['features']})
+
+
+# --- app-wide error handling -------------------------------------------------
+
+def _boom(request):
+    raise RuntimeError('boom')
+
+
+def _missing(request):
+    from django.http import Http404
+    raise Http404('nope')
+
+
+def _test_urlpatterns():
+    from django.urls import path
+    from farm.urls import urlpatterns as real
+    return [path('boom/', _boom), path('missing/', _missing)] + list(real)
+
+
+class _LazyPatterns:
+    def __iter__(self):
+        return iter(_test_urlpatterns())
+
+    def __reversed__(self):
+        return reversed(_test_urlpatterns())
+
+
+urlpatterns = _LazyPatterns()
+handler404 = 'core.views.page_not_found'
+handler500 = 'core.views.server_error'
+
+
+class ExceptionSafetyNetTests(TestCase):
+    """core.middleware.ExceptionSafetyNetMiddleware + the 404/500 handlers."""
+
+    def setUp(self):
+        from django.test import override_settings
+        override = override_settings(ROOT_URLCONF='core.tests')
+        override.enable()
+        self.addCleanup(override.disable)
+
+    def test_an_unhandled_view_error_becomes_a_friendly_500_page(self):
+        with self.assertLogs('core.middleware', level='ERROR') as logs:
+            response = self.client.get('/boom/')
+        self.assertEqual(response.status_code, 500)
+        self.assertContains(response, 'Something went wrong', status_code=500)
+        self.assertIn('RuntimeError', logs.output[0])
+
+    def test_a_failed_post_is_never_answered_with_a_redirect(self):
+        # The offline queue reads a redirect as "saved" - see offline-queue.js.
+        with self.assertLogs('core.middleware', level='ERROR'):
+            response = self.client.post('/boom/', {'a': 'b'})
+        self.assertEqual(response.status_code, 500)
+
+    def test_json_callers_get_a_json_error(self):
+        with self.assertLogs('core.middleware', level='ERROR'):
+            response = self.client.get('/boom/', HTTP_ACCEPT='application/json')
+        self.assertEqual(response.status_code, 500)
+        self.assertFalse(response.json()['ok'])
+
+    def test_a_broken_error_page_still_answers(self):
+        from unittest.mock import patch
+        with patch('core.views.render', side_effect=RuntimeError('template broke')):
+            with self.assertLogs(level='ERROR'):
+                response = self.client.get('/boom/')
+        self.assertEqual(response.status_code, 500)
+        self.assertIn(b'FarmIQ', response.content)
+
+    def test_404_uses_the_friendly_page(self):
+        response = self.client.get('/missing/')
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(response, 'Page not found', status_code=404)
+
+    def test_debug_mode_leaves_the_error_for_djangos_debug_page(self):
+        from django.test import RequestFactory, override_settings
+        from .middleware import ExceptionSafetyNetMiddleware
+        middleware = ExceptionSafetyNetMiddleware(lambda request: None)
+        with override_settings(DEBUG=True):
+            self.assertIsNone(middleware.process_exception(RequestFactory().get('/boom/'), RuntimeError('x')))
+
+
+class NotifyNeverRaisesTests(TestCase):
+    def test_a_failing_notification_is_logged_not_raised(self):
+        from unittest.mock import patch
+        from notifications.models import Notification
+        from notifications.services import notify
+        with patch('notifications.services._notify', side_effect=RuntimeError('db down')):
+            with self.assertLogs('notifications.services', level='ERROR'):
+                self.assertIsNone(notify(None, None, Notification.Verb.CREATED, 'cow', 'C-1'))

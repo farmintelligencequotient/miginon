@@ -1,13 +1,13 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from core.formhelpers import TailwindFormMixin
+from core.formhelpers import TailwindFormMixin, UniqueNamePerFarmMixin
 from farms.models import FarmMembership
 
 from .models import InventoryItem, StockMovement
 
 
-class InventoryItemForm(TailwindFormMixin, forms.ModelForm):
+class InventoryItemForm(UniqueNamePerFarmMixin, TailwindFormMixin, forms.ModelForm):
     class Meta:
         model = InventoryItem
         fields = ['name', 'category', 'unit', 'current_stock', 'reorder_level']

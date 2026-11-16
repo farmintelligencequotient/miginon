@@ -158,6 +158,14 @@ class BackButtonTests(TestCase):
         self.assertContains(response, 'id="app-back-btn"')
         self.assertContains(response, 'data-fallback="/farm/"')
 
+    def test_duplicate_block_name_shows_a_form_error_instead_of_crashing(self):
+        from .models import Block
+        Block.objects.create(farm=self.farm, name='Block A', created_by=self.owner)
+        response = self.client.post('/farm/blocks/add/', {'name': 'Block A', 'description': ''})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['form']['name'].errors)
+        self.assertEqual(Block.objects.filter(farm=self.farm, name='Block A').count(), 1)
+
     def test_back_button_shown_two_levels_deep(self):
         block = Block.objects.create(farm=self.farm, name='Deep Block', created_by=self.owner)
         cow = Cow.objects.create(farm=self.farm, block=block, tag_id='D-1', added_by=self.owner)

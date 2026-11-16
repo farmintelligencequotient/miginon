@@ -1,6 +1,8 @@
+import logging
 from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
+from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -25,8 +27,10 @@ from .forms import (
 )
 from .models import (
     Cow, CowHealthRecord, CowTransfer, CowWeightRecord, FeedingRecord, FeedingRecordCow, MilkRecord,
-    ReproductiveEvent,
+    ReproductiveEvent, Session,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @any_member_required
@@ -312,29 +316,48 @@ def milk_create(request):
         record.farm = request.farm
         record.block = record.cow.block
         record.recorded_by = request.user
-        record.save()
-        movement = record_milk_production(request.farm, record.liters, record.date, request.user)
-        record.stock_movement = movement
-        record.save(update_fields=['stock_movement'])
-        notify(
-            request.farm, request.user, Notification.Verb.CREATED, 'milk record',
-            f'{record.cow.tag_id} - {record.date} {record.get_session_display()} - {record.liters}L'
-        )
-        if MilkRecord.objects.filter(farm=request.farm).count() == 1:
-            send_styled_email_safely(
-                to=request.farm.owner.email,
-                subject=_('🎉 First milk record logged on %(farm)s!') % {'farm': request.farm.name},
-                template_name='emails/milestone.html',
-                context={
-                    'farm': request.farm,
-                    'title': _('First milk record logged!'),
-                    'description': (
-                        _("%(cow)s just produced its first recorded %(liters)sL on FarmIQ. Every record from here builds your farm's production history.")
-                        % {'cow': record.cow, 'liters': record.liters}
-                    ),
-                    'dashboard_url': request.build_absolute_uri(reverse('farms:dashboard')),
-                },
+        try:
+            # One transaction, so a failure part-way never leaves a milk
+            # record without its stock movement (or the other way round).
+            with transaction.atomic():
+                record.save()
+                movement = record_milk_production(request.farm, record.liters, record.date, request.user)
+                record.stock_movement = movement
+                record.save(update_fields=['stock_movement'])
+        except IntegrityError:
+            # The form already checks for a duplicate cow/date/session - this
+            # only fires when two people save the same one at the same moment.
+            form.add_error(None, form.duplicate_error(record.cow, Session(record.session)))
+            return render(request, 'cows/milk_form.html', {'form': form})
+        except Exception:
+            logger.exception('Could not save milk record for farm %s', request.farm.pk)
+            form.add_error(None, _('Something went wrong while saving this record. Nothing was saved - please try again.'))
+            return render(request, 'cows/milk_form.html', {'form': form})
+
+        # The record is saved at this point - a failure in the activity feed
+        # or the milestone email must not turn that into an error page.
+        try:
+            notify(
+                request.farm, request.user, Notification.Verb.CREATED, 'milk record',
+                f'{record.cow.tag_id} - {record.date} {record.get_session_display()} - {record.liters}L'
             )
+            if MilkRecord.objects.filter(farm=request.farm).count() == 1:
+                send_styled_email_safely(
+                    to=request.farm.owner.email,
+                    subject=_('🎉 First milk record logged on %(farm)s!') % {'farm': request.farm.name},
+                    template_name='emails/milestone.html',
+                    context={
+                        'farm': request.farm,
+                        'title': _('First milk record logged!'),
+                        'description': (
+                            _("%(cow)s just produced its first recorded %(liters)sL on FarmIQ. Every record from here builds your farm's production history.")
+                            % {'cow': record.cow, 'liters': record.liters}
+                        ),
+                        'dashboard_url': request.build_absolute_uri(reverse('farms:dashboard')),
+                    },
+                )
+        except Exception:
+            logger.exception('Milk record %s saved, but the follow-up notification failed', record.pk)
         messages.success(
             request,
             _('Milk record saved for %(cow)s (%(session)s).')
@@ -352,23 +375,35 @@ def milk_edit(request, record_id):
         old_movement = record.stock_movement
         updated = form.save(commit=False)
         updated.block = updated.cow.block
-        updated.save()
+        try:
+            with transaction.atomic():
+                updated.save()
 
-        # Stock movements are a ledger, not freestanding records (see
-        # inventory.views.movement_delete) - reconcile by reversing whatever
-        # this record produced before and logging a fresh one for the
-        # updated liters/date, rather than editing the movement in place.
-        if old_movement:
-            reverse_movement(old_movement)
-            old_movement.delete()
-        new_movement = record_milk_production(request.farm, updated.liters, updated.date, request.user)
-        updated.stock_movement = new_movement
-        updated.save(update_fields=['stock_movement'])
+                # Stock movements are a ledger, not freestanding records (see
+                # inventory.views.movement_delete) - reconcile by reversing whatever
+                # this record produced before and logging a fresh one for the
+                # updated liters/date, rather than editing the movement in place.
+                if old_movement:
+                    reverse_movement(old_movement)
+                    old_movement.delete()
+                new_movement = record_milk_production(request.farm, updated.liters, updated.date, request.user)
+                updated.stock_movement = new_movement
+                updated.save(update_fields=['stock_movement'])
+        except IntegrityError:
+            form.add_error(None, form.duplicate_error(updated.cow, Session(updated.session)))
+            return render(request, 'cows/milk_form.html', {'form': form, 'record': record})
+        except Exception:
+            logger.exception('Could not update milk record %s', record.pk)
+            form.add_error(None, _('Something went wrong while saving this record. Nothing was changed - please try again.'))
+            return render(request, 'cows/milk_form.html', {'form': form, 'record': record})
 
-        notify(
-            request.farm, request.user, Notification.Verb.UPDATED, 'milk record',
-            f'{updated.cow.tag_id} - {updated.date} {updated.get_session_display()} - {updated.liters}L'
-        )
+        try:
+            notify(
+                request.farm, request.user, Notification.Verb.UPDATED, 'milk record',
+                f'{updated.cow.tag_id} - {updated.date} {updated.get_session_display()} - {updated.liters}L'
+            )
+        except Exception:
+            logger.exception('Milk record %s updated, but the follow-up notification failed', updated.pk)
         messages.success(request, _('Milk record updated.'))
         return redirect('cows:milk_list')
     return render(request, 'cows/milk_form.html', {'form': form, 'record': record})

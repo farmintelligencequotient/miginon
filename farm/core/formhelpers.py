@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext
 
 INPUT_CLASSES = (
     'w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm '
@@ -32,3 +33,29 @@ class TailwindFormMixin:
             else:
                 widget.attrs.setdefault('class', INPUT_CLASSES)
             widget.attrs.setdefault('autocomplete', 'off')
+
+
+class UniqueNamePerFarmMixin:
+    """For ModelForms on a model with unique_together = ('farm', 'name')
+    where 'farm' isn't a form field (the view sets it after is_valid()).
+    ModelForm's own uniqueness validation skips any constraint that involves
+    an excluded field, so without this a duplicate name surfaces as a raw
+    IntegrityError at save() instead of a form error. Pass farm=... when
+    creating; when editing, the instance's own farm is used."""
+
+    def __init__(self, *args, farm=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.farm = farm
+
+    def clean_name(self):
+        name = self.cleaned_data['name'].strip()
+        farm_id = self.farm.pk if self.farm is not None else self.instance.farm_id
+        if farm_id is not None:
+            existing = self._meta.model.objects.filter(farm_id=farm_id, name=name)
+            if self.instance.pk:
+                existing = existing.exclude(pk=self.instance.pk)
+            if existing.exists():
+                raise forms.ValidationError(
+                    gettext('"%(name)s" already exists on this farm. Pick a different name.') % {'name': name}
+                )
+        return name

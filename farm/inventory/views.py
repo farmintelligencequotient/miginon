@@ -26,7 +26,7 @@ def item_list(request):
 
 @manage_records_required
 def item_create(request):
-    form = InventoryItemForm(request.POST or None)
+    form = InventoryItemForm(request.POST or None, farm=request.farm)
     if request.method == 'POST' and form.is_valid():
         item = form.save(commit=False)
         item.farm = request.farm

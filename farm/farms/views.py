@@ -292,7 +292,7 @@ def setup_block(request):
     if wants_to_finish and not name_provided and blocks.exists():
         return redirect('farms:setup_cow')
 
-    form = BlockForm(request.POST or None)
+    form = BlockForm(request.POST or None, farm=farm)
     if request.method == 'POST' and form.is_valid():
         block = form.save(commit=False)
         block.farm = farm
@@ -591,7 +591,7 @@ def farm_map(request):
 
 @manage_herd_required
 def block_create(request):
-    form = BlockForm(request.POST or None)
+    form = BlockForm(request.POST or None, farm=request.farm)
     if request.method == 'POST' and form.is_valid():
         block = form.save(commit=False)
         block.farm = request.farm

@@ -157,15 +157,15 @@ class MilkRecordViewTests(CowsTestCase):
         cow = self._make_cow(tag_id='C-080')
         self._login(self.worker)
         response = self.client.post('/cows/milk/add/', {
-            'cow': cow.id, 'date': '2026-01-05', 'liters': '15.5',
+            'cow': cow.id, 'date': '2026-01-05', 'liters': '12.5',
             'use_current_time': 'on',
         }, follow=True)
         self.assertEqual(response.status_code, 200)
         record = MilkRecord.objects.get(farm=self.farm, cow=cow)
-        self.assertEqual(record.liters, Decimal('15.50'))
+        self.assertEqual(record.liters, Decimal('12.50'))
         self.assertIsNotNone(record.stock_movement)
         milk_item = InventoryItem.objects.get(farm=self.farm, name='Milk')
-        self.assertEqual(milk_item.current_stock, Decimal('15.50'))
+        self.assertEqual(milk_item.current_stock, Decimal('12.50'))
 
     def test_editing_a_milk_record_reconciles_stock(self):
         cow = self._make_cow(tag_id='C-090')
@@ -175,10 +175,71 @@ class MilkRecordViewTests(CowsTestCase):
         })
         record = MilkRecord.objects.get(farm=self.farm, cow=cow)
         self.client.post(f'/cows/milk/{record.id}/edit/', {
-            'cow': cow.id, 'date': '2026-01-05', 'liters': '25.00', 'use_current_time': 'on',
+            'cow': cow.id, 'date': '2026-01-05', 'liters': '14.00', 'use_current_time': 'on',
         })
         milk_item = InventoryItem.objects.get(farm=self.farm, name='Milk')
-        self.assertEqual(milk_item.current_stock, Decimal('25.00'))
+        self.assertEqual(milk_item.current_stock, Decimal('14.00'))
+
+    def test_liters_is_an_empty_field_with_a_placeholder_on_a_new_record(self):
+        self._make_cow(tag_id='C-091')
+        self._login(self.worker)
+        response = self.client.get('/cows/milk/add/')
+        liters = response.context['form']['liters']
+        self.assertIsNone(liters.value())
+        self.assertIn('placeholder="0"', str(liters))
+
+    def test_duplicate_session_shows_a_form_error_instead_of_crashing(self):
+        cow = self._make_cow(tag_id='C-092')
+        self._login(self.worker)
+        data = {
+            'cow': cow.id, 'date': '2026-01-05', 'liters': '10.00', 'recorded_time': '06:30',
+        }
+        self.client.post('/cows/milk/add/', data)
+        response = self.client.post('/cows/milk/add/', data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['form'].non_field_errors())
+        self.assertEqual(MilkRecord.objects.filter(farm=self.farm, cow=cow).count(), 1)
+        milk_item = InventoryItem.objects.get(farm=self.farm, name='Milk')
+        self.assertEqual(milk_item.current_stock, Decimal('10.00'))
+
+    def test_a_failed_save_rolls_back_and_shows_an_error(self):
+        cow = self._make_cow(tag_id='C-093')
+        self._login(self.worker)
+        with patch('cows.views.record_milk_production', side_effect=RuntimeError('boom')):
+            with self.assertLogs('cows.views', level='ERROR'):
+                response = self.client.post('/cows/milk/add/', {
+                    'cow': cow.id, 'date': '2026-01-05', 'liters': '10.00', 'use_current_time': 'on',
+                })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['form'].non_field_errors())
+        self.assertFalse(MilkRecord.objects.filter(farm=self.farm, cow=cow).exists())
+
+    def test_negative_liters_is_rejected(self):
+        cow = self._make_cow(tag_id='C-094')
+        self._login(self.worker)
+        response = self.client.post('/cows/milk/add/', {
+            'cow': cow.id, 'date': '2026-01-05', 'liters': '-3', 'use_current_time': 'on',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(MilkRecord.objects.filter(farm=self.farm, cow=cow).exists())
+
+    def test_liters_above_the_15_liter_limit_is_rejected(self):
+        cow = self._make_cow(tag_id='C-095')
+        self._login(self.worker)
+        response = self.client.post('/cows/milk/add/', {
+            'cow': cow.id, 'date': '2026-01-05', 'liters': '15.01', 'use_current_time': 'on',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['form']['liters'].errors)
+        self.assertFalse(MilkRecord.objects.filter(farm=self.farm, cow=cow).exists())
+
+    def test_exactly_15_liters_is_accepted(self):
+        cow = self._make_cow(tag_id='C-096')
+        self._login(self.worker)
+        self.client.post('/cows/milk/add/', {
+            'cow': cow.id, 'date': '2026-01-05', 'liters': '15', 'use_current_time': 'on',
+        })
+        self.assertEqual(MilkRecord.objects.get(farm=self.farm, cow=cow).liters, Decimal('15.00'))
 
     def test_worker_cannot_delete_a_milk_record(self):
         cow = self._make_cow(tag_id='C-100')

@@ -1,4 +1,8 @@
+import logging
+
 from .models import Notification
+
+logger = logging.getLogger(__name__)
 
 
 def notify(farm, actor, verb, kind, description, recipient=None):
@@ -18,6 +22,17 @@ def notify(farm, actor, verb, kind, description, recipient=None):
     Returns the created Notification, or None if the recipient's preference
     means no in-app row was written for this event.
     """
+    # Called right after the real work has already been saved - a failure
+    # here (activity feed row, push, WhatsApp) must never turn that saved
+    # action into an error page, so it is logged and swallowed instead.
+    try:
+        return _notify(farm, actor, verb, kind, description, recipient)
+    except Exception:
+        logger.exception('Could not record/send notification (%s %s)', verb, kind)
+        return None
+
+
+def _notify(farm, actor, verb, kind, description, recipient=None):
     delivery = recipient.notification_delivery if recipient is not None else None
 
     notification = None

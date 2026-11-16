@@ -86,6 +86,24 @@ class InventoryPermissionTests(TestCase):
         })
         self.assertFalse(InventoryItem.objects.filter(farm=self.farm, name='New Item').exists())
 
+    def test_duplicate_item_name_shows_a_form_error_instead_of_crashing(self):
+        self._login(self.farmer)
+        response = self.client.post('/inventory/add/', {
+            'name': 'Dairy Meal', 'category': InventoryItem.Category.FEED,
+            'unit': InventoryItem.Unit.KG, 'current_stock': '0', 'reorder_level': '0',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['form']['name'].errors)
+        self.assertEqual(InventoryItem.objects.filter(farm=self.farm, name='Dairy Meal').count(), 1)
+
+    def test_an_item_can_be_saved_again_under_its_own_name(self):
+        self._login(self.farmer)
+        response = self.client.post(f'/inventory/{self.item.id}/edit/', {
+            'name': 'Dairy Meal', 'category': InventoryItem.Category.FEED,
+            'unit': InventoryItem.Unit.KG, 'reorder_level': '5',
+        })
+        self.assertEqual(response.status_code, 302)
+
     def test_worker_can_log_a_stock_movement(self):
         self._login(self.worker)
         response = self.client.post('/inventory/movements/add/', {
