@@ -52,8 +52,10 @@ def milk_session_totals(farm, date):
 
 def milk_cow_breakdown(farm, date):
     """Which cows were milked on one day and how much each gave per session
-    (the "Cows milked" table on the milk records page), plus the active
-    milking cows with nothing logged for that day.
+    (the "Cows milked" table on the milk records page), plus every other
+    animal still on the farm with nothing logged for that day - dry cows,
+    heifers, calves and bulls included, each tagged with why (see 'note');
+    only sold and deceased animals are left out.
 
     Each row's 'sessions' list lines up with cows.models.Session order
     (morning, noon, evening); a slot is None when that session wasn't logged
@@ -75,9 +77,17 @@ def milk_cow_breakdown(farm, date):
     milked = list(rows.values())
 
     not_milked = list(
-        Cow.objects.filter(farm=farm, status=Cow.Status.ACTIVE, category=Cow.Category.COW)
+        Cow.objects.filter(farm=farm, status__in=[Cow.Status.ACTIVE, Cow.Status.DRY])
         .exclude(pk__in=rows.keys()).select_related('block').order_by('block__name', 'tag_id')
     )
+    for cow in not_milked:
+        # Blank for an ordinary active cow - the one case that needs chasing.
+        if cow.status == Cow.Status.DRY:
+            cow.note = cow.get_status_display()
+        elif cow.category != Cow.Category.COW:
+            cow.note = cow.get_category_display()
+        else:
+            cow.note = ''
     return {
         'milked': milked,
         'not_milked': not_milked,

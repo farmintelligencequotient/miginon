@@ -312,7 +312,17 @@ class MilkRecordViewTests(CowsTestCase):
         self.assertEqual(rows['C-301']['total'], Decimal('14.50'))
         self.assertEqual(breakdown['session_totals'], [Decimal('15.50'), Decimal('0'), Decimal('6.00')])
         self.assertEqual(breakdown['total'], Decimal('21.50'))
-        self.assertEqual([cow.pk for cow in breakdown['not_milked']], [idle.pk])
+        dry = self._make_cow(tag_id='C-306', status=Cow.Status.DRY)
+        sold = self._make_cow(tag_id='C-307', status=Cow.Status.SOLD)
+        bull = Cow.objects.create(
+            farm=self.farm, block=self.block_a, tag_id='C-308',
+            category=Cow.Category.BULL, gender=Cow.Gender.MALE,
+        )
+        not_milked = {
+            cow.tag_id: cow.note for cow in self.client.get('/cows/milk/').context['cow_breakdown']['not_milked']
+        }
+        self.assertEqual(not_milked, {'C-303': '', 'C-306': 'Dry', 'C-308': 'Bull'})
+        self.assertNotIn(sold.tag_id, not_milked)
         totals = response.context['totals']
         self.assertEqual(totals['cows_milked'], 2)
         self.assertEqual({row['key']: row['cows'] for row in totals['sessions']}, {'AM': 2, 'NOON': 0, 'PM': 1})
