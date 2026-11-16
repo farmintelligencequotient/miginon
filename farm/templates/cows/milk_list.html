@@ -90,6 +90,7 @@
                 <thead class="bg-stone-50 text-xs font-bold uppercase tracking-wide text-stone-400 dark:bg-stone-800 dark:text-stone-500">
                     <tr>
                         <th scope="col" class="px-6 py-3">{% trans "Cow" %}</th>
+                        <th scope="col" class="px-6 py-3">{% trans "Category" %}</th>
                         <th scope="col" class="px-6 py-3">{% trans "Block" %}</th>
                         {% for s in totals.sessions %}<th scope="col" class="px-4 py-3 text-right">{{ s.label }}</th>{% endfor %}
                         <th scope="col" class="px-6 py-3 text-right">{% trans "Total" %}</th>
@@ -101,6 +102,7 @@
                         <th scope="row" class="whitespace-nowrap px-6 py-3 font-semibold text-stone-800 dark:text-stone-200">
                             <a href="{% url 'cows:cow_detail' row.cow.id %}" class="hover:text-emerald-700 dark:hover:text-emerald-400">{{ row.cow.tag_id }}{% if row.cow.name %} - {{ row.cow.name }}{% endif %}</a>
                         </th>
+                        <td class="whitespace-nowrap px-6 py-3"><span class="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-bold text-stone-600 dark:bg-stone-800 dark:text-stone-300">{{ row.category }}</span></td>
                         <td class="whitespace-nowrap px-6 py-3 text-stone-600 dark:text-stone-300">{{ row.block.name }}</td>
                         {% for liters in row.sessions %}
                         <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums {% if liters is None %}text-stone-300 dark:text-stone-600{% else %}text-stone-700 dark:text-stone-200{% endif %}">{% if liters is None %}&ndash;{% else %}{{ liters|floatformat:"-2" }}{% endif %}</td>
@@ -111,7 +113,7 @@
                 </tbody>
                 <tfoot class="border-t-2 border-stone-200 bg-stone-50 text-sm font-extrabold text-stone-900 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100">
                     <tr>
-                        <th scope="row" colspan="2" class="px-6 py-3">{% trans "Total" %}</th>
+                        <th scope="row" colspan="3" class="px-6 py-3">{% trans "Total" %}</th>
                         {% for liters in cow_breakdown.session_totals %}<td class="whitespace-nowrap px-4 py-3 text-right tabular-nums">{{ liters|floatformat:"-2" }}</td>{% endfor %}
                         <td class="whitespace-nowrap px-6 py-3 text-right tabular-nums text-emerald-700 dark:text-emerald-400">{{ cow_breakdown.total|floatformat:"-2" }} L</td>
                     </tr>

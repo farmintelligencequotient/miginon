@@ -134,7 +134,9 @@ class ReportMilkSessionTests(TestCase):
         self.assertEqual({row['key']: row['cows'] for row in report['milk']['by_session']}, {'am': 2, 'noon': 1, 'pm': 1})
         csv_text = export_csv(report).content.decode('utf-8')
         self.assertIn('Not milked in this period', csv_text)
-        self.assertIn('S-4,,Block A,Dry', csv_text)
+        self.assertIn('S-4,,Dry,Block A,Dry', csv_text)
+        self.assertIn('Tag,Name,Category,Block,Morning (L)', csv_text)
+        self.assertIn('S-1,,Cow,Block A,', csv_text)
         self.assertEqual(export_xlsx(report).status_code, 200)
         self.assertTrue(build_pdf_bytes(report).startswith(b'%PDF'))
 

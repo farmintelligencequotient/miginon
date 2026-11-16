@@ -310,6 +310,8 @@ class MilkRecordViewTests(CowsTestCase):
         self.assertEqual(set(rows), {'C-301', 'C-302'})
         self.assertEqual(rows['C-301']['sessions'], [Decimal('8.50'), None, Decimal('6.00')])
         self.assertEqual(rows['C-301']['total'], Decimal('14.50'))
+        self.assertEqual(rows['C-301']['category'], 'Cow')
+        self.assertContains(response, 'Category')
         self.assertEqual(breakdown['session_totals'], [Decimal('15.50'), Decimal('0'), Decimal('6.00')])
         self.assertEqual(breakdown['total'], Decimal('21.50'))
         dry = self._make_cow(tag_id='C-306', status=Cow.Status.DRY)

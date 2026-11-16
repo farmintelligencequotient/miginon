@@ -5,7 +5,7 @@ from django.db.models import Count, Q, Sum
 from django.utils import timezone
 
 from cows.models import Cow, FeedingRecord, MilkRecord, Session
-from cows.services import cows_not_milked
+from cows.services import cow_group_label, cows_not_milked
 from crops.models import CropActivity
 from finance.models import Transaction
 from inventory.models import InventoryItem, StockMovement
@@ -91,10 +91,12 @@ def build_report(farm, start, end, period_label):
         milk_qs.values('block__name').annotate(**session_sums, liters=Sum('liters')).order_by('-liters')
     )
     milk_by_cow = with_sessions(
-        milk_qs.values('cow__tag_id', 'cow__name', 'cow__block__name')
+        milk_qs.values('cow__tag_id', 'cow__name', 'cow__block__name', 'cow__category', 'cow__status')
         .annotate(**session_sums, liters=Sum('liters'))
         .order_by('-liters')
     )
+    for row in milk_by_cow:
+        row['category'] = cow_group_label(row['cow__category'], row['cow__status'])
     milk_daily = with_sessions(
         milk_qs.values('date').annotate(**session_sums, liters=Sum('liters')).order_by('date')
     )
@@ -109,6 +111,7 @@ def build_report(farm, start, end, period_label):
     milk_not_milked = [
         {
             'tag_id': cow.tag_id, 'name': cow.name, 'block': cow.block.name,
+            'category': cow_group_label(cow.category, cow.status),
             'note': cow.note or 'No milk recorded',
             'expected': bool(cow.note),
         }

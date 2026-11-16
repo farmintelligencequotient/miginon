@@ -50,6 +50,18 @@ def milk_session_totals(farm, date):
     }
 
 
+def cow_group_label(category, status):
+    """The one-word group an animal is listed under wherever milk is broken
+    down by cow: Dry for a dry cow, otherwise its category (Cow / Heifer /
+    Calf / Bull). Takes the raw values so report queries that only select
+    those two columns can use it too."""
+    from .models import Cow
+
+    if status == Cow.Status.DRY:
+        return str(Cow.Status.DRY.label)
+    return str(Cow.Category(category).label) if category in Cow.Category.values else str(category or '')
+
+
 def cows_not_milked(farm, milked_cow_ids):
     """Every animal still on the farm that isn't in milked_cow_ids - dry
     cows, heifers, calves and bulls included; only sold and deceased animals
@@ -93,7 +105,9 @@ def milk_cow_breakdown(farm, date):
     )
     for record in records:
         row = rows.setdefault(record.cow_id, {
-            'cow': record.cow, 'block': record.block, 'sessions': [None] * len(order), 'total': Decimal('0'),
+            'cow': record.cow, 'block': record.block,
+            'category': cow_group_label(record.cow.category, record.cow.status),
+            'sessions': [None] * len(order), 'total': Decimal('0'),
         })
         row['sessions'][order.index(record.session)] = record.liters
         row['total'] += record.liters
