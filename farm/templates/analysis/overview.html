@@ -233,6 +233,16 @@
                 <ion-icon name="mail-outline"></ion-icon> {% trans "Email report" %}
             </button>
         </div>
+
+        {# Used by the installed iPhone/iPad app only - see the script below. #}
+        <div id="export-status" hidden role="status" aria-live="polite"
+            class="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-700 [&[hidden]]:hidden dark:border-stone-800 dark:bg-stone-800/60 dark:text-stone-200">
+            <span id="export-status-text" class="flex-1"></span>
+            <button type="button" id="export-share-btn" hidden
+                class="flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-800 [&[hidden]]:hidden dark:bg-emerald-600 dark:hover:bg-emerald-500">
+                <ion-icon name="share-outline"></ion-icon> {% trans "Save or share report" %}
+            </button>
+        </div>
     </form>
 </div>
 {% endblock %}
@@ -276,6 +286,89 @@
                     form.action = exportUrl;
                 }
             });
+        });
+
+        // The app installed on an iPhone/iPad home screen has no download
+        // manager: navigating to a file download there does nothing (or
+        // strands the person on a blank screen). So in that one case the
+        // report is fetched in the page and handed to the iOS share sheet
+        // (Save to Files, WhatsApp, Mail, Print...). Everywhere else the
+        // normal browser download above is left alone.
+        var isIosApp = window.navigator.standalone === true;
+        var statusBox = document.getElementById('export-status');
+        var statusText = document.getElementById('export-status-text');
+        var shareBtn = document.getElementById('export-share-btn');
+        var readyFile = null;
+        var MSG = {
+            preparing: '{% trans "Preparing your report..." %}',
+            ready: '{% trans "Your report is ready." %}',
+            failed: '{% trans "Could not prepare the report. Check your connection and try again." %}',
+            signedOut: '{% trans "Your session has expired. Sign in again, then export the report." %}',
+        };
+
+        function showStatus(message, withShare) {
+            statusText.textContent = message;
+            shareBtn.hidden = !withShare;
+            statusBox.hidden = false;
+        }
+
+        function setBusy(busy) {
+            document.querySelectorAll('.export-btn').forEach(function (btn) { btn.disabled = busy; });
+        }
+
+        function fileNameFrom(response, format) {
+            var match = /filename="?([^";]+)"?/i.exec(response.headers.get('Content-Disposition') || '');
+            return match ? match[1] : 'farmiq-report.' + format;
+        }
+
+        function saveWithLink(file) {
+            var url = URL.createObjectURL(file);
+            var link = document.createElement('a');
+            link.href = url;
+            link.download = file.name;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+        }
+
+        function deliver(file) {
+            var canShare = false;
+            try { canShare = !!(navigator.share && navigator.canShare && navigator.canShare({ files: [file] })); } catch (err) { canShare = false; }
+            if (!canShare) { saveWithLink(file); return Promise.resolve(); }
+            // Rejects with AbortError when the person closes the share sheet
+            // and NotAllowedError when iOS decides the tap is too old - either
+            // way the "Save or share report" button stays for another go.
+            return navigator.share({ files: [file], title: file.name }).catch(function () {});
+        }
+
+        shareBtn.addEventListener('click', function () {
+            if (readyFile) deliver(readyFile);
+        });
+
+        form.addEventListener('submit', function (e) {
+            var format = formatInput.value;
+            if (!isIosApp || format === 'email' || !window.fetch || !window.File) return;
+            e.preventDefault();
+            var params = new URLSearchParams(new FormData(form));
+            params.delete('csrfmiddlewaretoken');
+            readyFile = null;
+            setBusy(true);
+            showStatus(MSG.preparing, false);
+            fetch(exportUrl + '?' + params.toString(), { credentials: 'same-origin' }).then(function (response) {
+                var type = response.headers.get('Content-Type') || '';
+                if (response.redirected || type.indexOf('text/html') === 0) throw new Error('signed-out');
+                if (!response.ok) throw new Error('http-' + response.status);
+                return response.blob().then(function (blob) {
+                    return new File([blob], fileNameFrom(response, format), { type: blob.type || type });
+                });
+            }).then(function (file) {
+                readyFile = file;
+                showStatus(MSG.ready, true);
+                return deliver(file);
+            }).catch(function (err) {
+                showStatus(err && err.message === 'signed-out' ? MSG.signedOut : MSG.failed, false);
+            }).then(function () { setBusy(false); });
         });
     })();
 </script>

@@ -4210,3 +4210,18 @@ msgstr "Rekodi za hivi karibuni"
 
 msgid "today"
 msgstr "leo"
+
+msgid "Save or share report"
+msgstr "Hifadhi au shiriki ripoti"
+
+msgid "Preparing your report..."
+msgstr "Ripoti yako inaandaliwa..."
+
+msgid "Your report is ready."
+msgstr "Ripoti yako iko tayari."
+
+msgid "Could not prepare the report. Check your connection and try again."
+msgstr "Imeshindikana kuandaa ripoti. Angalia mtandao wako kisha ujaribu tena."
+
+msgid "Your session has expired. Sign in again, then export the report."
+msgstr "Muda wako wa kuingia umeisha. Ingia tena, kisha uhamishe ripoti."
