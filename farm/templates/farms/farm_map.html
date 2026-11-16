@@ -968,8 +968,11 @@ function sunState(hour) {
     return { daylight, glow, isDay, arc };
 }
 
-const NIGHT_SKY = new THREE.Color(0x0b1226);
-const NIGHT_CLOUD = new THREE.Color(0x232a38);
+// Night is moonlit, not black: everything on the farm must stay easy to see and click.
+const NIGHT_SKY = new THREE.Color(0x1f3358);
+const NIGHT_CLOUD = new THREE.Color(0x4a5876);
+const NIGHT_AMBIENT = new THREE.Color(0xc6d4f5);
+const DAY_AMBIENT = new THREE.Color(0xffffff);
 const TWILIGHT_SKY = new THREE.Color(0xf0a05a);
 const MOONLIGHT = new THREE.Color(0x9db4e0);
 const SUN_DISC_DAY = new THREE.Color(0xffe9a8);
@@ -997,8 +1000,10 @@ function applyLighting() {
     scene.background.copy(sky);
     scene.fog.color.copy(sky);
 
-    baseAmbient = look.ambient * (0.26 + 0.74 * day);
+    // Never below ~0.6: a cool, bright moonlit level rather than real darkness.
+    baseAmbient = Math.max(0.6, look.ambient * (0.78 + 0.22 * day));
     ambient.intensity = baseAmbient;
+    ambient.color.copy(NIGHT_AMBIENT).lerp(DAY_AMBIENT, day);
 
     if (state.isDay) {
         tmpColor.setHex(look.sunColor);
@@ -1007,7 +1012,7 @@ function applyLighting() {
         sunDisc.material.color.copy(SUN_DISC_DAY).lerp(SUN_DISC_LOW, state.glow);
     } else {
         sun.color.copy(MOONLIGHT);
-        sun.intensity = look.disc ? 0.22 : 0.1;
+        sun.intensity = look.disc ? 0.55 : 0.38;
         sunDisc.material.color.copy(MOON_DISC);
     }
     sunDisc.visible = look.disc;
