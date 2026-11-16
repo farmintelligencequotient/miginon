@@ -79,8 +79,11 @@ class StockMovement(models.Model):
         help_text=_('Who used/consumed this (most relevant for equipment) - separate from '
                     'recorded_by, who logged the entry.')
     )
+    # db_default (not just default): the database itself fills in '' when a
+    # row is inserted without this column, so a deployment still running the
+    # previous code keeps working after the migration has been applied.
     used_by_group = models.CharField(
-        max_length=10, choices=UsedByGroup.choices, blank=True,
+        max_length=10, choices=UsedByGroup.choices, blank=True, db_default='',
         help_text=_('Set instead of used_by when the stock went to animals rather than a person, e.g. calves.')
     )
     created_at = models.DateTimeField(auto_now_add=True)

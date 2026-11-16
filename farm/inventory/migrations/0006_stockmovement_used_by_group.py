@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
             model_name='stockmovement',
             name='used_by_group',
             field=models.CharField(
-                blank=True, choices=[('calves', 'Calves')],
+                blank=True, choices=[('calves', 'Calves')], db_default='',
                 help_text='Set instead of used_by when the stock went to animals rather than a person, e.g. calves.',
                 max_length=10,
             ),
